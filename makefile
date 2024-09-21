@@ -47,7 +47,7 @@ USE_FPU_OPT = -mfloat-abi=$(USE_FPU) -mfpu=fpv4-sp-d16
 # Project, Target, Sources & Paths --------------------------------------------------------------------------------------------
 
 # Define project name here
-PROJECT = stub
+PROJECT = vcu_2025
 
 # Target settings.
 MCU  = cortex-m4
@@ -82,18 +82,17 @@ include $(CHIBIOS)/os/common/ports/ARMv7-M/compilers/GCC/mk/port.mk
 include $(CHIBIOS)/tools/mk/autobuild.mk
 
 # Other files (optional).
-include $(CHIBIOS)/os/test/test.mk
-include $(CHIBIOS)/test/rt/rt_test.mk
-include $(CHIBIOS)/test/oslib/oslib_test.mk
+include $(CHIBIOS)/os/hal/lib/streams/streams.mk
 
 # Define linker script file here
 LDSCRIPT= $(STARTUPLD)/STM32F407xG.ld
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-CSRC = $(ALLCSRC) \
-       $(TESTSRC) \
-       src/main.c
+CSRC = $(ALLCSRC)		\
+       $(TESTSRC)		\
+       src/main.c		\
+	   src/debug.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -149,6 +148,8 @@ $(BOARD_FILES) &: $(BOARD_CONF)
 	fmpp -C $(CONFDIR)/board.fmpp --data-root=$(CONFDIR) -S									\
 		$(CHIBIOS_SOURCE_PATH)/tools/ftl/processors/boards/stm32f4xx/templates				\
 		--freemarker-links=lib:$(CHIBIOS_SOURCE_PATH)/tools/ftl/libs -O $(BOARDDIR)
+
+board_files: $(BOARD_FILES)
 
 # Board Programming -----------------------------------------------------------------------------------------------------------
 

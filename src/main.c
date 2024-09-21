@@ -1,26 +1,11 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
+// Includes
+#include "debug.h"
+
 // ChibiOS
 #include "ch.h"
 #include "hal.h"
-
-// Threads --------------------------------------------------------------------------------------------------------------------
-
-static THD_WORKING_AREA (heartbeatWa, 128);
-
-static THD_FUNCTION (heartbeatThread, arg)
-{
-	(void) arg;
-	chRegSetThreadName ("heartbeat");
-
-	while (true)
-	{
-		palSetLine (LINE_LED_HEARTBEAT);
-		chThdSleepMilliseconds (500);
-		palClearLine (LINE_LED_HEARTBEAT);
-		chThdSleepMilliseconds (500);
-	}
-}
 
 // Entrypoint -----------------------------------------------------------------------------------------------------------------
 
@@ -30,8 +15,8 @@ int main (void)
 	halInit ();
 	chSysInit ();
 
-	// Create the heartbeat thread
-	chThdCreateStatic (heartbeatWa, sizeof(heartbeatWa), NORMALPRIO, heartbeatThread, NULL);
+	// Debug Initialization
+	debugInit ("Vehicle Control Board, Revision AA");
 
 	// Do nothing.
 	while (true)
