@@ -11,7 +11,7 @@
   <board_name>Vehicle Control Board Rev.AA</board_name>
   <board_id>VCB_AA_2025</board_id>
   <board_functions></board_functions>
-  <subtype>STM32F407xx</subtype>
+  <subtype>STM32F405xx</subtype>
   <clocks
     HSEFrequency="12000000"
     HSEBypass="false"
