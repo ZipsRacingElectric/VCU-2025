@@ -1,7 +1,12 @@
 {
-	"files.associations": {
-		"*.tcc": "c",
-		"format": "c",
-		"thread": "c"
-	}
+	"C_Cpp.intelliSenseEngine": "disabled",
+	"C_Cpp.default.intelliSenseMode": "linux-gcc-arm",
+	"clangd.arguments":
+	[
+		"-log=verbose", 
+		"-pretty", 
+		"--background-index", 
+		"--compile-commands-dir=./build/",
+		"-header-insertion=never"
+	]
 }
