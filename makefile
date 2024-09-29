@@ -1,5 +1,5 @@
 # Project name
-PROJECT = stub
+PROJECT = vcu_2025
 
 # Imported files
 CHIBIOS  := $(CHIBIOS_SOURCE_PATH)
@@ -32,6 +32,9 @@ ULIBDIR =
 
 # Libraries
 ULIBS =
+
+# ChibiOS extra includes
+include $(CHIBIOS)/os/hal/lib/streams/streams.mk
 
 # Common toolchain includes
 include common/makefile
