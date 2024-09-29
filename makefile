@@ -11,9 +11,12 @@ DEPDIR   := ./build/dep
 BOARDDIR := ./build/board
 
 # Source files
-CSRC =	$(ALLCSRC)		\
-		src/main.c		\
-		src/debug.c
+CSRC =	$(ALLCSRC)						\
+		src/main.c						\
+		src/debug.c						\
+		src/can_thread.c				\
+		src/peripherals.c				\
+		src/peripherals/mc24lc32.c
 
 # C macro definitions
 UDEFS =
