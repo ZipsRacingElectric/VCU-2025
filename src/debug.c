@@ -35,7 +35,7 @@ void debugInit (const char* boardName)
 	// Start the serial driver
 	#if DEBUG_SERIAL_ENABLED
 		sdStart (&DEBUG_SERIAL, NULL);
-		DEBUG_PRINTF ("Launching %s...\n", boardName);
-		DEBUG_PRINTF ("\tSoftware Version: " __DATE__ "\n");
+		DEBUG_PRINTF ("Launching %s...\r\n", boardName);
+		DEBUG_PRINTF ("\tSoftware Version: " __DATE__ "\r\n");
 	#endif // DEBUG_SERIAL_ENABLED
 }

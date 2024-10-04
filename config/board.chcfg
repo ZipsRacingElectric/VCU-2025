@@ -215,7 +215,7 @@
         Mode="Output"
         Alternate="0" />
       <pin8
-        ID="I2C3_SCL"
+        ID="I2C1_SCL"
         Type="OpenDrain"
         Level="High"
         Speed="Minimum"
@@ -223,7 +223,7 @@
         Mode="Alternate"
         Alternate="4" />
       <pin9
-        ID="I2C3_SDA"
+        ID="I2C1_SDA"
         Type="OpenDrain"
         Level="High"
         Speed="Minimum"

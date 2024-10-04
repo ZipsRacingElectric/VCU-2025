@@ -19,10 +19,10 @@ int main (void)
 	// Debug Initialization
 	debugInit ("Vehicle Control Board, Revision AA");
 
-	// Peripherals
+	// Peripheral Initialization
 	peripheralsInit ();
 
-	// CAN Thread
+	// CAN Thread Initialization
 	canThreadStart (NORMALPRIO, "can_thread");
 
 	// Do nothing.

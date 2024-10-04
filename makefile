@@ -1,3 +1,5 @@
+# TODO(Barach): Different targets for debug and standard (-O levels for cortex-debug)
+
 # Project name
 PROJECT = vcu_2025
 
@@ -16,7 +18,11 @@ CSRC =	$(ALLCSRC)						\
 		src/debug.c						\
 		src/can_thread.c				\
 		src/peripherals.c				\
-		src/peripherals/mc24lc32.c
+		src/peripherals/analog.c		\
+		src/peripherals/pedals.c
+
+# Compiler flags
+USE_OPT = -O0 
 
 # C macro definitions
 UDEFS =
