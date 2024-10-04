@@ -21,6 +21,9 @@ CSRC =	$(ALLCSRC)						\
 		src/peripherals/analog.c		\
 		src/peripherals/pedals.c
 
+# Common library includes
+include common/make/mc24lc32.mk 
+
 # Compiler flags
 USE_OPT = -O0 
 
