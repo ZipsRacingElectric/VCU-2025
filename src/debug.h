@@ -1,6 +1,15 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+// Debug ----------------------------------------------------------------------------------------------------------------------
+//
+// Author: Cole Barach
+// Date Created: 2024.09.21
+//
+// Description: Group of functions related to board debugging.
+
+// Macros ---------------------------------------------------------------------------------------------------------------------
+
 /// @brief Enables / disables the heartbeat LED.
 #define DEBUG_HEARTBEAT_ENABLED 1
 

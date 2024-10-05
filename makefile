@@ -12,6 +12,9 @@ BUILDDIR := ./build
 DEPDIR   := ./build/dep
 BOARDDIR := ./build/board
 
+# Include
+ALLINC += $(CURDIR)/src
+
 # Source files
 CSRC =	$(ALLCSRC)						\
 		src/main.c						\
@@ -20,6 +23,7 @@ CSRC =	$(ALLCSRC)						\
 		src/peripherals.c				\
 		src/peripherals/pedals.c		\
 		src/can/can_node.c				\
+		src/can/misc.c					\
 		src/can/ecumaster_gps_v2.c		\
 
 # Common library includes

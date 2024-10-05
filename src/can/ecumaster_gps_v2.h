@@ -1,10 +1,26 @@
 #ifndef ECUMASTER_GPS_V2_H
 #define ECUMASTER_GPS_V2_H
 
+// ECUMaster GPS to CAN V2 ----------------------------------------------------------------------------------------------------
+//
+// Author: Cole Barach
+// Date Created: 2024.10.05
+// 
+// Description: Object representing the ECUMaster GPS CAN module.
+//
+// To do:
+// - Handler implementations.
+
+// Includes -------------------------------------------------------------------------------------------------------------------
+
 // Includes
 #include "can_node.h"
 
-#define ECUMASTER_GPS_MESSAGE_COUNT 5
+// Constants ------------------------------------------------------------------------------------------------------------------
+
+#define ECUMASTER_GPS_HANDLER_COUNT 5
+
+// Datatypes ------------------------------------------------------------------------------------------------------------------
 
 struct ecumasterGps
 {
@@ -22,7 +38,11 @@ struct ecumasterGps
 
 typedef struct ecumasterGps ecumasterGps_t;
 
+// Configuration --------------------------------------------------------------------------------------------------------------
+
 extern const canNodeConfig_t ecumasterGpsConfig;
+
+// Handlers -------------------------------------------------------------------------------------------------------------------
 
 void ecumasterGpsHandler0 (CANRxFrame* frame);
 

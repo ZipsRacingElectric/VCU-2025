@@ -7,12 +7,12 @@
 
 // Configuration --------------------------------------------------------------------------------------------------------------
 
-static uint16_t addresses [ECUMASTER_GPS_MESSAGE_COUNT] =
+static uint16_t addresses [ECUMASTER_GPS_HANDLER_COUNT] =
 {
 	0x400, 0x401, 0x402, 0x403, 0x404
 };
 
-static canHandler_t* handlers [ECUMASTER_GPS_MESSAGE_COUNT] =
+static canHandler_t* handlers [ECUMASTER_GPS_HANDLER_COUNT] =
 {
 	&ecumasterGpsHandler0, &ecumasterGpsHandler1,
 	&ecumasterGpsHandler2, &ecumasterGpsHandler3,
@@ -21,8 +21,9 @@ static canHandler_t* handlers [ECUMASTER_GPS_MESSAGE_COUNT] =
 
 const canNodeConfig_t ecumasterGpsConfig =
 {
-	.addresses	= addresses,
-	.handlers	= handlers
+	.handlerCount	= ECUMASTER_GPS_HANDLER_COUNT,
+	.addresses		= addresses,
+	.handlers		= handlers
 };
 
 // Handlers -------------------------------------------------------------------------------------------------------------------

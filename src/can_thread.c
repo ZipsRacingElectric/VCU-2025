@@ -19,11 +19,12 @@
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
-ecumasterGps_t gps;
+ecumasterGps_t	gps;
+misc_t			misc;
 
 canNode_t* nodes [] =
 {
-	(canNode_t*) &gps
+	(canNode_t*) &gps, (canNode_t*) &misc
 };
 
 // Configuration --------------------------------------------------------------------------------------------------------------
@@ -93,8 +94,7 @@ THD_FUNCTION(canTxThread, arg)
 
 	while (true)
 	{
-		sysinterval_t timeout = TIME_MS2I (CAN_THREAD_TX_TIMEOUT_MS);
-		msg_t result = canTransmitTimeout (&CAND1, CAN_ANY_MAILBOX, &txFrame, timeout);
+		msg_t result = canTransmitTimeout (&CAND1, CAN_ANY_MAILBOX, &txFrame, CAN_THREAD_TX_TIMEOUT);
 		if (result != MSG_OK)
 			CAN_THREAD_PRINTF ("Failed to transmit on CAN1: Error %i.\r\n", result);
 

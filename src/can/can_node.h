@@ -1,8 +1,20 @@
 #ifndef CAN_NODE_H
 #define CAN_NODE_H
 
+// CAN Node -------------------------------------------------------------------------------------------------------------------
+//
+// Author: Cole Barach
+// Date Created: 2024.10.05
+//
+// Description: Base object representing a node in a CAN bus. This object provides a standard interface for an object that
+//   broadcasts periodic CAN messages.
+
+// Includes -------------------------------------------------------------------------------------------------------------------
+
 // ChibiOS
 #include "hal.h"
+
+// Datatypes ------------------------------------------------------------------------------------------------------------------
 
 typedef void (canHandler_t) (CANRxFrame* frame);
 
@@ -21,6 +33,8 @@ struct canNode
 	CAN_NODE_FIELDS
 };
 
+typedef struct canNode canNode_t;
+
 struct canNodeConfig
 {
 	uint8_t handlerCount;
@@ -28,9 +42,9 @@ struct canNodeConfig
 	canHandler_t** handlers;
 };
 
-typedef struct canNode canNode_t;
-
 typedef struct canNodeConfig canNodeConfig_t;
+
+// Functions ------------------------------------------------------------------------------------------------------------------
 
 /**
  * @brief Initializes the CAN node using the given configuration.
