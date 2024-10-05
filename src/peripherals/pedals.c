@@ -10,7 +10,9 @@ void appsUpdate (apps_t* apps, uint16_t raw)
 	apps->value = (float) (raw - apps->rawMin) / (apps->rawMax - apps->rawMin);
 }
 
-bool appsPercent (apps_t* apps1, apps_t* apps2)
+void bseUpdate (bse_t* bse, uint16_t raw)
 {
-	
+	// TODO(Barach): Implementation
+	(void) bse;
+	(void) raw;
 }

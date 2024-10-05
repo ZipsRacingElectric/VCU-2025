@@ -18,8 +18,9 @@ CSRC =	$(ALLCSRC)						\
 		src/debug.c						\
 		src/can_thread.c				\
 		src/peripherals.c				\
-		src/peripherals/analog.c		\
-		src/peripherals/pedals.c
+		src/peripherals/pedals.c		\
+		src/can/can_node.c				\
+		src/can/ecumaster_gps_v2.c		\
 
 # Common library includes
 include common/make/mc24lc32.mk 

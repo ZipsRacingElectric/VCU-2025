@@ -37,4 +37,6 @@ typedef struct bse bse_t;
 
 void appsUpdate (apps_t* apps, uint16_t raw);
 
+void bseUpdate (bse_t* bse, uint16_t raw);
+
 #endif // APPS_H

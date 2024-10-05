@@ -23,7 +23,7 @@ int main (void)
 	peripheralsInit ();
 
 	// CAN Thread Initialization
-	canThreadStart (NORMALPRIO, "can_thread");
+	canThreadStart (NORMALPRIO);
 
 	// Do nothing.
 	while (true)
