@@ -1,3 +1,11 @@
+// Vehicle Control Unit -------------------------------------------------------------------------------------------------------
+//
+// Author: Cole Barach
+// Date Created: 2024.09.21
+//
+// To do:
+// - Better fault handling. Most of this can be in common, but parts will be board specific.
+
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
@@ -7,6 +15,29 @@
 
 // ChibiOS
 #include "hal.h"
+
+// Debug Thread ---------------------------------------------------------------------------------------------------------------
+
+static THD_WORKING_AREA(debugThreadWa, 128);
+THD_FUNCTION(debugThread, arg)
+{
+	(void) arg;
+	chRegSetThreadName ("Debug Thread");
+
+	while (true)
+	{
+		analogSample (&analog);
+
+		DEBUG_PRINTF ("APPS-1: %f.\r\n", analog.apps1.value);
+		DEBUG_PRINTF ("APPS-2: %f.\r\n", analog.apps2.value);
+		DEBUG_PRINTF ("BSE-F: %f.\r\n", analog.bseF.value);
+		DEBUG_PRINTF ("BSE-R: %f.\r\n", analog.bseR.value);
+		DEBUG_PRINTF ("SAS: %f.\r\n", analog.steeringAngle);
+		DEBUG_PRINTF ("GLV: %f.\r\n", analog.glvVoltage);
+
+		chThdSleepMilliseconds (500);
+	}
+}
 
 // Entrypoint -----------------------------------------------------------------------------------------------------------------
 
@@ -25,7 +56,23 @@ int main (void)
 	// CAN Thread Initialization
 	canThreadStart (NORMALPRIO);
 
+	// Debug Thread Initialization
+	chThdCreateStatic (debugThreadWa, sizeof (debugThreadWa), NORMALPRIO, debugThread, NULL);
+
 	// Do nothing.
 	while (true)
 		chThdSleepMilliseconds (500);
+}
+
+// Interrupts -----------------------------------------------------------------------------------------------------------------
+
+void HardFault_Handler (void)
+{
+	// Disable further interrupts
+	__asm__ ("cpsid i");
+
+	// TODO(Barach): Enter safe state.
+
+	// Halt for the debugger
+	__asm__ ("bkpt");
 }

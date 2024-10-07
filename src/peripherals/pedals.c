@@ -12,7 +12,9 @@ void appsUpdate (apps_t* apps, uint16_t raw)
 
 void bseUpdate (bse_t* bse, uint16_t raw)
 {
-	// TODO(Barach): Implementation
-	(void) bse;
-	(void) raw;
+	// Range check
+	if (raw < bse->rawMin || raw > bse->rawMax)
+		bse->valid = false;
+
+	bse->value = (float) (raw - bse->rawMin) / (bse->rawMax - bse->rawMin);
 }

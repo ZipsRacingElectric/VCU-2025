@@ -21,19 +21,21 @@ CSRC =	$(ALLCSRC)						\
 		src/debug.c						\
 		src/can_thread.c				\
 		src/peripherals.c				\
+		src/peripherals/analog.c		\
+		src/peripherals/eeprom.c		\
 		src/peripherals/pedals.c		\
 		src/can/can_node.c				\
-		src/can/misc.c					\
 		src/can/ecumaster_gps_v2.c		\
+		src/can/misc_node.c
 
 # Common library includes
-include common/make/mc24lc32.mk 
+include common/make/mc24lc32.mk
 
 # Compiler flags
-USE_OPT = -O0 
+USE_OPT = -O0
 
 # C macro definitions
-UDEFS =
+UDEFS = -DCHPRINTF_USE_FLOAT=1
 
 # ASM definitions
 UADEFS =
