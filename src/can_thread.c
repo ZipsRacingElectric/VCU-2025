@@ -14,7 +14,7 @@
 #if CAN_THREAD_DEBUGGING
 	#define CAN_THREAD_PRINTF(format, ...) DEBUG_PRINTF("[CAN Thread] " format, ##__VA_ARGS__)
 #else
-	#define CAN_THREAD_PRINTF()
+	#define CAN_THREAD_PRINTF(format, ...) do {} while (false);
 #endif // CAN_THREAD_DEBUGGING
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------

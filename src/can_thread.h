@@ -22,7 +22,7 @@
 // Constants ------------------------------------------------------------------------------------------------------------------
 
 /// @brief Enables / disables debugging messages from the CAN thread.
-#define CAN_THREAD_DEBUGGING 1
+#define CAN_THREAD_DEBUGGING 0
 
 /// @brief Timeout period for message transmission.
 #define CAN_THREAD_TX_TIMEOUT TIME_MS2I(500)

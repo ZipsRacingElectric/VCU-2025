@@ -29,7 +29,7 @@ CSRC =	$(ALLCSRC)						\
 		src/can/misc_node.c
 
 # Common library includes
-include common/make/mc24lc32.mk
+include common/make/peripherals/mc24lc32.mk
 
 # Compiler flags
 USE_OPT = -O0

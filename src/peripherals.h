@@ -5,7 +5,8 @@
 
 // Includes
 #include "peripherals/analog.h"
-#include "mc24lc32.h"
+#include "peripherals/pedals.h"
+#include "peripherals/mc24lc32.h"
 
 // Debugging ------------------------------------------------------------------------------------------------------------------
 
@@ -14,8 +15,14 @@
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
-extern analog_t		analog;
+extern analog_t		adc;
+extern apps_t		apps1;
+extern apps_t		apps2;
+extern bse_t		bseF;
+extern bse_t		bseR;
 extern mc24lc32_t	eeprom;
+extern float		steeringAngle;
+extern float		glvBatteryVoltage;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -23,5 +30,10 @@ extern mc24lc32_t	eeprom;
  * @brief Initializes the devices peripherals.
  */
 void peripheralsInit (void);
+
+/**
+ * @brief Gets a code representing the state of the device's peripherals. 
+ */
+uint32_t peripheralsGetState (void);
 
 #endif // PERIPHERALS_H

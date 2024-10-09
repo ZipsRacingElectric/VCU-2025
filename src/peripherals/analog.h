@@ -6,10 +6,7 @@
 // Author: Cole Barach
 // Date Created: 2024.10.05
 //
-// Description: Aggregate peripheral for sensors using the on-board ADC.
-//
-// To do:
-// - This is a pretty weak way of going about things, this'll be replaced with a more flexible solution.
+// Description: Peripheral wrapping the ChibiOS ADC driver.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -19,26 +16,56 @@
 // ChibiOS
 #include "hal.h"
 
+// Constants ------------------------------------------------------------------------------------------------------------------
+
+#define ANALOG_CHANNEL_COUNT 16
+
 // Datatypes ------------------------------------------------------------------------------------------------------------------
+
+typedef void (analogCallback_t) (void*, adcsample_t);
+
+enum analogState
+{
+	ANALOG_STATE_READY	= 0,
+	ANALOG_STATE_FAILED	= 1,
+};
+
+typedef enum analogState analogState_t;
+
+struct analogConfig
+{
+	/// @brief The ADC driver to use.
+	ADCDriver* driver;
+	/// @brief The number of channels in the sample sequence.
+	uint8_t channelCount;
+	/// @brief The sequence of channels to sample.
+	adc_channels_num_t channels [ANALOG_CHANNEL_COUNT];
+	/// @brief The callback for each sample in the sequence. Use null for no callback.
+	analogCallback_t* callbacks [ANALOG_CHANNEL_COUNT];
+	/// @brief Object to use for the handler argument of each callback.
+	void* handlers [ANALOG_CHANNEL_COUNT];
+	/// @brief The sampling time selection to use for every channel.
+	uint32_t sampleCycles;
+};
+
+typedef struct analogConfig analogConfig_t;
 
 struct analog
 {
+	analogState_t		state;
 	ADCDriver*			driver;
 	ADCConversionGroup	group;
-	adcsample_t			samples [6];
-	apps_t				apps1;
-	apps_t				apps2;
-	bse_t				bseF;
-	bse_t				bseR;
-	float				steeringAngle;
-	float				glvVoltage;
+	uint8_t				channelCount;
+	adcsample_t			samples [ANALOG_CHANNEL_COUNT];
+	analogCallback_t**	callbacks;
+	void**				handlers;
 };
 
 typedef struct analog analog_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-bool analogInit (analog_t* analog);
+bool analogInit (analog_t* analog, analogConfig_t* config);
 
 void analogSample (analog_t* analog);
 
