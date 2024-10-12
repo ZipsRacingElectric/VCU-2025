@@ -1,10 +1,23 @@
 // Header
 #include "analog.h"
 
+// Includes
+#include "debug.h"
+
+// Macros ---------------------------------------------------------------------------------------------------------------------
+
+#if ANALOG_DEBUGGING
+	#define ANALOG_PRINTF(format, ...) DEBUG_PRINTF("[Analog] " format, ##__VA_ARGS__)
+#else
+	#define ANALOG_PRINTF(format, ...) while(false)
+#endif // ANALOG_DEBUGGING
+
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 bool analogInit (analog_t* analog, analogConfig_t* config)
 {
+	analog->state = ANALOG_STATE_READY;
+
 	// Set all uninitialized channels to 0
 	for (uint8_t index = config->channelCount; index < ANALOG_CHANNEL_COUNT; ++index)
 		config->channels [index] = 0;
@@ -17,7 +30,7 @@ bool analogInit (analog_t* analog, analogConfig_t* config)
 		.end_cb			= 	NULL,
 		.error_cb		= 	NULL,
 		.cr1			=	0,
-		.cr2			=	ADC_CR2_SWSTART, // TODO(Barach): This can likely be removed.
+		.cr2			=	ADC_CR2_SWSTART,
 		.smpr1			=	(config->sampleCycles << ADC_SMPR1_SMP15_Pos) |	// Channel 15 sample time.
 							(config->sampleCycles << ADC_SMPR1_SMP14_Pos) |	// Channel 14 sample time.
 							(config->sampleCycles << ADC_SMPR1_SMP13_Pos) |	// Channel 13 sample time.
@@ -64,7 +77,13 @@ bool analogInit (analog_t* analog, analogConfig_t* config)
 
 	// Start the ADC driver
 	msg_t result = adcStart (analog->driver, NULL);
-	return result == MSG_OK;
+	if (result != MSG_OK)
+	{
+		analog->state = ANALOG_STATE_FAILED;
+		return false;
+	}
+
+	return true;
 }
 
 void analogSample (analog_t* analog)
@@ -72,10 +91,25 @@ void analogSample (analog_t* analog)
 	// Sample the ADC channels
 	msg_t result = adcConvert (analog->driver, &analog->group, analog->samples, 1);
 	if (result != MSG_OK)
-		return; // TODO(Barach): Device state
+	{
+		analog->state = ANALOG_STATE_FAILED;
+		return;
+	}
+
+	ANALOG_PRINTF ("Sampled: ");
 
 	// Call each handler's callback
 	for (uint8_t index = 0; index < analog->channelCount; ++index)
+	{
+		#if ANALOG_DEBUGGING
+		DEBUG_PRINTF ("%u, ", analog->samples [index]);
+		#endif // ANALOG_DEBUGGING
+
 		if (analog->callbacks [index] != NULL)
 			analog->callbacks [index] (analog->handlers [index], analog->samples [index]);
+	}
+
+	#if ANALOG_DEBUGGING
+	DEBUG_PRINTF ("\r\n");
+	#endif // ANALOG_DEBUGGING
 }

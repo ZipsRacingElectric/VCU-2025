@@ -12,34 +12,10 @@
 #include "debug.h"
 #include "can_thread.h"
 #include "peripherals.h"
+#include "torque_thread.h"
 
 // ChibiOS
 #include "hal.h"
-
-// Debug Thread ---------------------------------------------------------------------------------------------------------------
-
-#define DEBUG_THREAD_RUN 1
-
-static THD_WORKING_AREA(debugThreadWa, 128);
-THD_FUNCTION(debugThread, arg)
-{
-	(void) arg;
-	chRegSetThreadName ("Debug Thread");
-
-	while (DEBUG_THREAD_RUN)
-	{
-		analogSample (&adc);
-
-		DEBUG_PRINTF ("APPS-1: %f.\r\n",	apps1.value);
-		DEBUG_PRINTF ("APPS-2: %f.\r\n",	apps2.value);
-		DEBUG_PRINTF ("BSE-F: %f.\r\n",	bseF.value);
-		DEBUG_PRINTF ("BSE-R: %f.\r\n",	bseR.value);
-		DEBUG_PRINTF ("SAS: %f.\r\n",		steeringAngle);
-		DEBUG_PRINTF ("GLV: %f.\r\n",		glvBatteryVoltage);
-
-		chThdSleepMilliseconds (500);
-	}
-}
 
 // Entrypoint -----------------------------------------------------------------------------------------------------------------
 
@@ -58,8 +34,8 @@ int main (void)
 	// CAN Thread Initialization
 	canThreadStart (NORMALPRIO);
 
-	// Debug Thread Initialization
-	chThdCreateStatic (debugThreadWa, sizeof (debugThreadWa), NORMALPRIO, debugThread, NULL);
+	// Torque Thread Initialization
+	torqueThreadStart (NORMALPRIO);
 
 	// Do nothing.
 	while (true)
@@ -77,4 +53,7 @@ void HardFault_Handler (void)
 
 	// Halt for the debugger
 	__asm__ ("bkpt");
+
+	// Infinite loop to halt the program
+	while (true);
 }

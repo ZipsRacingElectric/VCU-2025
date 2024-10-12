@@ -1,25 +1,51 @@
 // Header
 #include "pedals.h"
 
-void appsCallback (void* appsPtr, uint16_t raw)
+bool pedalSensorInit (pedalSensor_t* sensor, pedalSensorConfig_t* config)
 {
-	apps_t* apps = (apps_t*) appsPtr;
+	// Validate the configuration
+	sensor->configValid = config->rawMin < config->rawMax;
+	
+	// Store the configuration
+	sensor->rawMin = config->rawMin;
+	sensor->rawMax = config->rawMax;
+	
+	// Set values to their defaults
+	sensor->valueValid = false;
+	sensor->value = 0.0f;
 
-	// Range check
-	if (raw < apps->rawMin || raw > apps->rawMax)
-		apps->valid = false;
-
-	// apps->value = (float) (raw - apps->rawMin) / (apps->rawMax - apps->rawMin);
-	apps->value = raw;
+	return sensor->configValid;
 }
 
-void bseCallback (void* bsePtr, uint16_t raw)
+void pedalSensorCallback (void* handler, uint16_t raw)
 {
-	apps_t* bse = (apps_t*) bsePtr;
+	pedalSensor_t* sensor = (pedalSensor_t*) handler;
+
+	// Config check
+	if (!sensor->configValid)
+		return;
 
 	// Range check
-	if (raw < bse->rawMin || raw > bse->rawMax)
-		bse->valid = false;
+	if (raw < sensor->rawMin || raw > sensor->rawMax)
+		sensor->valueValid = false;
 
-	bse->value = (float) (raw - bse->rawMin) / (bse->rawMax - bse->rawMin);
+	// Linear interpolation
+	sensor->value = (float) (raw - sensor->rawMin) / (sensor->rawMax - sensor->rawMin);
+}
+
+bool pedalsInit (pedals_t* pedals, pedalsConfig_t* config)
+{
+	// Configure and validate the individual sensors
+	bool result = pedalSensorInit (&pedals->apps1, &config->apps1Config);
+	result &= pedalSensorInit (&pedals->apps2, &config->apps2Config);
+	result &= pedalSensorInit (&pedals->bseF, &config->bseFConfig);
+	result &= pedalSensorInit (&pedals->bseR, &config->bseRConfig);
+	return result;
+}
+
+void pedalsUpdate (pedals_t* pedals)
+{
+	// TODO(Barach): Validation / state
+	pedals->appsRequest	= (pedals->apps1.value + pedals->apps2.value) / 2.0;
+	pedals->bseRequest = (pedals->bseF.value + pedals->bseR.value) / 2.0;
 }

@@ -19,14 +19,20 @@ ALLINC += $(CURDIR)/src
 CSRC =	$(ALLCSRC)						\
 		src/main.c						\
 		src/debug.c						\
-		src/can_thread.c				\
+										\
 		src/peripherals.c				\
 		src/peripherals/analog.c		\
-		src/peripherals/eeprom.c		\
 		src/peripherals/pedals.c		\
+										\
+		src/can_thread.c				\
 		src/can/can_node.c				\
 		src/can/ecumaster_gps_v2.c		\
-		src/can/misc_node.c
+		src/can/misc_node.c				\
+										\
+		src/torque_thread.c				\
+		src/controls/tv_chatfield.c		\
+		src/controls/tv_straight_diff.c	\
+		src/controls/torque_vectoring.c
 
 # Common library includes
 include common/make/peripherals/mc24lc32.mk

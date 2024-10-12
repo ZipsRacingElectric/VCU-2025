@@ -14,7 +14,7 @@
 #if CAN_THREAD_DEBUGGING
 	#define CAN_THREAD_PRINTF(format, ...) DEBUG_PRINTF("[CAN Thread] " format, ##__VA_ARGS__)
 #else
-	#define CAN_THREAD_PRINTF(format, ...) do {} while (false);
+	#define CAN_THREAD_PRINTF(format, ...) while(false)
 #endif // CAN_THREAD_DEBUGGING
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
@@ -67,11 +67,11 @@ bool handleRxFrame (CANRxFrame* rxFrame)
 
 // Thread Entrypoints ---------------------------------------------------------------------------------------------------------
 
-static THD_WORKING_AREA(canTxThreadWa, 128);
+static THD_WORKING_AREA(canTxThreadWa, 512);
 THD_FUNCTION(canTxThread, arg)
 {
 	(void) arg;
-	chRegSetThreadName ("CAN1 TX Thread");
+	chRegSetThreadName ("can_tx");
 
 	CANTxFrame txFrame =
 	{
@@ -102,11 +102,11 @@ THD_FUNCTION(canTxThread, arg)
 	}
 }
 
-static THD_WORKING_AREA(canRxThreadWa, 128);
+static THD_WORKING_AREA(canRxThreadWa, 512);
 THD_FUNCTION(canRxThread, arg)
 {
 	(void) arg;
-	chRegSetThreadName ("CAN1 RX Thread");
+	chRegSetThreadName ("can_rx");
 
 	CANRxFrame rxFrame;
 

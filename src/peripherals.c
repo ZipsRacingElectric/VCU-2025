@@ -19,16 +19,13 @@
 #if PERIPHERAL_DEBUGGING
 	#define PERIPHERAL_PRINTF(format, ...) DEBUG_PRINTF("[Peripherals] " format, ##__VA_ARGS__)
 #else
-	#define PERIPHERAL_PRINTF(format, ...) do {} while (false);
+	#define PERIPHERAL_PRINTF(format, ...) while(false)
 #endif // PERIPHERAL_DEBUGGING
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
 analog_t	adc;
-apps_t		apps1;
-apps_t		apps2;
-bse_t		bseF;
-bse_t		bseR;
+pedals_t	pedals;
 mc24lc32_t	eeprom;
 float		steeringAngle;
 float		glvBatteryVoltage;
@@ -65,19 +62,19 @@ static analogConfig_t adcConfig =
 	},
 	.callbacks =
 	{
-		appsCallback,
-		appsCallback,
-		bseCallback,
-		bseCallback,
-		NULL,
-		NULL
+		pedalSensorCallback,
+		pedalSensorCallback,
+		pedalSensorCallback,
+		pedalSensorCallback,
+		steeringAngleCallback,
+		glvBatteryCallback
 	},
 	.handlers =
 	{
-		&apps1,
-		&apps2,
-		&bseF,
-		&bseR,
+		&pedals.apps1,
+		&pedals.apps2,
+		&pedals.bseF,
+		&pedals.bseR,
 		NULL,
 		NULL
 	},
@@ -91,6 +88,9 @@ static mc24lc32Config_t eepromConfig =
 	.i2c			= &I2CD1,
 	.magicString	= "VCU_2024_10_07"
 };
+
+/// @brief Configuration for the pedal sensors (computed at runtime).
+static pedalsConfig_t pedalsConfig;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -117,14 +117,20 @@ void peripheralsInit ()
 	// Analog sensor initialization
 	if (!analogInit (&adc, &adcConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize the ADC.\r\n");
-}
 
-uint32_t peripheralsGetState ()
-{
-	uint32_t code = 0;
-	code |= eeprom.state	& 0b11;
-	code |= adc.state		& 0b11 << 2;
-	return code;
+	// Pedals initialization
+	// TODO(Barach): From EEPROM
+	pedalsConfig.apps1Config.rawMin	= 0;
+	pedalsConfig.apps1Config.rawMax	= 4095;
+	pedalsConfig.apps2Config.rawMin	= 0;
+	pedalsConfig.apps2Config.rawMax	= 4095;
+	pedalsConfig.bseFConfig.rawMin	= 0;
+	pedalsConfig.bseFConfig.rawMax	= 4095;
+	pedalsConfig.bseRConfig.rawMin	= 0;
+	pedalsConfig.bseRConfig.rawMax	= 4095;
+
+	if (!pedalsInit (&pedals, &pedalsConfig))
+		PERIPHERAL_PRINTF ("Failed to initialize the pedals.");
 }
 
 void steeringAngleCallback (void* arg, uint16_t value)
