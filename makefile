@@ -25,6 +25,7 @@ CSRC =	$(ALLCSRC)						\
 		src/peripherals/pedals.c		\
 										\
 		src/can_thread.c				\
+		src/can/amk_inverter.c			\
 		src/can/can_node.c				\
 		src/can/ecumaster_gps_v2.c		\
 		src/can/misc_node.c				\
