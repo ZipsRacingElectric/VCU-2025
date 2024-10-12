@@ -24,7 +24,7 @@
 
 struct ecumasterGps
 {
-	CAN_NODE_FIELDS
+	CAN_NODE_FIELDS;
 	float speed;
 	float headingMotion;
 	float headingVehicle;

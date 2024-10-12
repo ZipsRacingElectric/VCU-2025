@@ -13,6 +13,7 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
+#include "can/amk_inverter.h"
 #include "can/ecumaster_gps_v2.h"
 #include "can/misc_node.h"
 
@@ -29,6 +30,8 @@
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
+extern amkInverter_t	inverterLeft;
+extern amkInverter_t	inverterRight;
 extern ecumasterGps_t	gps;
 extern misc_t			misc;
 

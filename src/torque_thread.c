@@ -2,9 +2,9 @@
 #include "torque_thread.h"
 
 // Includes
+#include "can_thread.h"
 #include "debug.h"
 #include "peripherals.h"
-#include "can/amk_inverter.h"
 #include "controls/torque_vectoring.h"
 #include "controls/tv_chatfield.h"
 #include "controls/tv_straight_diff.h"
@@ -51,7 +51,7 @@ THD_FUNCTION(tvThread, arg)
 		TORQUE_THREAD_PRINTF ("\tRear Right: %f\r\n",	output.rearRightTorqueRequest);
 
 		// TODO(Barach): Proper timeouts.
-		msg_t result = amkSendTorqueRequest (&CAND1, 0x200, output.frontLeftTorqueRequest,
+		msg_t result = amkSendTorqueRequest (&inverterLeft, output.frontLeftTorqueRequest,
 			output.rearLeftTorqueRequest, TIME_MS2I(100));
 
 		if (result != MSG_OK)
@@ -60,7 +60,7 @@ THD_FUNCTION(tvThread, arg)
 			break;
 		}
 
-		result = amkSendTorqueRequest (&CAND1, 0x201, output.frontRightTorqueRequest,
+		result = amkSendTorqueRequest (&inverterRight, output.frontRightTorqueRequest,
 			output.rearRightTorqueRequest, TIME_MS2I(100));
 
 		if (result != MSG_OK)

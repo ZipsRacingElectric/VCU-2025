@@ -21,7 +21,7 @@
 
 struct misc
 {
-	CAN_NODE_FIELDS
+	CAN_NODE_FIELDS;
 };
 
 typedef struct misc misc_t;

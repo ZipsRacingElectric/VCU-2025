@@ -19,12 +19,14 @@
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
+amkInverter_t	inverterLeft;
+amkInverter_t	inverterRight;
 ecumasterGps_t	gps;
 misc_t			misc;
 
 canNode_t* nodes [] =
 {
-	(canNode_t*) &gps, (canNode_t*) &misc
+	(canNode_t*) &inverterLeft, (canNode_t*) &inverterRight, (canNode_t*) &gps, (canNode_t*) &misc
 };
 
 // Configuration --------------------------------------------------------------------------------------------------------------
@@ -44,7 +46,12 @@ static CANConfig canConfig =
 			CAN_BTR_BRP(2)		// Baudrate divisor of 3 (1 Mbps)
 };
 
+#define INVERTER_LEFT_BASE_ID	0x200
+#define INVERTER_RIGHT_BASE_ID	0x201
+
 // Functions ------------------------------------------------------------------------------------------------------------------
+
+bool handleRxFrame (CANRxFrame* rxFrame);
 
 bool handleRxFrame (CANRxFrame* rxFrame)
 {
@@ -136,8 +143,11 @@ void canThreadStart (tprio_t priority)
 	palClearLine (LINE_CAN1_STBY);
 
 	// Initialize the CAN nodes
-	canNodeInit ((canNode_t*) &gps, &ecumasterGpsConfig);
-
+	amkInit (&inverterLeft, INVERTER_LEFT_BASE_ID, &CAND1);
+	amkInit (&inverterRight, INVERTER_RIGHT_BASE_ID, &CAND1);
+	canNodeInit ((canNode_t*) &gps, &ecumasterGpsConfig, &CAND1);
+	canNodeInit ((canNode_t*) &misc, &miscConfig, &CAND1);
+	
 	// Create the CAN threads
 	chThdCreateStatic (&canTxThreadWa, sizeof (canTxThreadWa), priority, canTxThread, NULL);
 	chThdCreateStatic (&canRxThreadWa, sizeof (canRxThreadWa), priority, canRxThread, NULL);

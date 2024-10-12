@@ -18,10 +18,11 @@
 
 typedef void (canHandler_t) (CANRxFrame* frame);
 
-#define CAN_NODE_FIELDS			\
-	uint8_t handlerCount;		\
-	uint16_t* addresses;		\
-	canHandler_t** handlers;
+#define CAN_NODE_FIELDS				\
+	CANDriver*		driver;			\
+	uint8_t			handlerCount;	\
+	uint16_t*		addresses;		\
+	canHandler_t**	handlers
 
 /**
  * @brief Polymorphic base object representing a node in a CAN bus.
@@ -30,16 +31,16 @@ typedef void (canHandler_t) (CANRxFrame* frame);
  */
 struct canNode
 {
-	CAN_NODE_FIELDS
+	CAN_NODE_FIELDS;
 };
 
 typedef struct canNode canNode_t;
 
 struct canNodeConfig
 {
-	uint8_t handlerCount;
-	uint16_t* addresses;
-	canHandler_t** handlers;
+	uint8_t			handlerCount;
+	uint16_t*		addresses;
+	canHandler_t**	handlers;
 };
 
 typedef struct canNodeConfig canNodeConfig_t;
@@ -50,7 +51,8 @@ typedef struct canNodeConfig canNodeConfig_t;
  * @brief Initializes the CAN node using the given configuration.
  * @param node The node to initialize.
  * @param config The configuration to use.
+ * @param driver The driver for the bus this node is connected to.
  */
-void canNodeInit (canNode_t* node, const canNodeConfig_t* config);
+void canNodeInit (canNode_t* node, const canNodeConfig_t* config, CANDriver* driver);
 
 #endif // CAN_NODE_H
