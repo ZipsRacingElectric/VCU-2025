@@ -19,14 +19,16 @@
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
-amkInverter_t	inverterLeft;
-amkInverter_t	inverterRight;
+amkInverter_t	amkFl;
+amkInverter_t	amkFr;
+amkInverter_t	amkRl;
+amkInverter_t	amkRr;
 ecumasterGps_t	gps;
 misc_t			misc;
 
 canNode_t* nodes [] =
 {
-	(canNode_t*) &inverterLeft, (canNode_t*) &inverterRight, (canNode_t*) &gps, (canNode_t*) &misc
+	(canNode_t*) &amkFl, (canNode_t*) &amkFr, (canNode_t*) &amkRl, (canNode_t*) &amkRr, (canNode_t*) &gps, (canNode_t*) &misc
 };
 
 // Configuration --------------------------------------------------------------------------------------------------------------
@@ -46,8 +48,10 @@ static CANConfig canConfig =
 			CAN_BTR_BRP(2)		// Baudrate divisor of 3 (1 Mbps)
 };
 
-#define INVERTER_LEFT_BASE_ID	0x200
-#define INVERTER_RIGHT_BASE_ID	0x201
+#define INVERTER_FL_BASE_ID 0x200
+#define INVERTER_FR_BASE_ID 0x206
+#define INVERTER_RL_BASE_ID 0x20C
+#define INVERTER_RR_BASE_ID 0x212
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -143,8 +147,10 @@ void canThreadStart (tprio_t priority)
 	palClearLine (LINE_CAN1_STBY);
 
 	// Initialize the CAN nodes
-	amkInit (&inverterLeft, INVERTER_LEFT_BASE_ID, &CAND1);
-	amkInit (&inverterRight, INVERTER_RIGHT_BASE_ID, &CAND1);
+	amkInit (&amkFl, INVERTER_FL_BASE_ID, &CAND1);
+	amkInit (&amkFr, INVERTER_FR_BASE_ID, &CAND1);
+	amkInit (&amkRl, INVERTER_RL_BASE_ID, &CAND1);
+	amkInit (&amkRr, INVERTER_RR_BASE_ID, &CAND1);
 	canNodeInit ((canNode_t*) &gps, &ecumasterGpsConfig, &CAND1);
 	canNodeInit ((canNode_t*) &misc, &miscConfig, &CAND1);
 	

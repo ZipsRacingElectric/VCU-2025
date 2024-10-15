@@ -21,10 +21,10 @@ extern float torqueRequestLimit;
 struct tvOutput
 {
 	bool valid;
-	float frontLeftTorqueRequest;
-	float frontRightTorqueRequest;
-	float rearLeftTorqueRequest;
-	float rearRightTorqueRequest;
+	float torqueFl;
+	float torqueFr;
+	float torqueRl;
+	float torqueRr;
 };
 
 typedef struct tvOutput tvOutput_t;

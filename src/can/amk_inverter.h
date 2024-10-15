@@ -37,14 +37,20 @@ void amkInit (amkInverter_t* amk, uint16_t baseId, CANDriver* driver);
 
 // Transmit -------------------------------------------------------------------------------------------------------------------
 
+// TODO(Barach): Better Documentation
 /**
  * @brief Sends the specified torque request to an AMK inverter.
  * @param amk The AMK inverter to send the message to.
- * @param torque1 The torque to request from motor 1.
- * @param torque2 The torque to request from motor 2.
+ * @param inverterEnabled
+ * @param dcEnabled
+ * @param driverEnabled
+ * @param torqueRequest The torque to request from the motor.
+ * @param torqueLimitPositive The positive torque limit to specify.
+ * @param torqueLimitNegative The negative torque limit to specify.
  * @param timeout The interval to timeout after.
- * @return The result of the operation.
+ * @return The result of the CAN operation.
  */
-msg_t amkSendTorqueRequest (amkInverter_t* amk, float torque1, float torque2, sysinterval_t timeout);
+msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnabled, bool driverEnabled, float torqueRequest,
+	float torqueLimitPositive, float torqueLimitNegative, sysinterval_t timeout);
 
 #endif // AMK_INVERTER_H

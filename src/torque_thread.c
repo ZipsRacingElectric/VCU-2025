@@ -45,27 +45,33 @@ THD_FUNCTION(tvThread, arg)
 
 		TORQUE_THREAD_PRINTF ("Torque output, algorithm %u\r\n", algoritmIndex);
 		TORQUE_THREAD_PRINTF ("\tValid: %u\r\n",		output.valid);
-		TORQUE_THREAD_PRINTF ("\tFront Left: %f\r\n",	output.frontLeftTorqueRequest);
-		TORQUE_THREAD_PRINTF ("\tFront Right: %f\r\n",	output.frontRightTorqueRequest);
-		TORQUE_THREAD_PRINTF ("\tRear Left: %f\r\n",	output.rearLeftTorqueRequest);
-		TORQUE_THREAD_PRINTF ("\tRear Right: %f\r\n",	output.rearRightTorqueRequest);
+		TORQUE_THREAD_PRINTF ("\tFL: %f\r\n",	output.torqueFl);
+		TORQUE_THREAD_PRINTF ("\tFR: %f\r\n",	output.torqueFr);
+		TORQUE_THREAD_PRINTF ("\tRL: %f\r\n",	output.torqueRl);
+		TORQUE_THREAD_PRINTF ("\tRR: %f\r\n",	output.torqueRr);
 
 		// TODO(Barach): Proper timeouts.
-		msg_t result = amkSendTorqueRequest (&inverterLeft, output.frontLeftTorqueRequest,
-			output.rearLeftTorqueRequest, TIME_MS2I(100));
-
-		if (result != MSG_OK)
+		if (amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueRequestLimit, 0, TIME_MS2I(100)) != MSG_OK)
 		{
-			TORQUE_THREAD_PRINTF ("CAN Error: %i", result);
+			TORQUE_THREAD_PRINTF ("CAN Error");
 			break;
 		}
 
-		result = amkSendTorqueRequest (&inverterRight, output.frontRightTorqueRequest,
-			output.rearRightTorqueRequest, TIME_MS2I(100));
-
-		if (result != MSG_OK)
+		if (amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueRequestLimit, 0, TIME_MS2I(100)) != MSG_OK)
 		{
-			TORQUE_THREAD_PRINTF ("CAN Error: %i", result);
+			TORQUE_THREAD_PRINTF ("CAN Error");
+			break;
+		}
+
+		if (amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueRequestLimit, 0, TIME_MS2I(100)) != MSG_OK)
+		{
+			TORQUE_THREAD_PRINTF ("CAN Error");
+			break;
+		}
+
+		if (amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueRequestLimit, 0, TIME_MS2I(100)) != MSG_OK)
+		{
+			TORQUE_THREAD_PRINTF ("CAN Error");
 			break;
 		}
 

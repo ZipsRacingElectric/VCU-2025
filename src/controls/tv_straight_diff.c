@@ -11,10 +11,10 @@ tvOutput_t tvStraightDiff (float deltaTime)
 	tvOutput_t out = 
 	{
 		.valid = true,
-		.frontRightTorqueRequest = pedals.appsRequest * TORQUE_REQUEST_MAX,
-		.frontLeftTorqueRequest = pedals.appsRequest * TORQUE_REQUEST_MAX,
-		.rearRightTorqueRequest = pedals.appsRequest * TORQUE_REQUEST_MAX,
-		.rearLeftTorqueRequest = pedals.appsRequest * TORQUE_REQUEST_MAX
+		.torqueFl = pedals.appsRequest * torqueRequestLimit,
+		.torqueFr = pedals.appsRequest * torqueRequestLimit,
+		.torqueRl = pedals.appsRequest * torqueRequestLimit,
+		.torqueRr = pedals.appsRequest * torqueRequestLimit
 	};
 	return out;
 }

@@ -9,10 +9,10 @@ tvOutput_t tvChatfield (float deltaTime)
 	tvOutput_t output =
 	{
 		.valid = false,
-		.frontLeftTorqueRequest = 0,
-		.frontRightTorqueRequest = 0,
-		.rearRightTorqueRequest = 0,
-		.rearLeftTorqueRequest = 0
+		.torqueFl = 0,
+		.torqueFr = 0,
+		.torqueRl = 0,
+		.torqueRr = 0
 	};
 
 	return output;

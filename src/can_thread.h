@@ -30,8 +30,10 @@
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
-extern amkInverter_t	inverterLeft;
-extern amkInverter_t	inverterRight;
+extern amkInverter_t	amkFl;
+extern amkInverter_t	amkFr;
+extern amkInverter_t	amkRl;
+extern amkInverter_t	amkRr;
 extern ecumasterGps_t	gps;
 extern misc_t			misc;
 
