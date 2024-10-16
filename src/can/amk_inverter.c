@@ -1,7 +1,7 @@
 // Header
 #include "amk_inverter.h"
 
-// Constants ------------------------------------------------------------------------------------------------------------------
+// Macros ---------------------------------------------------------------------------------------------------------------------
 
 // Message IDs
 #define MOTOR_REQUEST_ID_OFFSET 0
@@ -9,8 +9,8 @@
 // Scaling for torque values (unit Nm)
 #define TORQUE_FACTOR			0.0098f
 #define TORQUE_INVERSE_FACTOR	102.040816326530f
-#define TORQUE_TO_WORD(torque) (int16_t) ((torque) * TORQUE_INVERSE_FACTOR)
-#define WORD_TO_TORQUE(torque) ((torque) * TORQUE_FACTOR)
+#define TORQUE_TO_WORD(torque)	(int16_t) ((torque) * TORQUE_INVERSE_FACTOR)
+#define WORD_TO_TORQUE(word)	((word) * TORQUE_FACTOR)
 
 // AMK Control word
 #define CONTROL_WORD_INVERTER_ON(bit)	(((uint16_t) (bit)) << 8)

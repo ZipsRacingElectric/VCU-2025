@@ -28,27 +28,32 @@ const canNodeConfig_t ecumasterGpsConfig =
 
 // Handlers -------------------------------------------------------------------------------------------------------------------
 
-void ecumasterGpsHandler0 (CANRxFrame* frame)
+void ecumasterGpsHandler0 (void* node, CANRxFrame* frame)
 {
+	(void) node;
 	(void) frame;
 }
 
-void ecumasterGpsHandler1 (CANRxFrame* frame)
+void ecumasterGpsHandler1 (void* node, CANRxFrame* frame)
 {
+	(void) node;
 	(void) frame;
 }
 
-void ecumasterGpsHandler2 (CANRxFrame* frame)
+void ecumasterGpsHandler2 (void* node, CANRxFrame* frame)
 {
+	(void) node;
 	(void) frame;
 }
 
-void ecumasterGpsHandler3 (CANRxFrame* frame)
+void ecumasterGpsHandler3 (void* node, CANRxFrame* frame)
 {
+	(void) node;
 	(void) frame;
 }
 
-void ecumasterGpsHandler4 (CANRxFrame* frame)
+void ecumasterGpsHandler4 (void* node, CANRxFrame* frame)
 {
+	(void) node;
 	(void) frame;
 }

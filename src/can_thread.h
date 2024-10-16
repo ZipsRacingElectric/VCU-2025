@@ -14,6 +14,7 @@
 
 // Includes
 #include "can/amk_inverter.h"
+#include "can/bms.h"
 #include "can/ecumaster_gps_v2.h"
 #include "can/misc_node.h"
 
@@ -34,6 +35,7 @@ extern amkInverter_t	amkFl;
 extern amkInverter_t	amkFr;
 extern amkInverter_t	amkRl;
 extern amkInverter_t	amkRr;
+extern bms_t			bms;
 extern ecumasterGps_t	gps;
 extern misc_t			misc;
 

@@ -28,8 +28,8 @@ static tvFunction_t* tvAlgorithms [] =
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
-static THD_WORKING_AREA(tvThreadWa, 512);
-THD_FUNCTION(tvThread, arg)
+static THD_WORKING_AREA(torqueThreadWa, 512);
+THD_FUNCTION(torqueThread, arg)
 {
 	(void) arg;
 	chRegSetThreadName ("torque_control");
@@ -44,11 +44,11 @@ THD_FUNCTION(tvThread, arg)
 		tvOutput_t output = tvAlgorithms [algoritmIndex] (0.1);
 
 		TORQUE_THREAD_PRINTF ("Torque output, algorithm %u\r\n", algoritmIndex);
-		TORQUE_THREAD_PRINTF ("\tValid: %u\r\n",		output.valid);
-		TORQUE_THREAD_PRINTF ("\tFL: %f\r\n",	output.torqueFl);
-		TORQUE_THREAD_PRINTF ("\tFR: %f\r\n",	output.torqueFr);
-		TORQUE_THREAD_PRINTF ("\tRL: %f\r\n",	output.torqueRl);
-		TORQUE_THREAD_PRINTF ("\tRR: %f\r\n",	output.torqueRr);
+		TORQUE_THREAD_PRINTF ("\tValid: %u\r\n",	output.valid);
+		TORQUE_THREAD_PRINTF ("\tFL: %f\r\n",		output.torqueFl);
+		TORQUE_THREAD_PRINTF ("\tFR: %f\r\n",		output.torqueFr);
+		TORQUE_THREAD_PRINTF ("\tRL: %f\r\n",		output.torqueRl);
+		TORQUE_THREAD_PRINTF ("\tRR: %f\r\n",		output.torqueRr);
 
 		// TODO(Barach): Proper timeouts.
 		if (amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueRequestLimit, 0, TIME_MS2I(100)) != MSG_OK)
@@ -89,5 +89,5 @@ void torqueThreadStart (tprio_t priority)
 	torqueVectoringInit ();
 
 	// Start the torque control thread
-	chThdCreateStatic (&tvThreadWa, sizeof (tvThreadWa), priority, tvThread, NULL);
+	chThdCreateStatic (&torqueThreadWa, sizeof (torqueThreadWa), priority, torqueThread, NULL);
 }

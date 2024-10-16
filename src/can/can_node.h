@@ -16,7 +16,7 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-typedef void (canHandler_t) (CANRxFrame* frame);
+typedef void (canHandler_t) (void* node, CANRxFrame* frame);
 
 #define CAN_NODE_FIELDS				\
 	CANDriver*		driver;			\

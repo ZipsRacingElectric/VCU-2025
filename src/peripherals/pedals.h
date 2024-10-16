@@ -50,6 +50,8 @@ struct pedals
 	pedalSensor_t bseR;
 	float appsRequest;
 	float bseRequest;
+	bool isAccelerating;
+	bool isBraking;
 };
 
 typedef struct pedals pedals_t; 

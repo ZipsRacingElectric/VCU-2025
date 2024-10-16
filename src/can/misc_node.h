@@ -32,6 +32,6 @@ extern const canNodeConfig_t miscConfig;
 
 // Handlers -------------------------------------------------------------------------------------------------------------------
 
-void miscHandleEepromWrite (CANRxFrame* frame);
+void miscHandleEepromWrite (void* node, CANRxFrame* frame);
 
 #endif // MISC_NODE_H

@@ -25,8 +25,10 @@ const canNodeConfig_t miscConfig =
 
 // Handlers -------------------------------------------------------------------------------------------------------------------
 
-void miscHandleEepromWrite (CANRxFrame* frame)
+void miscHandleEepromWrite (void* node, CANRxFrame* frame)
 {
+	(void) node;
+
 	// Bytes 0 & 1 are the address.
 	uint16_t addr = frame->data8 [0] | frame->data8 [1] << 8;
 

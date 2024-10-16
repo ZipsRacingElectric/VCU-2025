@@ -49,7 +49,14 @@ void HardFault_Handler (void)
 	// Disable further interrupts
 	__asm__ ("cpsid i");
 
-	// TODO(Barach): Enter safe state.
+	// Open the shutdown loop
+	palClearLine (LINE_SHUTDOWN_EN);
+
+	// Set the fault LEDs
+	palSetLine (LINE_VCU_FLT);
+	palSetLine (LINE_IND_RED);
+	palClearLine (LINE_IND_GRN);
+	palClearLine (LINE_IND_BLU);
 
 	// Halt for the debugger
 	__asm__ ("bkpt");

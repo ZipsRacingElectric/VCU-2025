@@ -19,16 +19,23 @@
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
+#define INVERTER_FL_BASE_ID 0x200
+#define INVERTER_FR_BASE_ID 0x206
+#define INVERTER_RL_BASE_ID 0x20C
+#define INVERTER_RR_BASE_ID 0x212
+
 amkInverter_t	amkFl;
 amkInverter_t	amkFr;
 amkInverter_t	amkRl;
 amkInverter_t	amkRr;
+bms_t			bms;
 ecumasterGps_t	gps;
 misc_t			misc;
 
 canNode_t* nodes [] =
 {
-	(canNode_t*) &amkFl, (canNode_t*) &amkFr, (canNode_t*) &amkRl, (canNode_t*) &amkRr, (canNode_t*) &gps, (canNode_t*) &misc
+	(canNode_t*) &amkFl, (canNode_t*) &amkFr, (canNode_t*) &amkRl, (canNode_t*) &amkRr,
+	(canNode_t*) &bms, (canNode_t*) &gps, (canNode_t*) &misc
 };
 
 // Configuration --------------------------------------------------------------------------------------------------------------
@@ -48,11 +55,6 @@ static CANConfig canConfig =
 			CAN_BTR_BRP(2)		// Baudrate divisor of 3 (1 Mbps)
 };
 
-#define INVERTER_FL_BASE_ID 0x200
-#define INVERTER_FR_BASE_ID 0x206
-#define INVERTER_RL_BASE_ID 0x20C
-#define INVERTER_RR_BASE_ID 0x212
-
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 bool handleRxFrame (CANRxFrame* rxFrame);
@@ -67,7 +69,7 @@ bool handleRxFrame (CANRxFrame* rxFrame)
 			if (rxFrame->SID == nodes [nodeIndex]->addresses [handlerIndex])
 			{
 				// Call the handler
-				nodes [nodeIndex]->handlers [handlerIndex] (rxFrame);
+				nodes [nodeIndex]->handlers [handlerIndex] (&nodes [nodeIndex], rxFrame);
 				return true;
 			}
 		}
@@ -151,6 +153,7 @@ void canThreadStart (tprio_t priority)
 	amkInit (&amkFr, INVERTER_FR_BASE_ID, &CAND1);
 	amkInit (&amkRl, INVERTER_RL_BASE_ID, &CAND1);
 	amkInit (&amkRr, INVERTER_RR_BASE_ID, &CAND1);
+	canNodeInit ((canNode_t*) &bms, &bmsConfig, &CAND1);
 	canNodeInit ((canNode_t*) &gps, &ecumasterGpsConfig, &CAND1);
 	canNodeInit ((canNode_t*) &misc, &miscConfig, &CAND1);
 	
