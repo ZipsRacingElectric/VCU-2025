@@ -5,6 +5,7 @@
 
 // Message IDs
 #define MOTOR_REQUEST_ID_OFFSET 0
+#define MOTOR_FEEDBACK_ID_OFFSET 1
 
 // Scaling for torque values (unit Nm)
 #define TORQUE_FACTOR			0.0098f
@@ -18,31 +19,21 @@
 #define CONTROL_WORD_ENABLE(bit)		(((uint16_t) (bit)) << 10)
 #define CONTROL_WORD_ERROR_RESET(bit)	(((uint16_t) (bit)) << 11)
 
-// Configuration --------------------------------------------------------------------------------------------------------------
+// AMK Status word
 
-static uint16_t addresses [AMK_INVERTER_HANDLER_COUNT] = {};
 
-static canHandler_t* handlers [AMK_INVERTER_HANDLER_COUNT] = {};
+// Functions ------------------------------------------------------------------------------------------------------------------
 
-static const canNodeConfig_t amkInverterConfig =
-{
-	.handlerCount	= AMK_INVERTER_HANDLER_COUNT,
-	.addresses		= addresses,
-	.handlers		= handlers
-};
-
-// Initialization -------------------------------------------------------------------------------------------------------------
-
-void amkInit (amkInverter_t* amk, uint16_t baseId, CANDriver* driver)
+void amkInit (amkInverter_t* amk, amkInverterConfig_t* config)
 {
 	// Store the configuration
-	amk->baseId = baseId;
+	amk->baseId = config->baseId;
 
 	// Initialize the node
-	canNodeInit ((canNode_t*) amk, &amkInverterConfig, driver);
+	canNodeInit ((canNode_t*) amk, amkReceiveHandler, config->driver);
 }
 
-// Transmit -------------------------------------------------------------------------------------------------------------------
+// Transmit Functions ---------------------------------------------------------------------------------------------------------
 
 msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnabled, bool driverEnabled, float torqueRequest,
 	float torqueLimitPositive, float torqueLimitNegative, sysinterval_t timeout)
@@ -83,4 +74,31 @@ msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnab
 	};
 
 	return canTransmitTimeout(amk->driver, CAN_ANY_MAILBOX, &transmit, timeout);
+}
+
+// Receive Functions ----------------------------------------------------------------------------------------------------------
+
+void amkHandleMotorFeedback (amkInverter_t* amk, CANRxFrame* frame);
+
+void amkHandleMotorFeedback (amkInverter_t* amk, CANRxFrame* frame)
+{
+	// TODO(Barach): Implementation
+	(void) amk;
+	(void) frame;
+}
+
+bool amkReceiveHandler (void* node, CANRxFrame* frame)
+{
+	amkInverter_t* amk = (amkInverter_t*) node;
+	uint16_t id = frame->SID;
+
+	// Motor feedback message
+	if (id == amk->baseId + MOTOR_FEEDBACK_ID_OFFSET)
+	{
+		amkHandleMotorFeedback (amk, frame);
+		return true;
+	}
+
+	// No matching ID
+	return false;
 }

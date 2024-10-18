@@ -19,26 +19,20 @@
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
-#define INVERTER_FL_BASE_ID 0x200
-#define INVERTER_FR_BASE_ID 0x206
-#define INVERTER_RL_BASE_ID 0x20C
-#define INVERTER_RR_BASE_ID 0x212
-
 amkInverter_t	amkFl;
 amkInverter_t	amkFr;
 amkInverter_t	amkRl;
 amkInverter_t	amkRr;
 bms_t			bms;
 ecumasterGps_t	gps;
-misc_t			misc;
 
 canNode_t* nodes [] =
 {
 	(canNode_t*) &amkFl, (canNode_t*) &amkFr, (canNode_t*) &amkRl, (canNode_t*) &amkRr,
-	(canNode_t*) &bms, (canNode_t*) &gps, (canNode_t*) &misc
+	(canNode_t*) &bms, (canNode_t*) &gps
 };
 
-// Configuration --------------------------------------------------------------------------------------------------------------
+// Configurations -------------------------------------------------------------------------------------------------------------
 
 /**
  * @brief Configuration of the CAN 1 & CAN 2 peripherals.
@@ -55,65 +49,60 @@ static CANConfig canConfig =
 			CAN_BTR_BRP(2)		// Baudrate divisor of 3 (1 Mbps)
 };
 
+amkInverterConfig_t amkFlConfig =
+{
+	.driver	= &CAND1,
+	.baseId	= 0x200
+};
+
+amkInverterConfig_t amkFrConfig =
+{
+	.driver	= &CAND1,
+	.baseId	= 0x201
+};
+
+amkInverterConfig_t amkRlConfig =
+{
+	.driver	= &CAND1,
+	.baseId	= 0x202
+};
+
+amkInverterConfig_t amkRrConfig =
+{
+	.driver	= &CAND1,
+	.baseId	= 0x203
+};
+
+bmsConfig_t bmsConfig =
+{
+	.driver				= &CAND1,
+	.voltMessageBaseId	= 0x700,
+	.tempMessageBaseId	= 0x712
+};
+
+ecumasterGpsConfig_t gpsConfig =
+{
+	.driver	= &CAND1,
+	.baseId	= 0x400
+};
+
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-bool handleRxFrame (CANRxFrame* rxFrame);
+bool handleFrame (CANRxFrame* frame);
 
-bool handleRxFrame (CANRxFrame* rxFrame)
+bool handleFrame (CANRxFrame* frame)
 {
-	// Search each node's handler for the correct one.
-	for (uint8_t nodeIndex = 0; nodeIndex < sizeof (nodes) / sizeof (canNode_t*); ++nodeIndex)
+	// Call each node's handler until the correct one is found.
+	for (uint8_t index = 0; index < sizeof (nodes) / sizeof (canNode_t*); ++index)
 	{
-		for (uint8_t handlerIndex = 0; handlerIndex < nodes [nodeIndex]->handlerCount; ++handlerIndex)
-		{
-			if (rxFrame->SID == nodes [nodeIndex]->addresses [handlerIndex])
-			{
-				// Call the handler
-				nodes [nodeIndex]->handlers [handlerIndex] (&nodes [nodeIndex], rxFrame);
-				return true;
-			}
-		}
+		if (nodes [index]->handler (nodes [index], frame))
+			return true;
 	}
 
 	return false;
 }
 
-// Thread Entrypoints ---------------------------------------------------------------------------------------------------------
-
-static THD_WORKING_AREA(canTxThreadWa, 512);
-THD_FUNCTION(canTxThread, arg)
-{
-	(void) arg;
-	chRegSetThreadName ("can_tx");
-
-	CANTxFrame txFrame =
-	{
-		.DLC = 8,
-		.RTR = 0,
-		.IDE = CAN_IDE_STD,
-		.SID = 0x123,
-		.data8 =
-		{
-			0x01,
-			0x23,
-			0x45,
-			0x67,
-			0x89,
-			0xAB,
-			0xCD,
-			0xEF
-		}
-	};
-
-	while (true)
-	{
-		msg_t result = canTransmitTimeout (&CAND1, CAN_ANY_MAILBOX, &txFrame, CAN_THREAD_TX_TIMEOUT);
-		if (result != MSG_OK)
-			CAN_THREAD_PRINTF ("Failed to transmit on CAN1: Error %i.\r\n", result);
-
-		chThdSleepMilliseconds (500);
-	}
-}
+// Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
 static THD_WORKING_AREA(canRxThreadWa, 512);
 THD_FUNCTION(canRxThread, arg)
@@ -121,12 +110,12 @@ THD_FUNCTION(canRxThread, arg)
 	(void) arg;
 	chRegSetThreadName ("can_rx");
 
-	CANRxFrame rxFrame;
+	CANRxFrame frame;
 
 	while (true)
 	{
 		// Block until the next message arrives
-		msg_t result = canReceiveTimeout (&CAND1, CAN_ANY_MAILBOX, &rxFrame, TIME_INFINITE);
+		msg_t result = canReceiveTimeout (&CAND1, CAN_ANY_MAILBOX, &frame, TIME_INFINITE);
 		if (result != MSG_OK)
 		{
 			CAN_THREAD_PRINTF ("Failed to receive from CAN1: Error %i.\r\n", result);
@@ -134,9 +123,9 @@ THD_FUNCTION(canRxThread, arg)
 		}
 
 		// Find the handler of the message
-		bool handled = handleRxFrame (&rxFrame);
+		bool handled = handleFrame (&frame);
 		if (!handled)
-			CAN_THREAD_PRINTF ("Received unknown CAN message. ID: 0x%X.\r\n", rxFrame.SID);
+			CAN_THREAD_PRINTF ("Received unknown CAN message. ID: 0x%X.\r\n", frame.SID);
 	}
 }
 
@@ -149,15 +138,13 @@ void canThreadStart (tprio_t priority)
 	palClearLine (LINE_CAN1_STBY);
 
 	// Initialize the CAN nodes
-	amkInit (&amkFl, INVERTER_FL_BASE_ID, &CAND1);
-	amkInit (&amkFr, INVERTER_FR_BASE_ID, &CAND1);
-	amkInit (&amkRl, INVERTER_RL_BASE_ID, &CAND1);
-	amkInit (&amkRr, INVERTER_RR_BASE_ID, &CAND1);
-	canNodeInit ((canNode_t*) &bms, &bmsConfig, &CAND1);
-	canNodeInit ((canNode_t*) &gps, &ecumasterGpsConfig, &CAND1);
-	canNodeInit ((canNode_t*) &misc, &miscConfig, &CAND1);
+	amkInit (&amkFl, &amkFlConfig);
+	amkInit (&amkFr, &amkFrConfig);
+	amkInit (&amkRl, &amkRlConfig);
+	amkInit (&amkRr, &amkRrConfig);
+	bmsInit (&bms, &bmsConfig);
+	ecumasterInit (&gps, &gpsConfig);
 	
-	// Create the CAN threads
-	chThdCreateStatic (&canTxThreadWa, sizeof (canTxThreadWa), priority, canTxThread, NULL);
+	// Create the CAN thread
 	chThdCreateStatic (&canRxThreadWa, sizeof (canRxThreadWa), priority, canRxThread, NULL);
 }

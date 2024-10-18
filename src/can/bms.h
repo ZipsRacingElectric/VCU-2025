@@ -18,70 +18,44 @@
 
 // Constants ------------------------------------------------------------------------------------------------------------------
 
-#define BMS_HANDLER_COUNT		22
-#define BMS_CELL_COUNT			120
-#define BMS_TEMPERATURE_COUNT	50
+#define BMS_CELL_COUNT			144
+#define BMS_TEMPERATURE_COUNT	60
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
+
+struct bmsConfig
+{
+	/// @brief The driver for the bus this node is connected to.
+	CANDriver* driver;
+	/// @brief Base ID of the cell voltage CAN messages.
+	uint16_t voltMessageBaseId;
+	/// @brief Base ID of the temperature CAN messages.
+	uint16_t tempMessageBaseId;
+};
+
+typedef struct bmsConfig bmsConfig_t;
 
 struct bms
 {
 	CAN_NODE_FIELDS;
+	
 	bool tractiveSystemsActive;
+	
 	float cellVoltages [BMS_CELL_COUNT];
 	float temperatures [BMS_TEMPERATURE_COUNT];
+
+	uint16_t voltMessageBaseId;
+	uint16_t tempMessageBaseId;
+	uint8_t voltMessageCount;
+	uint8_t tempMessageCount;
 };
 
 typedef struct bms bms_t;
 
-// Configuration --------------------------------------------------------------------------------------------------------------
+// Functions ------------------------------------------------------------------------------------------------------------------
 
-extern const canNodeConfig_t bmsConfig;
+void bmsInit (bms_t* bms, bmsConfig_t* config);
 
-// Handlers -------------------------------------------------------------------------------------------------------------------
-
-void bmsHandlerCellVoltages0 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages8 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages16 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages24 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages32 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages40 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages48 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages56 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages64 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages72 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages80 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages88 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages96 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages104 (void* node, CANRxFrame* frame);
-
-void bmsHandlerCellVoltages112 (void* node, CANRxFrame* frame);
-
-void bmsHandlerTemperatures0 (void* node, CANRxFrame* frame);
-
-void bmsHandlerTemperatures8 (void* node, CANRxFrame* frame);
-
-void bmsHandlerTemperatures16 (void* node, CANRxFrame* frame);
-
-void bmsHandlerTemperatures24 (void* node, CANRxFrame* frame);
-
-void bmsHandlerTemperatures32 (void* node, CANRxFrame* frame);
-
-void bmsHandlerTemperatures40 (void* node, CANRxFrame* frame);
-
-void bmsHandlerTemperatures48 (void* node, CANRxFrame* frame);
+bool bmsReceiveHandler (void* node, CANRxFrame* frame);
 
 #endif // BMS_H

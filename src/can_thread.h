@@ -8,7 +8,6 @@
 // 
 // To do:
 // - Implement timeout for CAN nodes.
-// - A lot of CAN stuff can be constant.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -16,7 +15,6 @@
 #include "can/amk_inverter.h"
 #include "can/bms.h"
 #include "can/ecumaster_gps_v2.h"
-#include "can/misc_node.h"
 
 // ChibiOS
 #include "ch.h"
@@ -24,10 +22,7 @@
 // Constants ------------------------------------------------------------------------------------------------------------------
 
 /// @brief Enables / disables debugging messages from the CAN thread.
-#define CAN_THREAD_DEBUGGING 0
-
-/// @brief Timeout period for message transmission.
-#define CAN_THREAD_TX_TIMEOUT TIME_MS2I(500)
+#define CAN_THREAD_DEBUGGING 1
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
@@ -37,7 +32,6 @@ extern amkInverter_t	amkRl;
 extern amkInverter_t	amkRr;
 extern bms_t			bms;
 extern ecumasterGps_t	gps;
-extern misc_t			misc;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

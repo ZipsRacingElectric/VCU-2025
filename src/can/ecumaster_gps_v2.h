@@ -16,15 +16,24 @@
 // Includes
 #include "can_node.h"
 
-// Constants ------------------------------------------------------------------------------------------------------------------
-
-#define ECUMASTER_GPS_HANDLER_COUNT 5
-
 // Datatypes ------------------------------------------------------------------------------------------------------------------
+
+struct ecumasterGpsConfig
+{
+	/// @brief The driver for the bus this node is connected to.
+	CANDriver* driver;
+	/// @brief The base CAN ID of this node.
+	uint16_t baseId;
+};
+
+typedef struct ecumasterGpsConfig ecumasterGpsConfig_t;
 
 struct ecumasterGps
 {
 	CAN_NODE_FIELDS;
+
+	uint16_t baseId;
+
 	float speed;
 	float headingMotion;
 	float headingVehicle;
@@ -38,20 +47,10 @@ struct ecumasterGps
 
 typedef struct ecumasterGps ecumasterGps_t;
 
-// Configuration --------------------------------------------------------------------------------------------------------------
+// Functions ------------------------------------------------------------------------------------------------------------------
 
-extern const canNodeConfig_t ecumasterGpsConfig;
+void ecumasterInit (ecumasterGps_t* gps, ecumasterGpsConfig_t* config);
 
-// Handlers -------------------------------------------------------------------------------------------------------------------
-
-void ecumasterGpsHandler0 (void* node, CANRxFrame* frame);
-
-void ecumasterGpsHandler1 (void* node, CANRxFrame* frame);
-
-void ecumasterGpsHandler2 (void* node, CANRxFrame* frame);
-
-void ecumasterGpsHandler3 (void* node, CANRxFrame* frame);
-
-void ecumasterGpsHandler4 (void* node, CANRxFrame* frame);
+bool ecumasterReceiveHandler (void* node, CANRxFrame* frame);
 
 #endif // ECUMASTER_GPS_V2_H

@@ -1,10 +1,8 @@
 // Header
 #include "can_node.h"
 
-void canNodeInit (canNode_t* node, const canNodeConfig_t* config, CANDriver* driver)
+void canNodeInit (canNode_t* node, canReceiveHandler_t* handler, CANDriver* driver)
 {
-	node->driver		= driver;
-	node->handlerCount	= config->handlerCount;
-	node->addresses		= config->addresses;
-	node->handlers		= config->handlers;
+	node->driver	= driver;
+	node->handler	= handler;
 }

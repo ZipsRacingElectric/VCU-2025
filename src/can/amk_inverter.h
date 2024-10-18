@@ -10,18 +10,23 @@
 //
 // To do:
 // - Handler / transmit implementations.
-// - Transmit should expect a node reference, rather than ID.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
 #include "can_node.h"
 
-// Constants ------------------------------------------------------------------------------------------------------------------
-
-#define AMK_INVERTER_HANDLER_COUNT 0
-
 // Datatypes ------------------------------------------------------------------------------------------------------------------
+
+struct amkInverterConfig
+{
+	/// @brief The driver for the bus this node is connected to.
+	CANDriver* driver;
+	/// @brief The base CAN ID of this node.
+	uint16_t baseId;
+};
+
+typedef struct amkInverterConfig amkInverterConfig_t;
 
 struct amkInverter
 {
@@ -31,11 +36,11 @@ struct amkInverter
 
 typedef struct amkInverter amkInverter_t;
 
-// Initialization -------------------------------------------------------------------------------------------------------------
+// Functions ------------------------------------------------------------------------------------------------------------------
 
-void amkInit (amkInverter_t* amk, uint16_t baseId, CANDriver* driver);
+void amkInit (amkInverter_t* amk, amkInverterConfig_t* config);
 
-// Transmit -------------------------------------------------------------------------------------------------------------------
+bool amkReceiveHandler (void* node, CANRxFrame* frame);
 
 // TODO(Barach): Better Documentation
 /**

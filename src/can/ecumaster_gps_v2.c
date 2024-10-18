@@ -1,59 +1,103 @@
 // Header
 #include "ecumaster_gps_v2.h"
 
-// Constants ------------------------------------------------------------------------------------------------------------------
+// Macros ---------------------------------------------------------------------------------------------------------------------
 
+// Functions -------------------------------------------------------------------------------------------------------------------
 
-
-// Configuration --------------------------------------------------------------------------------------------------------------
-
-static uint16_t addresses [ECUMASTER_GPS_HANDLER_COUNT] =
+void ecumasterInit (ecumasterGps_t* gps, ecumasterGpsConfig_t* config)
 {
-	0x400, 0x401, 0x402, 0x403, 0x404
-};
+	// Store the configuration
+	gps->baseId = config->baseId;
+	
+	// Set default values
+	gps->speed			= 0.0f;
+	gps->headingMotion	= 0.0f;
+	gps->headingVehicle	= 0.0f;
+	gps->xAngleRate		= 0.0f;
+	gps->yAngleRate		= 0.0f;
+	gps->zAngleRate		= 0.0f;
+	gps->xAcceleration	= 0.0f;
+	gps->yAcceleration	= 0.0f;
+	gps->zAcceleration	= 0.0f;
 
-static canHandler_t* handlers [ECUMASTER_GPS_HANDLER_COUNT] =
+	// Initialize the CAN node
+	canNodeInit ((canNode_t*) gps, ecumasterReceiveHandler, config->driver);
+}
+
+// Receive Functions ----------------------------------------------------------------------------------------------------------
+
+void ecumasterGpsHandler0 (ecumasterGps_t* gps, CANRxFrame* frame);
+
+void ecumasterGpsHandler1 (ecumasterGps_t* gps, CANRxFrame* frame);
+
+void ecumasterGpsHandler2 (ecumasterGps_t* gps, CANRxFrame* frame);
+
+void ecumasterGpsHandler3 (ecumasterGps_t* gps, CANRxFrame* frame);
+
+void ecumasterGpsHandler4 (ecumasterGps_t* gps, CANRxFrame* frame);
+
+void ecumasterGpsHandler0 (ecumasterGps_t* gps, CANRxFrame* frame)
 {
-	&ecumasterGpsHandler0, &ecumasterGpsHandler1,
-	&ecumasterGpsHandler2, &ecumasterGpsHandler3,
-	&ecumasterGpsHandler4
-};
-
-const canNodeConfig_t ecumasterGpsConfig =
-{
-	.handlerCount	= ECUMASTER_GPS_HANDLER_COUNT,
-	.addresses		= addresses,
-	.handlers		= handlers
-};
-
-// Handlers -------------------------------------------------------------------------------------------------------------------
-
-void ecumasterGpsHandler0 (void* node, CANRxFrame* frame)
-{
-	(void) node;
+	(void) gps;
 	(void) frame;
 }
 
-void ecumasterGpsHandler1 (void* node, CANRxFrame* frame)
+void ecumasterGpsHandler1 (ecumasterGps_t* gps, CANRxFrame* frame)
 {
-	(void) node;
+	(void) gps;
 	(void) frame;
 }
 
-void ecumasterGpsHandler2 (void* node, CANRxFrame* frame)
+void ecumasterGpsHandler2 (ecumasterGps_t* gps, CANRxFrame* frame)
 {
-	(void) node;
+	(void) gps;
 	(void) frame;
 }
 
-void ecumasterGpsHandler3 (void* node, CANRxFrame* frame)
+void ecumasterGpsHandler3 (ecumasterGps_t* gps, CANRxFrame* frame)
 {
-	(void) node;
+	(void) gps;
 	(void) frame;
 }
 
-void ecumasterGpsHandler4 (void* node, CANRxFrame* frame)
+void ecumasterGpsHandler4 (ecumasterGps_t* gps, CANRxFrame* frame)
 {
-	(void) node;
+	(void) gps;
 	(void) frame;
+}
+
+bool ecumasterReceiveHandler (void* node, CANRxFrame* frame)
+{
+	ecumasterGps_t* gps = (ecumasterGps_t*) node;
+	uint16_t id = frame->SID;
+
+	// TODO(Barach): Magic constants and bad names
+	if (id == gps->baseId)
+	{
+		ecumasterGpsHandler0 (gps, frame);
+		return true;
+	}
+	else if (id == gps->baseId + 1)
+	{
+		ecumasterGpsHandler1 (gps, frame);
+		return true;
+	}
+	else if (id == gps->baseId + 2)
+	{
+		ecumasterGpsHandler2 (gps, frame);
+		return true;
+	}
+	else if (id == gps->baseId + 3)
+	{
+		ecumasterGpsHandler3 (gps, frame);
+		return true;
+	}
+	else if (id == gps->baseId + 4)
+	{
+		ecumasterGpsHandler4 (gps, frame);
+		return true;
+	}
+
+	return false;
 }

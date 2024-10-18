@@ -16,13 +16,14 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-typedef void (canHandler_t) (void* node, CANRxFrame* frame);
+/// @brief Datatype representing a CAN node's message receive event handler. A node should check the ID of the received frame
+/// to determine whether or not the message came from it. The handler should return true to indicate the message was recognized
+/// and handled, and return false otherwise.
+typedef bool (canReceiveHandler_t) (void* node, CANRxFrame* frame);
 
 #define CAN_NODE_FIELDS				\
 	CANDriver*		driver;			\
-	uint8_t			handlerCount;	\
-	uint16_t*		addresses;		\
-	canHandler_t**	handlers
+	canReceiveHandler_t*	handler
 
 /**
  * @brief Polymorphic base object representing a node in a CAN bus.
@@ -36,23 +37,14 @@ struct canNode
 
 typedef struct canNode canNode_t;
 
-struct canNodeConfig
-{
-	uint8_t			handlerCount;
-	uint16_t*		addresses;
-	canHandler_t**	handlers;
-};
-
-typedef struct canNodeConfig canNodeConfig_t;
-
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 /**
  * @brief Initializes the CAN node using the given configuration.
  * @param node The node to initialize.
- * @param config The configuration to use.
+ * @param handler The node's receive handler.
  * @param driver The driver for the bus this node is connected to.
  */
-void canNodeInit (canNode_t* node, const canNodeConfig_t* config, CANDriver* driver);
+void canNodeInit (canNode_t* node, canReceiveHandler_t* handler, CANDriver* driver);
 
 #endif // CAN_NODE_H

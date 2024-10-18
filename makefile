@@ -29,7 +29,6 @@ CSRC =	$(ALLCSRC)						\
 		src/can/bms.c					\
 		src/can/can_node.c				\
 		src/can/ecumaster_gps_v2.c		\
-		src/can/misc_node.c				\
 										\
 		src/torque_thread.c				\
 		src/controls/tv_chatfield.c		\
