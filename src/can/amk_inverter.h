@@ -20,10 +20,7 @@
 
 struct amkInverterConfig
 {
-	/// @brief The driver for the bus this node is connected to.
-	CANDriver* driver;
-	/// @brief The base CAN ID of this node.
-	uint16_t baseId;
+	canNodeConfig_t nodeConfig;
 };
 
 typedef struct amkInverterConfig amkInverterConfig_t;
@@ -31,7 +28,6 @@ typedef struct amkInverterConfig amkInverterConfig_t;
 struct amkInverter
 {
 	CAN_NODE_FIELDS;
-	uint16_t baseId;
 };
 
 typedef struct amkInverter amkInverter_t;

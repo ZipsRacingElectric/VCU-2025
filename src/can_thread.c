@@ -32,7 +32,11 @@ canNode_t* nodes [] =
 	(canNode_t*) &bms, (canNode_t*) &gps
 };
 
+#define NODE_COUNT (sizeof (nodes) / sizeof (canNode_t*))
+
 // Configurations -------------------------------------------------------------------------------------------------------------
+
+#define CAN_THREAD_TIMEOUT_POLL_PERIOD TIME_MS2I (10)
 
 /**
  * @brief Configuration of the CAN 1 & CAN 2 peripherals.
@@ -51,56 +55,69 @@ static CANConfig canConfig =
 
 amkInverterConfig_t amkFlConfig =
 {
-	.driver	= &CAND1,
-	.baseId	= 0x200
+	.nodeConfig =
+	{
+		.driver			= &CAND1,
+		.baseId			= 0x200,
+		.timeoutHandler = NULL,
+		.timeoutPeriod	= TIME_MS2I (100),
+	}
 };
 
 amkInverterConfig_t amkFrConfig =
 {
-	.driver	= &CAND1,
-	.baseId	= 0x201
+	.nodeConfig =
+	{
+		.driver			= &CAND1,
+		.baseId			= 0x201,
+		.timeoutHandler = NULL,
+		.timeoutPeriod	= TIME_MS2I (100),
+	}
 };
 
 amkInverterConfig_t amkRlConfig =
 {
-	.driver	= &CAND1,
-	.baseId	= 0x202
+	.nodeConfig =
+	{
+		.driver			= &CAND1,
+		.baseId			= 0x202,
+		.timeoutHandler = NULL,
+		.timeoutPeriod	= TIME_MS2I (100),
+	}
 };
 
 amkInverterConfig_t amkRrConfig =
 {
-	.driver	= &CAND1,
-	.baseId	= 0x203
+	.nodeConfig =
+	{
+		.driver			= &CAND1,
+		.baseId			= 0x203,
+		.timeoutHandler = NULL,
+		.timeoutPeriod	= TIME_MS2I (100),
+	}
 };
 
 bmsConfig_t bmsConfig =
 {
-	.driver				= &CAND1,
-	.voltMessageBaseId	= 0x700,
-	.tempMessageBaseId	= 0x712
+	.nodeConfig =
+	{
+		.driver			= &CAND1,
+		.baseId			= 0x700,
+		.timeoutHandler = NULL,
+		.timeoutPeriod	= TIME_MS2I (100),
+	}
 };
 
 ecumasterGpsConfig_t gpsConfig =
 {
-	.driver	= &CAND1,
-	.baseId	= 0x400
-};
-
-// Functions ------------------------------------------------------------------------------------------------------------------
-
-bool handleFrame (CANRxFrame* frame);
-
-bool handleFrame (CANRxFrame* frame)
-{
-	// Call each node's handler until the correct one is found.
-	for (uint8_t index = 0; index < sizeof (nodes) / sizeof (canNode_t*); ++index)
+	.nodeConfig =
 	{
-		if (nodes [index]->handler (nodes [index], frame))
-			return true;
+		.driver			= &CAND1,
+		.baseId			= 0x400,
+		.timeoutHandler = NULL,
+		.timeoutPeriod	= TIME_MS2I (500),
 	}
-
-	return false;
-}
+};
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
@@ -115,17 +132,19 @@ THD_FUNCTION(canRxThread, arg)
 	while (true)
 	{
 		// Block until the next message arrives
-		msg_t result = canReceiveTimeout (&CAND1, CAN_ANY_MAILBOX, &frame, TIME_INFINITE);
-		if (result != MSG_OK)
+		msg_t result = canReceiveTimeout (&CAND1, CAN_ANY_MAILBOX, &frame, CAN_THREAD_TIMEOUT_POLL_PERIOD);
+		if (result == MSG_OK)
 		{
-			CAN_THREAD_PRINTF ("Failed to receive from CAN1: Error %i.\r\n", result);
-			continue;
+			// Find the handler of the message
+			bool handled = canNodesHandleReceive (nodes, NODE_COUNT, &frame);
+			if (!handled)
+				CAN_THREAD_PRINTF ("Received unknown CAN message. ID: 0x%X.\r\n", frame.SID);
 		}
 
-		// Find the handler of the message
-		bool handled = handleFrame (&frame);
-		if (!handled)
-			CAN_THREAD_PRINTF ("Received unknown CAN message. ID: 0x%X.\r\n", frame.SID);
+		if (result != MSG_TIMEOUT)
+			CAN_THREAD_PRINTF ("Failed to receive from CAN1: Error %i.\r\n", result);
+
+		canNodesCheckTimeout (nodes, NODE_COUNT);
 	}
 }
 
@@ -134,6 +153,7 @@ void canThreadStart (tprio_t priority)
 	// CAN 1 driver initialization
 	if (canStart (&CAND1, &canConfig) != MSG_OK)
 		CAN_THREAD_PRINTF ("Failed to initialize CAN1.");
+
 	
 	palClearLine (LINE_CAN1_STBY);
 

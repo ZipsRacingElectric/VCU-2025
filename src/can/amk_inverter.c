@@ -26,11 +26,8 @@
 
 void amkInit (amkInverter_t* amk, amkInverterConfig_t* config)
 {
-	// Store the configuration
-	amk->baseId = config->baseId;
-
 	// Initialize the node
-	canNodeInit ((canNode_t*) amk, amkReceiveHandler, config->driver);
+	canNodeInit ((canNode_t*) amk, &config->nodeConfig, amkReceiveHandler);
 }
 
 // Transmit Functions ---------------------------------------------------------------------------------------------------------

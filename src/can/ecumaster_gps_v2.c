@@ -6,10 +6,7 @@
 // Functions -------------------------------------------------------------------------------------------------------------------
 
 void ecumasterInit (ecumasterGps_t* gps, ecumasterGpsConfig_t* config)
-{
-	// Store the configuration
-	gps->baseId = config->baseId;
-	
+{	
 	// Set default values
 	gps->speed			= 0.0f;
 	gps->headingMotion	= 0.0f;
@@ -22,7 +19,7 @@ void ecumasterInit (ecumasterGps_t* gps, ecumasterGpsConfig_t* config)
 	gps->zAcceleration	= 0.0f;
 
 	// Initialize the CAN node
-	canNodeInit ((canNode_t*) gps, ecumasterReceiveHandler, config->driver);
+	canNodeInit ((canNode_t*) gps, &config->nodeConfig, ecumasterReceiveHandler);
 }
 
 // Receive Functions ----------------------------------------------------------------------------------------------------------

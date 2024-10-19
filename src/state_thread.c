@@ -30,6 +30,9 @@ THD_FUNCTION(stateThread, arg)
 	while (true)
 	{
 		systime_t timeCurrent = chVTGetSystemTime ();
+		
+		if (bms.timedOut)
+			vehicleState = VEHICLE_STATE_FAILED;
 
 		if (vehicleState == VEHICLE_STATE_LOW_VOLTAGE)
 		{

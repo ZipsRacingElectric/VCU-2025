@@ -25,12 +25,7 @@
 
 struct bmsConfig
 {
-	/// @brief The driver for the bus this node is connected to.
-	CANDriver* driver;
-	/// @brief Base ID of the cell voltage CAN messages.
-	uint16_t voltMessageBaseId;
-	/// @brief Base ID of the temperature CAN messages.
-	uint16_t tempMessageBaseId;
+	canNodeConfig_t nodeConfig;
 };
 
 typedef struct bmsConfig bmsConfig_t;

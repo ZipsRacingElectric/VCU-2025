@@ -16,9 +16,11 @@
 #define WORD_TO_TEMPERATURE(word)	((word) * TEMPERATURE_FACTOR + TEMPERATURE_OFFSET)
 
 // Cell Voltage Message
+#define VOLT_MESSAGE_BASE_ID_OFFSET 0
 #define VOLT_MESSAGE_VOLT_COUNT 8
 
 // Temperature Message
+#define TEMP_MESSAGE_BASE_ID_OFFSET 12
 #define TEMP_MESSAGE_TEMP_COUNT 8
 
 // Function Prototypes --------------------------------------------------------------------------------------------------------
@@ -32,8 +34,8 @@ void bmsHandleTempMessage (bms_t* bms, CANRxFrame* frame, uint8_t tempIndex);
 void bmsInit (bms_t* bms, bmsConfig_t* config)
 {
 	// Store the configuration
-	bms->voltMessageBaseId = config->voltMessageBaseId;
-	bms->tempMessageBaseId = config->tempMessageBaseId;
+	bms->voltMessageBaseId = config->nodeConfig.baseId + VOLT_MESSAGE_BASE_ID_OFFSET;
+	bms->tempMessageBaseId = config->nodeConfig.baseId + TEMP_MESSAGE_BASE_ID_OFFSET;
 
 	bms->voltMessageCount = ceilf ((float) BMS_CELL_COUNT		/ VOLT_MESSAGE_VOLT_COUNT);
 	bms->tempMessageCount = ceilf ((float) BMS_TEMPERATURE_COUNT	/ TEMP_MESSAGE_TEMP_COUNT);
@@ -42,7 +44,7 @@ void bmsInit (bms_t* bms, bmsConfig_t* config)
 	bms->tractiveSystemsActive = false;
 
 	// Initialize the CAN node
-	canNodeInit ((canNode_t*) bms, bmsReceiveHandler, config->driver);
+	canNodeInit ((canNode_t*) bms, &config->nodeConfig, bmsReceiveHandler);
 }
 
 bool bmsReceiveHandler (void *node, CANRxFrame *frame)

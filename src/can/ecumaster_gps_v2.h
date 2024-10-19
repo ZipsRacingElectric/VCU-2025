@@ -20,10 +20,7 @@
 
 struct ecumasterGpsConfig
 {
-	/// @brief The driver for the bus this node is connected to.
-	CANDriver* driver;
-	/// @brief The base CAN ID of this node.
-	uint16_t baseId;
+	canNodeConfig_t nodeConfig;
 };
 
 typedef struct ecumasterGpsConfig ecumasterGpsConfig_t;
@@ -31,8 +28,6 @@ typedef struct ecumasterGpsConfig ecumasterGpsConfig_t;
 struct ecumasterGps
 {
 	CAN_NODE_FIELDS;
-
-	uint16_t baseId;
 
 	float speed;
 	float headingMotion;
