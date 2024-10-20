@@ -20,7 +20,9 @@
 
 struct amkInverterConfig
 {
-	canNodeConfig_t nodeConfig;
+	CANDriver*		driver;
+	sysinterval_t	timeoutPeriod;
+	uint16_t		baseId;
 };
 
 typedef struct amkInverterConfig amkInverterConfig_t;
@@ -28,6 +30,8 @@ typedef struct amkInverterConfig amkInverterConfig_t;
 struct amkInverter
 {
 	CAN_NODE_FIELDS;
+	
+	uint16_t baseId;
 };
 
 typedef struct amkInverter amkInverter_t;
@@ -35,8 +39,6 @@ typedef struct amkInverter amkInverter_t;
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 void amkInit (amkInverter_t* amk, amkInverterConfig_t* config);
-
-bool amkReceiveHandler (void* node, CANRxFrame* frame);
 
 // TODO(Barach): Better Documentation
 /**

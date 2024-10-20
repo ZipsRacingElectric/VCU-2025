@@ -16,46 +16,43 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-/**
- * @brief Event handler for receiving a CAN message. A node should check the ID of the received frame to determine whether or
- * not the message came from it. The handler should return true to indicate the message was recognized and handled, and return
- * false otherwise.
- */
-typedef bool (canReceiveHandler_t) (void* node, CANRxFrame* frame);
+enum canNodeState
+{
+	CAN_NODE_VALID		= 0,
+	CAN_NODE_INCOMPLETE	= 1,
+	CAN_NODE_TIMEOUT	= 2
+};
+
+typedef enum canNodeState canNodeState_t;
 
 /**
- * @brief Event handler for a CAN node timing out.
+ * @brief Function for handling received CAN messages. This function should return a unique index for what message was
+ * received, or -1 to indicate the message does not belong to this node.
  */
-typedef void (canTimeoutHandler_t) (void* node);
+typedef int8_t (canReceiveHandler_t) (void* node, CANRxFrame* frame);
 
-/**
- * @brief Configuration structure for a CAN node.
- */
+typedef void (canEventHandler_t) (void* node);
+
 struct canNodeConfig
 {
-	/// @brief The driver for the bus this node is connected to.
-	CANDriver* driver;
-
-	/// @brief The base CAN ID of this node. All message IDs are local offsets from this value.
-	uint16_t baseId;
-
-	/// @brief The event handler for when a timeout occurs. Use null to ignore.
-	canTimeoutHandler_t* timeoutHandler;
-
-	/// @brief The period of time to timeout after.
-	sysinterval_t timeoutPeriod;
+	CANDriver*				driver;
+	canReceiveHandler_t*	receiveHandler;
+	canEventHandler_t*		timeoutHandler;
+	sysinterval_t			timeoutPeriod;
+	uint8_t					messageCount;
 };
 
 typedef struct canNodeConfig canNodeConfig_t;
 
 #define CAN_NODE_FIELDS							\
+	canNodeState_t			state;				\
 	CANDriver*				driver;				\
-	uint16_t				baseId;				\
 	canReceiveHandler_t*	receiveHandler;		\
-	canTimeoutHandler_t*	timeoutHandler;		\
-	bool					timedOut;			\
+	canEventHandler_t*		timeoutHandler;		\
 	sysinterval_t			timeoutPeriod;		\
-	systime_t				timeoutDeadline
+	systime_t				timeoutDeadline;	\
+	uint64_t				messageFlags;		\
+	uint64_t				validFlags
 
 /**
  * @brief Polymorphic base object representing a node in a CAN bus.
@@ -69,42 +66,47 @@ struct canNode
 
 typedef struct canNode canNode_t;
 
-// Functions ------------------------------------------------------------------------------------------------------------------
+// CAN Node Functions ---------------------------------------------------------------------------------------------------------
 
 /**
- * @brief Initializes the CAN node using the given configuration.
+ * @brief Initializes the CAN node using the specified configuration.
  * @param node The node to initialize.
  * @param config The configuration to use.
- * @param receiveHandler The node's receive handler.
  */
-void canNodeInit (canNode_t* node, canNodeConfig_t* config, canReceiveHandler_t* receiveHandler);
+void canNodeInit (canNode_t* node, canNodeConfig_t* config);
 
 /**
- * @brief Checks whether the CAN node has timed out.
- * @param node The node to use.
+ * @brief Checks whether a received CAN message originated from a node. Resets the node's timeout deadline and message validity
+ * flags if so.
+ * @param node The node to check.
+ * @param frame The received CAN frame.
+ * @return True if the message was identified and handled, false otherwise.
+ */
+bool canNodeReceive (canNode_t* node, CANRxFrame* frame);
+
+/**
+ * @brief Checks whether the CAN node's timeout deadline has expired. If so, the node is put into the @c CAN_NODE_TIMEOUT state
+ * the timeout event handler is called.
+ * @param node The node to check.
  * @param timeCurrent The current system time.
  */
 void canNodeCheckTimeout (canNode_t* node, systime_t timeCurrent);
 
-/**
- * @brief Resets the CAN node's timeout deadline.
- * @param node The node to use.
- */
-void canNodeResetTimeout (canNode_t* node);
+// CAN Node Array Functions ---------------------------------------------------------------------------------------------------
 
 /**
- * @brief Finds the node that can handle a received frame and calls its handler.
- * @param nodes The array of nodes to search.
- * @param nodeCount The number of elements in the array.
- * @param frame The received frame.
- * @return True if the handler was found, false otherwise. 
- */
-bool canNodesHandleReceive (canNode_t** nodes, uint8_t nodeCount, CANRxFrame* frame);
-
-/**
- * @brief Checks whether any of the CAN nodes in an array have timed out.
+ * @brief Checks whether a received CAN message originated from a node within an array.
  * @param nodes The array of nodes to check.
- * @param nodeCount The number of elements in the array.
+ * @param nodeCount The number of elements in @c nodes .
+ * @param frame The received CAN frame.
+ * @return True if the message was identified and handled, false otherwise.
+ */
+bool canNodesReceive (canNode_t** nodes, uint8_t nodeCount, CANRxFrame* frame);
+
+/**
+ * @brief Checks whether the timeout deadline of each CAN node in an array has expired.
+ * @param nodes The array of nodes to check.
+ * @param nodeCount The number of elements in @c nodes .
  */
 void canNodesCheckTimeout (canNode_t** nodes, uint8_t nodeCount);
 

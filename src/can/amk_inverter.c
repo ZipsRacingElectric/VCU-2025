@@ -1,33 +1,49 @@
 // Header
 #include "amk_inverter.h"
 
-// Macros ---------------------------------------------------------------------------------------------------------------------
+// Conversions -----------------------------------------------------------------------------------------------------------------
 
-// Message IDs
-#define MOTOR_REQUEST_ID_OFFSET 0
-#define MOTOR_FEEDBACK_ID_OFFSET 1
-
-// Scaling for torque values (unit Nm)
+// Torque values (unit Nm)
 #define TORQUE_FACTOR			0.0098f
 #define TORQUE_INVERSE_FACTOR	102.040816326530f
 #define TORQUE_TO_WORD(torque)	(int16_t) ((torque) * TORQUE_INVERSE_FACTOR)
 #define WORD_TO_TORQUE(word)	((word) * TORQUE_FACTOR)
 
-// AMK Control word
+// Message IDs ----------------------------------------------------------------------------------------------------------------
+
+#define MOTOR_REQUEST_ID_OFFSET		0x000
+#define MOTOR_FEEDBACK_ID_OFFSET	0x004
+
+// Message Flags --------------------------------------------------------------------------------------------------------------
+
+#define MOTOR_FEEDBACK_FLAG_POS 0x00
+
+// Message Packing ------------------------------------------------------------------------------------------------------------
+
+// AMK Control Word
 #define CONTROL_WORD_INVERTER_ON(bit)	(((uint16_t) (bit)) << 8)
 #define CONTROL_WORD_DC_ON(bit)			(((uint16_t) (bit)) << 9)
 #define CONTROL_WORD_ENABLE(bit)		(((uint16_t) (bit)) << 10)
 #define CONTROL_WORD_ERROR_RESET(bit)	(((uint16_t) (bit)) << 11)
 
-// AMK Status word
+// Function Prototypes --------------------------------------------------------------------------------------------------------
 
+int8_t amkReceiveHandler (void* node, CANRxFrame* frame);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 void amkInit (amkInverter_t* amk, amkInverterConfig_t* config)
 {
 	// Initialize the node
-	canNodeInit ((canNode_t*) amk, &config->nodeConfig, amkReceiveHandler);
+	canNodeConfig_t canConfig =
+	{
+		.driver			= config->driver,
+		.receiveHandler	= amkReceiveHandler,
+		.timeoutHandler	= NULL,
+		.timeoutPeriod	= config->timeoutPeriod,
+		.messageCount	= 1
+	};
+	canNodeInit ((canNode_t*) amk, &canConfig);
 }
 
 // Transmit Functions ---------------------------------------------------------------------------------------------------------
@@ -75,8 +91,6 @@ msg_t amkSendMotorRequest (amkInverter_t* amk, bool inverterEnabled, bool dcEnab
 
 // Receive Functions ----------------------------------------------------------------------------------------------------------
 
-void amkHandleMotorFeedback (amkInverter_t* amk, CANRxFrame* frame);
-
 void amkHandleMotorFeedback (amkInverter_t* amk, CANRxFrame* frame)
 {
 	// TODO(Barach): Implementation
@@ -84,18 +98,21 @@ void amkHandleMotorFeedback (amkInverter_t* amk, CANRxFrame* frame)
 	(void) frame;
 }
 
-bool amkReceiveHandler (void* node, CANRxFrame* frame)
+int8_t amkReceiveHandler (void* node, CANRxFrame* frame)
 {
 	amkInverter_t* amk = (amkInverter_t*) node;
 	uint16_t id = frame->SID;
 
-	// Motor feedback message
+	// Identify and handle the message.
 	if (id == amk->baseId + MOTOR_FEEDBACK_ID_OFFSET)
 	{
+		// Motor feedback message.
 		amkHandleMotorFeedback (amk, frame);
-		return true;
+		return MOTOR_FEEDBACK_FLAG_POS;
 	}
-
-	// No matching ID
-	return false;
+	else
+	{
+		// Message doesn't belong to this node.
+		return -1;
+	}
 }

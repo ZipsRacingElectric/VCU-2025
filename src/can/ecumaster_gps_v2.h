@@ -20,7 +20,8 @@
 
 struct ecumasterGpsConfig
 {
-	canNodeConfig_t nodeConfig;
+	CANDriver*		driver;
+	sysinterval_t	timeoutPeriod;
 };
 
 typedef struct ecumasterGpsConfig ecumasterGpsConfig_t;
@@ -45,7 +46,5 @@ typedef struct ecumasterGps ecumasterGps_t;
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 void ecumasterInit (ecumasterGps_t* gps, ecumasterGpsConfig_t* config);
-
-bool ecumasterReceiveHandler (void* node, CANRxFrame* frame);
 
 #endif // ECUMASTER_GPS_V2_H

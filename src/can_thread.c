@@ -55,68 +55,42 @@ static CANConfig canConfig =
 
 amkInverterConfig_t amkFlConfig =
 {
-	.nodeConfig =
-	{
-		.driver			= &CAND1,
-		.baseId			= 0x200,
-		.timeoutHandler = NULL,
-		.timeoutPeriod	= TIME_MS2I (100),
-	}
+	.driver			= &CAND1,
+	.baseId			= 0x200,
+	.timeoutPeriod	= TIME_MS2I (100),
 };
 
 amkInverterConfig_t amkFrConfig =
 {
-	.nodeConfig =
-	{
-		.driver			= &CAND1,
-		.baseId			= 0x201,
-		.timeoutHandler = NULL,
-		.timeoutPeriod	= TIME_MS2I (100),
-	}
+	.driver			= &CAND1,
+	.baseId			= 0x201,
+	.timeoutPeriod	= TIME_MS2I (100),
 };
 
 amkInverterConfig_t amkRlConfig =
 {
-	.nodeConfig =
-	{
-		.driver			= &CAND1,
-		.baseId			= 0x202,
-		.timeoutHandler = NULL,
-		.timeoutPeriod	= TIME_MS2I (100),
-	}
+	.driver			= &CAND1,
+	.baseId			= 0x202,
+	.timeoutPeriod	= TIME_MS2I (100),
 };
 
 amkInverterConfig_t amkRrConfig =
 {
-	.nodeConfig =
-	{
-		.driver			= &CAND1,
-		.baseId			= 0x203,
-		.timeoutHandler = NULL,
-		.timeoutPeriod	= TIME_MS2I (100),
-	}
+	.driver			= &CAND1,
+	.baseId			= 0x203,
+	.timeoutPeriod	= TIME_MS2I (100),
 };
 
 bmsConfig_t bmsConfig =
 {
-	.nodeConfig =
-	{
-		.driver			= &CAND1,
-		.baseId			= 0x700,
-		.timeoutHandler = NULL,
-		.timeoutPeriod	= TIME_MS2I (100),
-	}
+	.driver			= &CAND1,
+	.timeoutPeriod	= TIME_MS2I (100),
 };
 
 ecumasterGpsConfig_t gpsConfig =
 {
-	.nodeConfig =
-	{
-		.driver			= &CAND1,
-		.baseId			= 0x400,
-		.timeoutHandler = NULL,
-		.timeoutPeriod	= TIME_MS2I (500),
-	}
+	.driver			= &CAND1,
+	.timeoutPeriod	= TIME_MS2I (100),
 };
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
@@ -136,7 +110,7 @@ THD_FUNCTION(canRxThread, arg)
 		if (result == MSG_OK)
 		{
 			// Find the handler of the message
-			bool handled = canNodesHandleReceive (nodes, NODE_COUNT, &frame);
+			bool handled = canNodesReceive (nodes, NODE_COUNT, &frame);
 			if (!handled)
 				CAN_THREAD_PRINTF ("Received unknown CAN message. ID: 0x%X.\r\n", frame.SID);
 		}
