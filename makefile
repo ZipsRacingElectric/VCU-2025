@@ -25,10 +25,6 @@ CSRC =	$(ALLCSRC)						\
 		src/peripherals/pedals.c		\
 										\
 		src/can_thread.c				\
-		src/can/amk_inverter.c			\
-		src/can/bms.c					\
-		src/can/can_node.c				\
-		src/can/ecumaster_gps_v2.c		\
 										\
 		src/torque_thread.c				\
 		src/controls/tv_chatfield.c		\
@@ -36,7 +32,11 @@ CSRC =	$(ALLCSRC)						\
 		src/controls/torque_vectoring.c
 
 # Common library includes
-include common/make/peripherals/mc24lc32.mk
+include common/src/peripherals/mc24lc32.mk
+include common/src/can/amk_inverter.mk
+include common/src/can/bms.mk
+include common/src/can/can_node.mk
+include common/src/can/ecumaster_gps_v2.mk
 
 # Compiler flags
 USE_OPT = -O0
