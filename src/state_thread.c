@@ -3,6 +3,7 @@
 
 // Includes
 #include "can_thread.h"
+#include "can/transmit.h"
 #include "peripherals.h"
 
 // ChibiOS
@@ -11,9 +12,14 @@
 // Constants ------------------------------------------------------------------------------------------------------------------
 
 #define STATE_CONTROL_PERIOD	TIME_MS2I (20)
+#define STATE_MESSAGE_PRESCALAR	5
 
 #define BUZZER_TIME_PERIOD		TIME_MS2I (1000)
 #define HV_INACTIVE_PERIOD		TIME_MS2I (10)
+
+// Global Data ----------------------------------------------------------------------------------------------------------------
+
+vehicleState_t vehicleState;
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
@@ -27,11 +33,13 @@ THD_FUNCTION(stateThread, arg)
 	systime_t timeoutBuzzer = timePrevious;
 	systime_t timeoutHv = timePrevious;
 
+	uint16_t messageCounter = 0;
+
 	while (true)
 	{
 		systime_t timeCurrent = chVTGetSystemTime ();
 		
-		if (bms.timedOut)
+		if (bms.state != CAN_NODE_VALID)
 			vehicleState = VEHICLE_STATE_FAILED;
 
 		if (vehicleState == VEHICLE_STATE_LOW_VOLTAGE)
@@ -63,6 +71,13 @@ THD_FUNCTION(stateThread, arg)
 		if (timeCurrent >= timeoutBuzzer)
 			palClearLine (LINE_BUZZER);
 		
+		++messageCounter;
+		if (messageCounter >= STATE_MESSAGE_PRESCALAR)
+		{
+			transmitStatusMessage (&CAND1);
+			messageCounter = 0;
+		}
+
 		// Sleep until the next loop
 		systime_t timeNext = chTimeAddX (timePrevious, STATE_CONTROL_PERIOD);
 		timePrevious = chThdSleepUntilWindowed (timePrevious, timeNext);

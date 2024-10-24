@@ -26,7 +26,7 @@
 
 analog_t	adc;
 pedals_t	pedals;
-mc24lc32_t	eeprom;
+eepromMap_t	eeprom;
 float		steeringAngle;
 float		glvBatteryVoltage;
 
@@ -82,11 +82,10 @@ static analogConfig_t adcConfig =
 };
 
 /// @brief Configuration for the on-board EEPROM.
-static mc24lc32Config_t eepromConfig =
+static eepromMapConfig_t eepromConfig =
 {
-	.addr			= 0x50,
-	.i2c			= &I2CD1,
-	.magicString	= "VCU_2024_10_07"
+	.addr	= 0x50,
+	.i2c	= &I2CD1
 };
 
 /// @brief Configuration for the pedal sensors (computed at runtime).
@@ -101,9 +100,9 @@ void peripheralsInit ()
 		PERIPHERAL_PRINTF ("Failed to initialize I2C1.\r\n");
 
 	// EEPROM initialization
-	if (!mc24lc32Init (&eeprom, &eepromConfig))
+	if (!eepromMapInit (&eeprom, &eepromConfig))
 	{
-		switch (eeprom.state)
+		switch (eeprom.device.state)
 		{
 		case MC24LC32_STATE_INVALID:
 			PERIPHERAL_PRINTF ("EEPROM memory is invalid.\r\n");
@@ -119,15 +118,14 @@ void peripheralsInit ()
 		PERIPHERAL_PRINTF ("Failed to initialize the ADC.\r\n");
 
 	// Pedals initialization
-	// TODO(Barach): From EEPROM
-	pedalsConfig.apps1Config.rawMin	= 0;
-	pedalsConfig.apps1Config.rawMax	= 4095;
-	pedalsConfig.apps2Config.rawMin	= 0;
-	pedalsConfig.apps2Config.rawMax	= 4095;
-	pedalsConfig.bseFConfig.rawMin	= 0;
-	pedalsConfig.bseFConfig.rawMax	= 4095;
-	pedalsConfig.bseRConfig.rawMin	= 0;
-	pedalsConfig.bseRConfig.rawMax	= 4095;
+	pedalsConfig.apps1Config.rawMin	= *eeprom.apps1Min;
+	pedalsConfig.apps1Config.rawMax	= *eeprom.apps1Max;
+	pedalsConfig.apps2Config.rawMin	= *eeprom.apps2Min;
+	pedalsConfig.apps2Config.rawMax	= *eeprom.apps2Max;
+	pedalsConfig.bseFConfig.rawMin	= *eeprom.bseFMin;
+	pedalsConfig.bseFConfig.rawMax	= *eeprom.bseFMax;
+	pedalsConfig.bseRConfig.rawMin	= *eeprom.bseRMin;
+	pedalsConfig.bseRConfig.rawMax	= *eeprom.bseRMax;
 
 	if (!pedalsInit (&pedals, &pedalsConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize the pedals.");

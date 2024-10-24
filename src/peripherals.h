@@ -5,8 +5,8 @@
 
 // Includes
 #include "peripherals/analog.h"
+#include "peripherals/eeprom_map.h"
 #include "peripherals/pedals.h"
-#include "peripherals/mc24lc32.h"
 
 // Debugging ------------------------------------------------------------------------------------------------------------------
 
@@ -16,8 +16,8 @@
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
 extern analog_t		adc;
+extern eepromMap_t	eeprom;
 extern pedals_t		pedals;
-extern mc24lc32_t	eeprom;
 extern float		steeringAngle;
 extern float		glvBatteryVoltage;
 

@@ -20,7 +20,7 @@ typedef enum vehicleState vehicleState_t;
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
-vehicleState_t vehicleState;
+extern vehicleState_t vehicleState;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

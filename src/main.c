@@ -12,6 +12,7 @@
 #include "debug.h"
 #include "can_thread.h"
 #include "peripherals.h"
+#include "state_thread.h"
 #include "torque_thread.h"
 
 // ChibiOS
@@ -36,6 +37,9 @@ int main (void)
 
 	// Torque Thread Initialization
 	torqueThreadStart (NORMALPRIO);
+
+	// State Thread Initialization
+	stateThreadStart (NORMALPRIO);
 
 	// Do nothing.
 	while (true)

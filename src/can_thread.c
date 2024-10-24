@@ -4,6 +4,7 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
+#include "can/receive.h"
 #include "debug.h"
 
 // ChibiOS
@@ -110,12 +111,14 @@ THD_FUNCTION(canRxThread, arg)
 		if (result == MSG_OK)
 		{
 			// Find the handler of the message
-			bool handled = canNodesReceive (nodes, NODE_COUNT, &frame);
-			if (!handled)
-				CAN_THREAD_PRINTF ("Received unknown CAN message. ID: 0x%X.\r\n", frame.SID);
+			if (!canNodesReceive (nodes, NODE_COUNT, &frame))
+			{
+				// If no node handled the message, check if it is directly for the VCU.
+				if (!receiveMessage (&frame))
+					CAN_THREAD_PRINTF ("Received unknown CAN message. ID: 0x%X.\r\n", frame.SID);
+			}
 		}
-
-		if (result != MSG_TIMEOUT)
+		else if (result != MSG_TIMEOUT)
 			CAN_THREAD_PRINTF ("Failed to receive from CAN1: Error %i.\r\n", result);
 
 		canNodesCheckTimeout (nodes, NODE_COUNT);
