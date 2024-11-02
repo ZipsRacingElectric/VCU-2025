@@ -23,11 +23,13 @@ void pedalSensorCallback (void* handler, uint16_t raw)
 
 	// Config check
 	if (!sensor->configValid)
+	{
+		sensor->valueValid = false;
 		return;
+	}
 
 	// Range check
-	if (raw < sensor->rawMin || raw > sensor->rawMax)
-		sensor->valueValid = false;
+	sensor->valueValid = raw < sensor->rawMin || raw > sensor->rawMax;
 
 	// Linear interpolation
 	sensor->value = (float) (raw - sensor->rawMin) / (sensor->rawMax - sensor->rawMin);

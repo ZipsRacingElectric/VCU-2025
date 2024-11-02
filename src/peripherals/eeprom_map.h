@@ -42,6 +42,10 @@ struct eepromMap
 	uint16_t* bseFMax;
 	uint16_t* bseRMin;
 	uint16_t* bseRMax;
+
+	uint16_t* sasMin;
+	uint16_t* sasMax;
+	float* sasAngleRange;
 };
 
 typedef struct eepromMap eepromMap_t;
@@ -49,7 +53,5 @@ typedef struct eepromMap eepromMap_t;
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 bool eepromMapInit (eepromMap_t* eeprom, eepromMapConfig_t* config);
-
-bool eepromMapWriteThrough (eepromMap_t* eeprom, void* data, uint8_t dataCount);
 
 #endif // EEPROM_MAP_H
