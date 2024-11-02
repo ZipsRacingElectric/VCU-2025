@@ -3,6 +3,7 @@
 
 // Includes
 #include "can_thread.h"
+#include "can/transmit.h"
 #include "debug.h"
 #include "peripherals.h"
 #include "controls/torque_vectoring.h"
@@ -74,6 +75,9 @@ THD_FUNCTION(torqueThread, arg)
 			TORQUE_THREAD_PRINTF ("CAN Error");
 			break;
 		}
+
+		// Broadcast the sensor inputs message
+		transmitSensorInputs (&CAND1, TIME_MS2I (100));
 
 		// Control frequency
 		// TODO(Barach): Actual timing.

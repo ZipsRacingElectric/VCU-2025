@@ -25,14 +25,12 @@
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
 analog_t	adc;
-pedals_t	pedals;
 eepromMap_t	eeprom;
-float		steeringAngle;
 float		glvBatteryVoltage;
+pedals_t	pedals;
+sas_t		sas;
 
 // Functions Prototypes -------------------------------------------------------------------------------------------------------
-
-void steeringAngleCallback (void* arg, uint16_t value);
 
 void glvBatteryCallback (void* arg, uint16_t value);
 
@@ -66,7 +64,7 @@ static analogConfig_t adcConfig =
 		pedalSensorCallback,
 		pedalSensorCallback,
 		pedalSensorCallback,
-		steeringAngleCallback,
+		sasCallback,
 		glvBatteryCallback
 	},
 	.handlers =
@@ -75,7 +73,7 @@ static analogConfig_t adcConfig =
 		&pedals.apps2,
 		&pedals.bseF,
 		&pedals.bseR,
-		NULL,
+		&sas,
 		NULL
 	},
 	.sampleCycles = ADC_SAMPLE_480
@@ -88,8 +86,11 @@ static eepromMapConfig_t eepromConfig =
 	.i2c	= &I2CD1
 };
 
-/// @brief Configuration for the pedal sensors (computed at runtime).
+/// @brief Configuration for the pedal sensors. (computed at runtime).
 static pedalsConfig_t pedalsConfig;
+
+/// @brief Configuration for the steering-angle sensor. (computed at runtime).
+static sasConfig_t sasConfig;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -98,6 +99,10 @@ void peripheralsInit ()
 	// I2C 3 driver initialization
 	if (i2cStart (&I2CD1, &i2cConfig) != MSG_OK)
 		PERIPHERAL_PRINTF ("Failed to initialize I2C1.\r\n");
+
+	// Analog sensor initialization
+	if (!analogInit (&adc, &adcConfig))
+		PERIPHERAL_PRINTF ("Failed to initialize the ADC.\r\n");
 
 	// EEPROM initialization
 	if (!eepromMapInit (&eeprom, &eepromConfig))
@@ -113,10 +118,11 @@ void peripheralsInit ()
 		}
 	}
 
-	// Analog sensor initialization
-	if (!analogInit (&adc, &adcConfig))
-		PERIPHERAL_PRINTF ("Failed to initialize the ADC.\r\n");
+	peripheralsReinit ();
+}
 
+void peripheralsReinit (void)
+{
 	// Pedals initialization
 	pedalsConfig.apps1Config.rawMin	= *eeprom.apps1Min;
 	pedalsConfig.apps1Config.rawMax	= *eeprom.apps1Max;
@@ -129,18 +135,17 @@ void peripheralsInit ()
 
 	if (!pedalsInit (&pedals, &pedalsConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize the pedals.");
-}
 
-void steeringAngleCallback (void* arg, uint16_t value)
-{
-	(void) arg;
-	// TODO(Barach): Calibration values.
-	steeringAngle = (3.3f * value / 4096.0f);
+	// SAS initialization
+	sasConfig.rawMin = *eeprom.sasMin;
+	sasConfig.rawMax = *eeprom.sasMax;
+
+	if (!sasInit (&sas, &sasConfig))
+		PERIPHERAL_PRINTF ("Failed to initialize the SAS.");
 }
 
 void glvBatteryCallback (void* arg, uint16_t value)
 {
 	(void) arg;
-	// TODO(Barach): Is is 4096 or 4095?
 	glvBatteryVoltage = (3.3f * value / 4096.0f) * (R24 + R32) / R32;
 }

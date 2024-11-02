@@ -63,7 +63,7 @@ void HardFault_Handler (void)
 	palClearLine (LINE_IND_BLU);
 
 	// Halt for the debugger
-	__asm__ ("bkpt");
+	__ASM ("bkpt 0");
 
 	// Infinite loop to halt the program
 	while (true);

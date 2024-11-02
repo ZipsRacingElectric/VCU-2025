@@ -16,24 +16,25 @@ BOARDDIR := ./build/board
 ALLINC += $(CURDIR)/src
 
 # Source files
-CSRC =	$(ALLCSRC)						\
-		src/main.c						\
-		src/debug.c						\
-										\
-		src/peripherals.c				\
-		src/peripherals/analog.c		\
-		src/peripherals/eeprom_map.c	\
-		src/peripherals/pedals.c		\
-										\
-		src/can_thread.c				\
-		src/can/receive.c				\
-		src/can/transmit.c				\
-										\
-		src/torque_thread.c				\
-		src/controls/tv_chatfield.c		\
-		src/controls/tv_straight_diff.c	\
-		src/controls/torque_vectoring.c	\
-										\
+CSRC =	$(ALLCSRC)							\
+		src/main.c							\
+		src/debug.c							\
+											\
+		src/peripherals.c					\
+		src/peripherals/analog.c			\
+		src/peripherals/eeprom_map.c		\
+		src/peripherals/pedals.c			\
+		src/peripherals/steering_angle.c	\
+											\
+		src/can_thread.c					\
+		src/can/receive.c					\
+		src/can/transmit.c					\
+											\
+		src/torque_thread.c					\
+		src/controls/tv_chatfield.c			\
+		src/controls/tv_straight_diff.c		\
+		src/controls/torque_vectoring.c		\
+											\
 		src/state_thread.c
 
 # Common library includes

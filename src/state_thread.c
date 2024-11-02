@@ -74,7 +74,8 @@ THD_FUNCTION(stateThread, arg)
 		++messageCounter;
 		if (messageCounter >= STATE_MESSAGE_PRESCALAR)
 		{
-			transmitStatusMessage (&CAND1);
+			// TODO(Barach): Proper timeout.
+			transmitStatusMessage (&CAND1, TIME_MS2I (100));
 			messageCounter = 0;
 		}
 

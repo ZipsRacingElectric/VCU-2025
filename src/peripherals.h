@@ -7,6 +7,7 @@
 #include "peripherals/analog.h"
 #include "peripherals/eeprom_map.h"
 #include "peripherals/pedals.h"
+#include "peripherals/steering_angle.h"
 
 // Debugging ------------------------------------------------------------------------------------------------------------------
 
@@ -17,9 +18,9 @@
 
 extern analog_t		adc;
 extern eepromMap_t	eeprom;
-extern pedals_t		pedals;
-extern float		steeringAngle;
 extern float		glvBatteryVoltage;
+extern pedals_t		pedals;
+extern sas_t		sas;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -27,5 +28,10 @@ extern float		glvBatteryVoltage;
  * @brief Initializes the devices peripherals.
  */
 void peripheralsInit (void);
+
+/**
+ * @brief Re-initializes the device peripherals after a change has been made to the device EEPROM.
+ */
+void peripheralsReinit (void);
 
 #endif // PERIPHERALS_H
