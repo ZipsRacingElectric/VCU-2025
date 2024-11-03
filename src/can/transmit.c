@@ -59,9 +59,9 @@ msg_t transmitSensorInputs (CANDriver* driver, sysinterval_t timeout)
 		.data8	=
 		{
 			PERCENT_TO_WORD (pedals.apps1.value * 100.0f),
-			PERCENT_TO_WORD (pedals.apps1.value * 100.0f),
-			PERCENT_TO_WORD (pedals.apps1.value * 100.0f),
-			PERCENT_TO_WORD (pedals.apps1.value * 100.0f),
+			PERCENT_TO_WORD (pedals.apps2.value * 100.0f),
+			PERCENT_TO_WORD (pedals.bseF.value * 100.0f),
+			PERCENT_TO_WORD (pedals.bseR.value * 100.0f),
 			ANGLE_TO_WORD (sas.value)
 		}
 	};
