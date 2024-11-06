@@ -4,7 +4,7 @@
 // Date Created: 2024.09.21
 //
 // To do:
-// - Better fault handling. Most of this can be in common, but parts will be board specific.
+// - Thread priorities.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -48,11 +48,8 @@ int main (void)
 
 // Interrupts -----------------------------------------------------------------------------------------------------------------
 
-void HardFault_Handler (void)
+void faultCallback (void)
 {
-	// Disable further interrupts
-	__asm__ ("cpsid i");
-
 	// Open the shutdown loop
 	palClearLine (LINE_SHUTDOWN_EN);
 
@@ -61,10 +58,4 @@ void HardFault_Handler (void)
 	palSetLine (LINE_IND_RED);
 	palClearLine (LINE_IND_GRN);
 	palClearLine (LINE_IND_BLU);
-
-	// Halt for the debugger
-	__ASM ("bkpt 0");
-
-	// Infinite loop to halt the program
-	while (true);
 }

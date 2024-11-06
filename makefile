@@ -38,6 +38,7 @@ CSRC =	$(ALLCSRC)							\
 		src/state_thread.c
 
 # Common library includes
+include common/src/fault_handler.mk
 include common/src/peripherals/mc24lc32.mk
 include common/src/can/amk_inverter.mk
 include common/src/can/bms.mk

@@ -10,7 +10,7 @@
 			"type": "cortex-debug",
 			"servertype": "openocd",
 			"device": "STM32F405RE",
-			"svdFile": "cfg/stm32f405.svd",
+			"svdFile": "common/stm32f405.svd",
 			"configFiles":
 			[
 				"interface/stlink.cfg",
