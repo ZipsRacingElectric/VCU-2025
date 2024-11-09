@@ -5,6 +5,7 @@
 //
 // To do:
 // - Thread priorities.
+// - Clean typedefs
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -48,14 +49,20 @@ int main (void)
 
 // Interrupts -----------------------------------------------------------------------------------------------------------------
 
-void faultCallback (void)
+void hardFaultCallback (void)
 {
 	// Open the shutdown loop
 	palClearLine (LINE_SHUTDOWN_EN);
 
 	// Set the fault LEDs
-	palSetLine (LINE_VCU_FLT);
-	palSetLine (LINE_IND_RED);
-	palClearLine (LINE_IND_GRN);
-	palClearLine (LINE_IND_BLU);
+	palClearLine (LINE_VCU_FLT);
+	palClearLine (LINE_IND_RED);
+	palSetLine (LINE_IND_GRN);
+	palSetLine (LINE_IND_BLU);
+}
+
+void canFaultCallback (msg_t result)
+{
+	(void) result;
+	canFault = true;
 }

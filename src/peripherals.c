@@ -17,9 +17,9 @@
 // Macros ---------------------------------------------------------------------------------------------------------------------
 
 #if PERIPHERAL_DEBUGGING
-	#define PERIPHERAL_PRINTF(format, ...) DEBUG_PRINTF("[Peripherals] " format, ##__VA_ARGS__)
+	#define PERIPHERAL_PRINTF(format, ...) DEBUG_PRINTF ("[Peripherals] " format, ##__VA_ARGS__)
 #else
-	#define PERIPHERAL_PRINTF(format, ...) while(false)
+	#define PERIPHERAL_PRINTF(format, ...) while (false)
 #endif // PERIPHERAL_DEBUGGING
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------

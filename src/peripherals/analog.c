@@ -7,9 +7,9 @@
 // Macros ---------------------------------------------------------------------------------------------------------------------
 
 #if ANALOG_DEBUGGING
-	#define ANALOG_PRINTF(format, ...) DEBUG_PRINTF("[Analog] " format, ##__VA_ARGS__)
+	#define ANALOG_PRINTF(format, ...) DEBUG_PRINTF ("[Analog] " format, ##__VA_ARGS__)
 #else
-	#define ANALOG_PRINTF(format, ...) while(false)
+	#define ANALOG_PRINTF(format, ...) while (false)
 #endif // ANALOG_DEBUGGING
 
 // Functions ------------------------------------------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ bool analogInit (analog_t* analog, analogConfig_t* config)
 							(config->sampleCycles << ADC_SMPR2_SMP0_Pos),	// Channel 0 sample time.
 		.htr			=	0,												// No watchdog threshold
 		.ltr			=	0,
-		.sqr1			= 	(ADC_SQR1_NUM_CH (config->channelCount)) |		// Number of channels in the conversion sequence..
+		.sqr1			= 	(ADC_SQR1_NUM_CH (config->channelCount)) |		// Number of channels in the conversion sequence.
 							(ADC_SQR1_SQ16_N (config->channels [15])) |		// Sample 16 channel number.
 							(ADC_SQR1_SQ15_N (config->channels [14])) |		// Sample 15 channel number.
 							(ADC_SQR1_SQ14_N (config->channels [13])) |		// Sample 14 channel number.

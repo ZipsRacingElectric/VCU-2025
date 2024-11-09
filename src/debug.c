@@ -29,7 +29,7 @@ void debugInit (const char* boardName)
 {
 	// Create the heartbeat thread
 	#if DEBUG_HEARTBEAT_ENABLED
-		chThdCreateStatic (heartbeatWa, sizeof(heartbeatWa), NORMALPRIO, heartbeatThread, NULL);
+		chThdCreateStatic (heartbeatWa, sizeof (heartbeatWa), NORMALPRIO, heartbeatThread, NULL);
 	#endif // DEBUG_HEARTBEAT_ENABLED
 
 	// Start the serial driver

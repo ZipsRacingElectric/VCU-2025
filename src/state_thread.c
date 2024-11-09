@@ -21,10 +21,17 @@
 
 vehicleState_t vehicleState;
 
+bool torquePlausible = false;
+bool canFault = false;
+
+// Function Prototypes --------------------------------------------------------------------------------------------------------
+
+void stateThreadSetIndicator (void);
+
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
-static THD_WORKING_AREA(stateThreadWa, 512);
-THD_FUNCTION(stateThread, arg)
+static THD_WORKING_AREA (stateThreadWa, 512);
+THD_FUNCTION (stateThread, arg)
 {
 	(void) arg;
 	chRegSetThreadName ("state_control");
@@ -38,7 +45,7 @@ THD_FUNCTION(stateThread, arg)
 	while (true)
 	{
 		systime_t timeCurrent = chVTGetSystemTime ();
-		
+
 		if (bms.state != CAN_NODE_VALID)
 			vehicleState = VEHICLE_STATE_FAILED;
 
@@ -70,7 +77,7 @@ THD_FUNCTION(stateThread, arg)
 		// Stop the RTD buzzer if it is past the deadline.
 		if (timeCurrent >= timeoutBuzzer)
 			palClearLine (LINE_BUZZER);
-		
+
 		++messageCounter;
 		if (messageCounter >= STATE_MESSAGE_PRESCALAR)
 		{
@@ -78,6 +85,9 @@ THD_FUNCTION(stateThread, arg)
 			transmitStatusMessage (&CAND1, TIME_MS2I (100));
 			messageCounter = 0;
 		}
+
+		// Update the VCU indicator
+		stateThreadSetIndicator ();
 
 		// Sleep until the next loop
 		systime_t timeNext = chTimeAddX (timePrevious, STATE_CONTROL_PERIOD);
@@ -91,4 +101,11 @@ void stateThreadStart (tprio_t priority)
 {
 	// Start the torque control thread
 	chThdCreateStatic (&stateThreadWa, sizeof (stateThreadWa), priority, stateThread, NULL);
+}
+
+void stateThreadSetIndicator (void)
+{
+	palWriteLine (LINE_IND_RED, torquePlausible);
+	palWriteLine (LINE_IND_GRN, pedals.valid);
+	palWriteLine (LINE_IND_BLU, ~(uint32_t) canFault);
 }

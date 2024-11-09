@@ -31,6 +31,9 @@ typedef enum vehicleState vehicleState_t;
 
 extern vehicleState_t vehicleState;
 
+extern bool torquePlausible;
+extern bool canFault;
+
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 /**

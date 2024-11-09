@@ -13,9 +13,9 @@
 // Macros ---------------------------------------------------------------------------------------------------------------------
 
 #if CAN_THREAD_DEBUGGING
-	#define CAN_THREAD_PRINTF(format, ...) DEBUG_PRINTF("[CAN Thread] " format, ##__VA_ARGS__)
+	#define CAN_THREAD_PRINTF(format, ...) DEBUG_PRINTF ("[CAN Thread] " format, ##__VA_ARGS__)
 #else
-	#define CAN_THREAD_PRINTF(format, ...) while(false)
+	#define CAN_THREAD_PRINTF(format, ...) while (false)
 #endif // CAN_THREAD_DEBUGGING
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
@@ -48,10 +48,10 @@ static CANConfig canConfig =
 	.mcr = 	CAN_MCR_ABOM |		// Automatic bus-off management.
 			CAN_MCR_AWUM |		// Automatic wakeup mode.
 			CAN_MCR_TXFP,		// Chronologic FIFI priority.
-	.btr =	CAN_BTR_SJW(0) |	// Max 1 TQ resynchronization jump. 
-			CAN_BTR_TS2(1) |	// 2 TQ for time segment 2
-			CAN_BTR_TS1(10) |	// 11 TQ for time segment 1
-			CAN_BTR_BRP(2)		// Baudrate divisor of 3 (1 Mbps)
+	.btr =	CAN_BTR_SJW (0) |	// Max 1 TQ resynchronization jump.
+			CAN_BTR_TS2 (1) |	// 2 TQ for time segment 2
+			CAN_BTR_TS1 (10) |	// 11 TQ for time segment 1
+			CAN_BTR_BRP (2)		// Baudrate divisor of 3 (1 Mbps)
 };
 
 amkInverterConfig_t amkFlConfig =
@@ -96,8 +96,8 @@ ecumasterGpsConfig_t gpsConfig =
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
-static THD_WORKING_AREA(canRxThreadWa, 512);
-THD_FUNCTION(canRxThread, arg)
+static THD_WORKING_AREA (canRxThreadWa, 512);
+THD_FUNCTION (canRxThread, arg)
 {
 	(void) arg;
 	chRegSetThreadName ("can_rx");
@@ -131,7 +131,6 @@ void canThreadStart (tprio_t priority)
 	if (canStart (&CAND1, &canConfig) != MSG_OK)
 		CAN_THREAD_PRINTF ("Failed to initialize CAN1.");
 
-	
 	palClearLine (LINE_CAN1_STBY);
 
 	// Initialize the CAN nodes
@@ -141,7 +140,7 @@ void canThreadStart (tprio_t priority)
 	amkInit (&amkRr, &amkRrConfig);
 	bmsInit (&bms, &bmsConfig);
 	ecumasterInit (&gps, &gpsConfig);
-	
+
 	// Create the CAN thread
 	chThdCreateStatic (&canRxThreadWa, sizeof (canRxThreadWa), priority, canRxThread, NULL);
 }

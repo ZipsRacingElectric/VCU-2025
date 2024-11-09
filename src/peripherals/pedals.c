@@ -5,11 +5,11 @@ bool pedalSensorInit (pedalSensor_t* sensor, pedalSensorConfig_t* config)
 {
 	// Validate the configuration
 	sensor->configValid = config->rawMin < config->rawMax;
-	
+
 	// Store the configuration
 	sensor->rawMin = config->rawMin;
 	sensor->rawMax = config->rawMax;
-	
+
 	// Set values to their defaults
 	sensor->valueValid = false;
 	sensor->value = 0.0f;
@@ -50,4 +50,7 @@ void pedalsUpdate (pedals_t* pedals)
 	// TODO(Barach): Validation / state
 	pedals->appsRequest	= (pedals->apps1.value + pedals->apps2.value) / 2.0;
 	pedals->bseRequest = (pedals->bseF.value + pedals->bseR.value) / 2.0;
+
+	pedals->valid = pedals->apps1.valueValid && pedals->apps2.valueValid &&
+		pedals->bseF.valueValid && pedals->bseR.valueValid;
 }

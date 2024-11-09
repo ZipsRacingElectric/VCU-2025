@@ -7,10 +7,10 @@
 tvOutput_t tvStraightDiff (float deltaTime)
 {
 	(void) deltaTime;
-	
-	tvOutput_t out = 
+
+	tvOutput_t out =
 	{
-		.valid = pedals.apps1.valueValid && pedals.apps2.valueValid,
+		.valid = pedals.valid,
 		.torqueFl = pedals.appsRequest * torqueRequestLimit,
 		.torqueFr = pedals.appsRequest * torqueRequestLimit,
 		.torqueRl = pedals.appsRequest * torqueRequestLimit,

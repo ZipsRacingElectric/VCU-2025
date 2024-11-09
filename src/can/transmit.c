@@ -2,6 +2,7 @@
 #include "transmit.h"
 
 // Includes
+#include "can/can_node.h"
 #include "peripherals.h"
 #include "state_thread.h"
 
@@ -27,7 +28,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 	// Byte 0
 	//   Bit 0 & 1: Vehicle state
 	//   Bit 2: Torque plausible
-	//   Bit 3: 
+	//   Bit 3:
 
 	CANTxFrame frame =
 	{
@@ -40,7 +41,10 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 		}
 	};
 
-	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
+	msg_t result = canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
+	if (result != MSG_OK)
+		canFaultCallback (result);
+	return result;
 }
 
 msg_t transmitSensorInputs (CANDriver* driver, sysinterval_t timeout)
@@ -88,5 +92,8 @@ msg_t transmitSensorInputs (CANDriver* driver, sysinterval_t timeout)
 		}
 	};
 
-	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
+	msg_t result = canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
+	if (result != MSG_OK)
+		canFaultCallback (result);
+	return result;
 }

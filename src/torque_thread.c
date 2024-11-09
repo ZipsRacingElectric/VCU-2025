@@ -4,18 +4,19 @@
 // Includes
 #include "can_thread.h"
 #include "can/transmit.h"
-#include "debug.h"
-#include "peripherals.h"
 #include "controls/torque_vectoring.h"
 #include "controls/tv_chatfield.h"
 #include "controls/tv_straight_diff.h"
+#include "debug.h"
+#include "peripherals.h"
+#include "state_thread.h"
 
 // Macros ---------------------------------------------------------------------------------------------------------------------
 
 #if TORQUE_THREAD_DEBUGGING
-	#define TORQUE_THREAD_PRINTF(format, ...) DEBUG_PRINTF("[Torque Thread] " format, ##__VA_ARGS__)
+	#define TORQUE_THREAD_PRINTF(format, ...) DEBUG_PRINTF ("[Torque Thread] " format, ##__VA_ARGS__)
 #else
-	#define TORQUE_THREAD_PRINTF(format, ...) while(false)
+	#define TORQUE_THREAD_PRINTF(format, ...) while (false)
 #endif // TORQUE_THREAD_DEBUGGING
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
@@ -29,8 +30,8 @@ static tvFunction_t* tvAlgorithms [] =
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
-static THD_WORKING_AREA(torqueThreadWa, 512);
-THD_FUNCTION(torqueThread, arg)
+static THD_WORKING_AREA (torqueThreadWa, 512);
+THD_FUNCTION (torqueThread, arg)
 {
 	(void) arg;
 	chRegSetThreadName ("torque_control");
@@ -51,30 +52,13 @@ THD_FUNCTION(torqueThread, arg)
 		TORQUE_THREAD_PRINTF ("\tRL: %f\r\n",		output.torqueRl);
 		TORQUE_THREAD_PRINTF ("\tRR: %f\r\n",		output.torqueRr);
 
+		torquePlausible = output.valid;
+
 		// TODO(Barach): Proper timeouts.
-		if (amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueRequestLimit, 0, TIME_MS2I(100)) != MSG_OK)
-		{
-			TORQUE_THREAD_PRINTF ("CAN Error");
-			break;
-		}
-
-		if (amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueRequestLimit, 0, TIME_MS2I(100)) != MSG_OK)
-		{
-			TORQUE_THREAD_PRINTF ("CAN Error");
-			break;
-		}
-
-		if (amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueRequestLimit, 0, TIME_MS2I(100)) != MSG_OK)
-		{
-			TORQUE_THREAD_PRINTF ("CAN Error");
-			break;
-		}
-
-		if (amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueRequestLimit, 0, TIME_MS2I(100)) != MSG_OK)
-		{
-			TORQUE_THREAD_PRINTF ("CAN Error");
-			break;
-		}
+		amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueRequestLimit, 0, TIME_MS2I (100));
+		amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueRequestLimit, 0, TIME_MS2I (100));
+		amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueRequestLimit, 0, TIME_MS2I (100));
+		amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueRequestLimit, 0, TIME_MS2I (100));
 
 		// Broadcast the sensor inputs message
 		transmitSensorInputs (&CAND1, TIME_MS2I (100));

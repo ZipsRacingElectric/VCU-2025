@@ -48,13 +48,14 @@ struct pedals
 	pedalSensor_t apps2;
 	pedalSensor_t bseF;
 	pedalSensor_t bseR;
+	bool valid;
 	float appsRequest;
 	float bseRequest;
 	bool isAccelerating;
 	bool isBraking;
 };
 
-typedef struct pedals pedals_t; 
+typedef struct pedals pedals_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

@@ -41,10 +41,10 @@
 	#if DEBUG_SERIAL_ENABLED
 		/// @brief Prints formatted output to the debug serial port.
 		#define DEBUG_PRINTF(format, ...) \
-			chprintf((BaseSequentialStream*) &DEBUG_SERIAL, format, ##__VA_ARGS__)
+			chprintf ((BaseSequentialStream*) &DEBUG_SERIAL, format, ##__VA_ARGS__)
 	#else
 		/// @brief Prints formatted output to the debug serial port.
-		#define DEBUG_PRINTF(format, ...) while(false)
+		#define DEBUG_PRINTF(format, ...) while (false)
 	#endif
 #endif // DEBUG_PRINTF
 

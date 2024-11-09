@@ -31,7 +31,7 @@
       <pin1
         ID="IND_RED"
         Type="PushPull"
-        Level="Low"
+        Level="High"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"
@@ -39,7 +39,7 @@
       <pin2
         ID="IND_BLU"
         Type="PushPull"
-        Level="Low"
+        Level="High"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"
@@ -47,7 +47,7 @@
       <pin3
         ID="IND_GRN"
         Type="PushPull"
-        Level="Low"
+        Level="High"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"
