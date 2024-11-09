@@ -18,18 +18,16 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-struct eepromMapConfig
+typedef struct
 {
 	/// @brief The 7-bit I2C address of the device.
 	uint8_t addr;
 
 	/// @brief The IC2 bus of the device.
 	I2CDriver* i2c;
-};
+} eepromMapConfig_t;
 
-typedef struct eepromMapConfig eepromMapConfig_t;
-
-struct eepromMap
+typedef struct
 {
 	mc24lc32_t device;
 
@@ -46,9 +44,7 @@ struct eepromMap
 	uint16_t* sasMin;
 	uint16_t* sasMax;
 	float* sasAngleRange;
-};
-
-typedef struct eepromMap eepromMap_t;
+} eepromMap_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

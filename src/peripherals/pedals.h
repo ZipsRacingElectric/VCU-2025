@@ -7,42 +7,36 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-struct pedalSensorConfig
+typedef struct
 {
 	uint16_t rawMin;
 	uint16_t rawMax;
-};
-
-typedef struct pedalSensorConfig pedalSensorConfig_t;
+} pedalSensorConfig_t;
 
 /**
  * @brief Structure representing a pedal sensor (APPS / BSE).
  */
-struct pedalSensor
+typedef struct
 {
 	uint16_t rawMin;
 	uint16_t rawMax;
 	float value;
 	bool valueValid;
 	bool configValid;
-};
+} pedalSensor_t;
 
-typedef struct pedalSensor pedalSensor_t;
-
-struct pedalsConfig
+typedef struct
 {
 	pedalSensorConfig_t apps1Config;
 	pedalSensorConfig_t apps2Config;
 	pedalSensorConfig_t bseFConfig;
 	pedalSensorConfig_t bseRConfig;
-};
-
-typedef struct pedalsConfig pedalsConfig_t;
+} pedalsConfig_t;
 
 /**
  * @brief Structure representing the pedals of the vehicle.
  */
-struct pedals
+typedef struct
 {
 	pedalSensor_t apps1;
 	pedalSensor_t apps2;
@@ -53,9 +47,7 @@ struct pedals
 	float bseRequest;
 	bool isAccelerating;
 	bool isBraking;
-};
-
-typedef struct pedals pedals_t;
+} pedals_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

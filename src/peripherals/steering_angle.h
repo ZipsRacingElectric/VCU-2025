@@ -16,16 +16,14 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-struct sasConfig
+typedef struct
 {
 	uint16_t rawMin;
 	uint16_t rawMax;
 	float range;
-};
+} sasConfig_t;
 
-typedef struct sasConfig sasConfig_t;
-
-struct sas
+typedef struct
 {
 	uint16_t rawMax;
 	uint16_t rawMin;
@@ -33,9 +31,7 @@ struct sas
 	float value;
 	bool valueValid;
 	bool configValid;
-};
-
-typedef struct sas sas_t;
+} sas_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

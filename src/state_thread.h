@@ -17,15 +17,13 @@
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-enum vehicleState
+typedef enum
 {
 	VEHICLE_STATE_FAILED			= 0,
 	VEHICLE_STATE_LOW_VOLTAGE		= 1,
 	VEHICLE_STATE_HIGH_VOLTAGE		= 2,
 	VEHICLE_STATE_READY_TO_DRIVE	= 3
-};
-
-typedef enum vehicleState vehicleState_t;
+} vehicleState_t;
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
 

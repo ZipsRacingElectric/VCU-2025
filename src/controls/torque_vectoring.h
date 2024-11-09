@@ -18,16 +18,14 @@ extern float torqueRequestLimit;
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
-struct tvOutput
+typedef struct
 {
 	bool valid;
 	float torqueFl;
 	float torqueFr;
 	float torqueRl;
 	float torqueRr;
-};
-
-typedef struct tvOutput tvOutput_t;
+} tvOutput_t;
 
 typedef tvOutput_t (tvFunction_t) (float deltaTime);
 
