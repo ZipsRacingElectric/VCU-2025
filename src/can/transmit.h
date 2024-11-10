@@ -24,11 +24,19 @@
 msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout);
 
 /**
- * @brief Transmits the VCU sensor input message, given the current sensor inputs.
+ * @brief Transmits the VCU sensor input percent message, given the current sensor inputs.
  * @param driver The CAN driver to use.
  * @param timeout The interval to timeout after.
  * @return The result of the CAN operation.
  */
-msg_t transmitSensorInputs (CANDriver* driver, sysinterval_t timeout);
+msg_t transmitSensorInputPercent (CANDriver* driver, sysinterval_t timeout);
+
+/**
+ * @brief Transmits the VCU sensor input raw message, given the current sensor inputs.
+ * @param driver The CAN driver to use.
+ * @param timeout The interval to timeout after.
+ * @return The result of the CAN operation.
+ */
+msg_t transmitSensorInputRaw (CANDriver* driver, sysinterval_t timeout);
 
 #endif // TRANSMIT_H

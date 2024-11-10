@@ -21,7 +21,6 @@ CSRC =	$(ALLCSRC)							\
 		src/debug.c							\
 											\
 		src/peripherals.c					\
-		src/peripherals/analog.c			\
 		src/peripherals/eeprom_map.c		\
 		src/peripherals/pedals.c			\
 		src/peripherals/steering_angle.c	\
@@ -46,7 +45,7 @@ include common/src/can/can_node.mk
 include common/src/can/ecumaster_gps_v2.mk
 
 # Compiler flags
-USE_OPT = -O0
+USE_OPT = -O0 -Wall -Wextra
 
 # C macro definitions
 UDEFS = -DCHPRINTF_USE_FLOAT=1

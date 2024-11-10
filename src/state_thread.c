@@ -106,6 +106,6 @@ void stateThreadStart (tprio_t priority)
 void stateThreadSetIndicator (void)
 {
 	palWriteLine (LINE_IND_RED, torquePlausible);
-	palWriteLine (LINE_IND_GRN, pedals.valid);
+	palWriteLine (LINE_IND_GRN, true);
 	palWriteLine (LINE_IND_BLU, ~(uint32_t) canFault);
 }

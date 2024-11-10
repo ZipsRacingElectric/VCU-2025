@@ -4,7 +4,6 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "peripherals/analog.h"
 #include "peripherals/eeprom_map.h"
 #include "peripherals/pedals.h"
 #include "peripherals/steering_angle.h"
@@ -16,7 +15,6 @@
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
-extern analog_t		adc;
 extern eepromMap_t	eeprom;
 extern float		glvBatteryVoltage;
 extern pedals_t		pedals;

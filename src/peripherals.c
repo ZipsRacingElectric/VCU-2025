@@ -24,7 +24,6 @@
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
-analog_t	adc;
 eepromMap_t	eeprom;
 float		glvBatteryVoltage;
 pedals_t	pedals;
@@ -41,42 +40,7 @@ static I2CConfig i2cConfig =
 {
 	.op_mode		= OPMODE_I2C,
 	.clock_speed	= 400000,
-	.duty_cycle		= FAST_DUTY_CYCLE_16_9
-};
-
-/// @brief Configuration for the ADC.
-static analogConfig_t adcConfig =
-{
-	.driver			= &ADCD1,
-	.channelCount	= 6,
-	.channels =
-	{
-		ADC_CHANNEL_IN10,
-		ADC_CHANNEL_IN11,
-		ADC_CHANNEL_IN12,
-		ADC_CHANNEL_IN13,
-		ADC_CHANNEL_IN14,
-		ADC_CHANNEL_IN0
-	},
-	.callbacks =
-	{
-		pedalSensorCallback,
-		pedalSensorCallback,
-		pedalSensorCallback,
-		pedalSensorCallback,
-		sasCallback,
-		glvBatteryCallback
-	},
-	.handlers =
-	{
-		&pedals.apps1,
-		&pedals.apps2,
-		&pedals.bseF,
-		&pedals.bseR,
-		&sas,
-		NULL
-	},
-	.sampleCycles = ADC_SAMPLE_480
+	.duty_cycle		= FAST_DUTY_CYCLE_2
 };
 
 /// @brief Configuration for the on-board EEPROM.
@@ -86,8 +50,36 @@ static eepromMapConfig_t eepromConfig =
 	.i2c	= &I2CD1
 };
 
-/// @brief Configuration for the pedal sensors. (computed at runtime).
-static pedalsConfig_t pedalsConfig;
+/// @brief Configuration for the pedal sensors.
+/// @note Minimum & maximum values are loaded from the EEPROM.
+static pedalsConfig_t pedalsConfig =
+{
+	.adc = &ADCD1,
+	.apps1Config =
+	{
+		.channel	= ADC_CHANNEL_IN10,
+		.rawMin		= 0,
+		.rawMax		= 0
+	},
+	.apps2Config =
+	{
+		.channel	= ADC_CHANNEL_IN11,
+		.rawMin		= 0,
+		.rawMax		= 0
+	},
+	.bseFConfig =
+	{
+		.channel	= ADC_CHANNEL_IN12,
+		.rawMin		= 0,
+		.rawMax		= 0
+	},
+	.bseRConfig =
+	{
+		.channel	= ADC_CHANNEL_IN13,
+		.rawMin		= 0,
+		.rawMax		= 0
+	}
+};
 
 /// @brief Configuration for the steering-angle sensor. (computed at runtime).
 static sasConfig_t sasConfig;
@@ -98,11 +90,11 @@ void peripheralsInit ()
 {
 	// I2C 3 driver initialization
 	if (i2cStart (&I2CD1, &i2cConfig) != MSG_OK)
-		PERIPHERAL_PRINTF ("Failed to initialize I2C1.\r\n");
+		PERIPHERAL_PRINTF ("Failed to initialize I2C 1.\r\n");
 
-	// Analog sensor initialization
-	if (!analogInit (&adc, &adcConfig))
-		PERIPHERAL_PRINTF ("Failed to initialize the ADC.\r\n");
+	// ADC initialization
+	if (adcStart (&ADCD1, NULL) != MSG_OK)
+		PERIPHERAL_PRINTF ("Failed to initialize ADC 1.\r\n");
 
 	// EEPROM initialization
 	if (!eepromMapInit (&eeprom, &eepromConfig))

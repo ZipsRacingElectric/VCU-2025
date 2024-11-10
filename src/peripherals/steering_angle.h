@@ -29,6 +29,7 @@ typedef struct
 	uint16_t rawMin;
 	float range;
 	float value;
+	uint16_t valueRaw;
 	bool valueValid;
 	bool configValid;
 } sas_t;

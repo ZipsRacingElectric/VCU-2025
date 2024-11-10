@@ -39,11 +39,11 @@ THD_FUNCTION (torqueThread, arg)
 	while (true)
 	{
 		// Sample the sensor inputs
-		analogSample (&adc);
-		pedalsUpdate (&pedals);
+		pedalsSample (&pedals, chVTGetSystemTimeX ());
 
 		// Perform torque vectoring
 		tvOutput_t output = tvAlgorithms [algoritmIndex] (0.1);
+		output.valid &= pedals.plausible;
 
 		TORQUE_THREAD_PRINTF ("Torque output, algorithm %u\r\n", algoritmIndex);
 		TORQUE_THREAD_PRINTF ("\tValid: %u\r\n",	output.valid);
@@ -54,14 +54,17 @@ THD_FUNCTION (torqueThread, arg)
 
 		torquePlausible = output.valid;
 
+		// TODO(Barach): Invalidity handling.
+
 		// TODO(Barach): Proper timeouts.
 		amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueRequestLimit, 0, TIME_MS2I (100));
 		amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueRequestLimit, 0, TIME_MS2I (100));
 		amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueRequestLimit, 0, TIME_MS2I (100));
 		amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueRequestLimit, 0, TIME_MS2I (100));
 
-		// Broadcast the sensor inputs message
-		transmitSensorInputs (&CAND1, TIME_MS2I (100));
+		// Broadcast the sensor input messages
+		transmitSensorInputPercent (&CAND1, TIME_MS2I (100));
+		transmitSensorInputRaw (&CAND1, TIME_MS2I (100));
 
 		// Control frequency
 		// TODO(Barach): Actual timing.

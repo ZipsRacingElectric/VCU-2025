@@ -5,14 +5,15 @@ bool sasInit (sas_t* sas, sasConfig_t* config)
 {
 	// Validate the configuration
 	sas->configValid = config->rawMin < config->rawMax;
-	
+
 	// Store the configuration
 	sas->rawMin = config->rawMin;
 	sas->rawMax = config->rawMax;
-	
+
 	// Set values to their defaults
 	sas->valueValid = false;
 	sas->value = 0.0f;
+	sas->valueRaw = 0;
 
 	return sas->configValid;
 }
@@ -27,6 +28,8 @@ void sasCallback (void* handler, uint16_t raw)
 		sas->valueValid = false;
 		return;
 	}
+
+	sas->valueRaw = raw;
 
 	// Range check
 	sas->valueValid = raw < sas->rawMin || raw > sas->rawMax;
