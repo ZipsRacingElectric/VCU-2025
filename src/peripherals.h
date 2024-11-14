@@ -30,6 +30,6 @@ void peripheralsInit (void);
 /**
  * @brief Re-initializes the device peripherals after a change has been made to the device EEPROM.
  */
-void peripheralsReinit (void);
+void peripheralsReconfigure (void);
 
 #endif // PERIPHERALS_H

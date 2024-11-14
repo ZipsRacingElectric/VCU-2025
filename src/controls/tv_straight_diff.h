@@ -19,6 +19,6 @@
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-tvOutput_t tvStraightDiff (float deltaTime);
+tvOutput_t tvStraightDiff (float deltaTime, float torqueLimit);
 
 #endif // TV_STRAIGHT_DIFF_H

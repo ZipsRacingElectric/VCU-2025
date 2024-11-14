@@ -44,6 +44,9 @@ typedef struct
 	uint16_t* sasMin;
 	uint16_t* sasMax;
 	float* sasAngleRange;
+
+	float* torqueLimit;
+	uint8_t* torqueAlgoritmIndex;
 } eepromMap_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

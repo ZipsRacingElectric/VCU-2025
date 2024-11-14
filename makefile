@@ -32,7 +32,6 @@ CSRC =	$(ALLCSRC)							\
 		src/torque_thread.c					\
 		src/controls/tv_chatfield.c			\
 		src/controls/tv_straight_diff.c		\
-		src/controls/torque_vectoring.c		\
 											\
 		src/state_thread.c
 

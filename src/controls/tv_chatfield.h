@@ -20,6 +20,6 @@
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-tvOutput_t tvChatfield (float deltaTime);
+tvOutput_t tvChatfield (float deltaTime, float torqueLimit);
 
 #endif // TV_CHATFIELD_H

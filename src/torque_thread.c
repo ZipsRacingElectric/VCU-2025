@@ -21,8 +21,14 @@
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
+/// @brief The global torque limit. Configured by the driver.
+float torqueLimit = 0.0f;
+
+/// @brief The index of the selected torque-vectoring algorithm.
 uint8_t algoritmIndex = 0;
 
+/// @brief The array of selectable torque-vectoring algorithms.
+#define TV_ALGORITHM_COUNT (sizeof (tvAlgorithms) / sizeof (tvFunction_t*))
 static tvFunction_t* tvAlgorithms [] =
 {
 	&tvStraightDiff, &tvChatfield
@@ -42,8 +48,8 @@ THD_FUNCTION (torqueThread, arg)
 		pedalsSample (&pedals, chVTGetSystemTimeX ());
 
 		// Perform torque vectoring
-		tvOutput_t output = tvAlgorithms [algoritmIndex] (0.1);
-		output.valid &= pedals.plausible;
+		tvOutput_t output = tvAlgorithms [algoritmIndex] (0.1f, torqueLimit);
+		output.valid &= pedals.plausible && torqueLimit != 0.0f;
 
 		TORQUE_THREAD_PRINTF ("Torque output, algorithm %u\r\n", algoritmIndex);
 		TORQUE_THREAD_PRINTF ("\tValid: %u\r\n",	output.valid);
@@ -57,10 +63,10 @@ THD_FUNCTION (torqueThread, arg)
 		// TODO(Barach): Invalidity handling.
 
 		// TODO(Barach): Proper timeouts.
-		amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueRequestLimit, 0, TIME_MS2I (100));
-		amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueRequestLimit, 0, TIME_MS2I (100));
-		amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueRequestLimit, 0, TIME_MS2I (100));
-		amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueRequestLimit, 0, TIME_MS2I (100));
+		amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueLimit, 0, TIME_MS2I (100));
+		amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueLimit, 0, TIME_MS2I (100));
+		amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueLimit, 0, TIME_MS2I (100));
+		amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueLimit, 0, TIME_MS2I (100));
 
 		// Broadcast the sensor input messages
 		transmitSensorInputPercent (&CAND1, TIME_MS2I (100));
@@ -76,9 +82,22 @@ THD_FUNCTION (torqueThread, arg)
 
 void torqueThreadStart (tprio_t priority)
 {
-	// Initialize torque vectoring code
-	torqueVectoringInit ();
-
 	// Start the torque control thread
 	chThdCreateStatic (&torqueThreadWa, sizeof (torqueThreadWa), priority, torqueThread, NULL);
+}
+
+void torqueThreadSetLimit (float torque)
+{
+	if (torque > TORQUE_LIMIT_MAX)
+		return;
+
+	torqueLimit = torque;
+}
+
+void torqueThreadSelectAlgorithm (uint8_t index)
+{
+	if (index >= TV_ALGORITHM_COUNT)
+		return;
+
+	algoritmIndex = index;
 }

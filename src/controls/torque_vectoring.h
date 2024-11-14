@@ -11,11 +11,6 @@
 /// @brief The maximum requestable torque value, in Nm.
 #define TORQUE_REQUEST_MAX 21.0f
 
-// Global Data ----------------------------------------------------------------------------------------------------------------
-
-/// @brief The configued torque limit, in Nm. This value is adjusted by the driver.
-extern float torqueRequestLimit;
-
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
 typedef struct
@@ -27,10 +22,6 @@ typedef struct
 	float torqueRr;
 } tvOutput_t;
 
-typedef tvOutput_t (tvFunction_t) (float deltaTime);
-
-// Functions ------------------------------------------------------------------------------------------------------------------
-
-void torqueVectoringInit (void);
+typedef tvOutput_t (tvFunction_t) (float deltaTime, float torqueLimit);
 
 #endif // TORQUE_VECTORING_H

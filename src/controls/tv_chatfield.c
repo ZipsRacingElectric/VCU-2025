@@ -1,10 +1,11 @@
 // Header
 #include "tv_chatfield.h"
 
-tvOutput_t tvChatfield (float deltaTime)
+tvOutput_t tvChatfield (float deltaTime, float torqueLimit)
 {
 	// TODO(Barach): Implementation.
 	(void) deltaTime;
+	(void) torqueLimit;
 
 	tvOutput_t output =
 	{

@@ -5,6 +5,7 @@
 
 // Includes
 #include "debug.h"
+#include "torque_thread.h"
 
 // ChibiOS
 #include "hal.h"
@@ -110,11 +111,14 @@ void peripheralsInit ()
 		}
 	}
 
-	peripheralsReinit ();
+	peripheralsReconfigure ();
 }
 
-void peripheralsReinit (void)
+void peripheralsReconfigure (void)
 {
+	if (eeprom.device.state != MC24LC32_STATE_READY)
+		return;
+
 	// Pedals initialization
 	pedalsConfig.apps1Config.rawMin	= *eeprom.apps1Min;
 	pedalsConfig.apps1Config.rawMax	= *eeprom.apps1Max;
@@ -134,6 +138,10 @@ void peripheralsReinit (void)
 
 	if (!sasInit (&sas, &sasConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize the SAS.");
+
+	// Torque thread configuration
+	torqueThreadSetLimit (*eeprom.torqueLimit);
+	torqueThreadSelectAlgorithm (*eeprom.torqueAlgoritmIndex);
 }
 
 void glvBatteryCallback (void* arg, uint16_t value)

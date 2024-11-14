@@ -25,7 +25,7 @@ void handleEepromDataMessage (CANRxFrame* frame)
 	mc24lc32WriteThrough (&eeprom.device, address, data, dataCount);
 
 	// Reinitialize the peripherals to update any changes.
-	peripheralsReinit ();
+	peripheralsReconfigure ();
 }
 
 void handlerEepromValidateMessage (CANRxFrame* frame)
