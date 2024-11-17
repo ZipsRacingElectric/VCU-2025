@@ -20,16 +20,16 @@
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
-amkInverter_t	amkFl;
-amkInverter_t	amkFr;
 amkInverter_t	amkRl;
 amkInverter_t	amkRr;
+amkInverter_t	amkFl;
+amkInverter_t	amkFr;
 bms_t			bms;
 ecumasterGps_t	gps;
 
 canNode_t* nodes [] =
 {
-	(canNode_t*) &amkFl, (canNode_t*) &amkFr, (canNode_t*) &amkRl, (canNode_t*) &amkRr,
+	(canNode_t*) &amkRl, (canNode_t*) &amkRr, (canNode_t*) &amkFl, (canNode_t*) &amkFr,
 	(canNode_t*) &bms, (canNode_t*) &gps
 };
 
@@ -54,28 +54,28 @@ static CANConfig canConfig =
 			CAN_BTR_BRP (2)		// Baudrate divisor of 3 (1 Mbps)
 };
 
-amkInverterConfig_t amkFlConfig =
+amkInverterConfig_t amkRlConfig =
 {
 	.driver			= &CAND1,
 	.baseId			= 0x200,
 	.timeoutPeriod	= TIME_MS2I (100),
 };
 
-amkInverterConfig_t amkFrConfig =
+amkInverterConfig_t amkRrConfig =
 {
 	.driver			= &CAND1,
 	.baseId			= 0x201,
 	.timeoutPeriod	= TIME_MS2I (100),
 };
 
-amkInverterConfig_t amkRlConfig =
+amkInverterConfig_t amkFlConfig =
 {
 	.driver			= &CAND1,
 	.baseId			= 0x202,
 	.timeoutPeriod	= TIME_MS2I (100),
 };
 
-amkInverterConfig_t amkRrConfig =
+amkInverterConfig_t amkFrConfig =
 {
 	.driver			= &CAND1,
 	.baseId			= 0x203,
@@ -104,10 +104,16 @@ THD_FUNCTION (canRxThread, arg)
 
 	CANRxFrame frame;
 
+	systime_t timeCurrent = chVTGetSystemTimeX ();
+	systime_t timePrevious;
+
 	while (true)
 	{
 		// Block until the next message arrives
 		msg_t result = canReceiveTimeout (&CAND1, CAN_ANY_MAILBOX, &frame, CAN_THREAD_TIMEOUT_POLL_PERIOD);
+		timePrevious = timeCurrent;
+		timeCurrent = chVTGetSystemTimeX ();
+
 		if (result == MSG_OK)
 		{
 			// Find the handler of the message
@@ -121,7 +127,7 @@ THD_FUNCTION (canRxThread, arg)
 		else if (result != MSG_TIMEOUT)
 			CAN_THREAD_PRINTF ("Failed to receive from CAN1: Error %i.\r\n", result);
 
-		canNodesCheckTimeout (nodes, NODE_COUNT);
+		canNodesCheckTimeout (nodes, NODE_COUNT, timePrevious, timeCurrent);
 	}
 }
 

@@ -11,22 +11,23 @@
 
 // Constants ------------------------------------------------------------------------------------------------------------------
 
-#define STATE_CONTROL_PERIOD	TIME_MS2I (20)
-#define STATE_MESSAGE_PRESCALAR	5
+#define STATE_CONTROL_PERIOD	TIME_MS2I (10)
+#define STATE_MESSAGE_PRESCALAR	10
 
 #define BUZZER_TIME_PERIOD		TIME_MS2I (1000)
-#define HV_INACTIVE_PERIOD		TIME_MS2I (10)
+#define HV_INACTIVE_PERIOD		TIME_MS2I (20)
+
+#define HV_VOLTAGE				60.0f
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
-vehicleState_t vehicleState;
-
-bool torquePlausible = false;
-bool canFault = false;
+vehicleState_t vehicleState	= VEHICLE_STATE_LOW_VOLTAGE;
+bool torquePlausible		= true;
+bool canFault				= false;
 
 // Function Prototypes --------------------------------------------------------------------------------------------------------
 
-void stateThreadSetIndicator (void);
+void stateThreadUpdate (systime_t timePrevious, systime_t timeCurrent, systime_t* timeoutBuzzer, systime_t* timeoutHv);
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
@@ -46,37 +47,7 @@ THD_FUNCTION (stateThread, arg)
 	{
 		systime_t timeCurrent = chVTGetSystemTime ();
 
-		if (bms.state != CAN_NODE_VALID)
-			vehicleState = VEHICLE_STATE_FAILED;
-
-		if (vehicleState == VEHICLE_STATE_LOW_VOLTAGE)
-		{
-			// Transition LV to HV
-			if (bms.tractiveSystemsActive)
-				vehicleState = VEHICLE_STATE_HIGH_VOLTAGE;
-		}
-		else if (vehicleState == VEHICLE_STATE_HIGH_VOLTAGE)
-		{
-			// Transition HV to RTD
-			if (pedals.isBraking && !pedals.isAccelerating && !palReadLine (LINE_START_BUTTON_IN))
-			{
-				vehicleState = VEHICLE_STATE_READY_TO_DRIVE;
-				palSetLine (LINE_BUZZER);
-				timeoutBuzzer = chTimeAddX (timeCurrent, BUZZER_TIME_PERIOD);
-			}
-		}
-		else if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
-		{
-			// Transition RTD to LV if the deadline expires (postpone if HV is active)
-			if (bms.tractiveSystemsActive)
-				timeoutHv = chTimeAddX (timeCurrent, HV_INACTIVE_PERIOD);
-			else if (timeCurrent >= timeoutHv)
-				vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
-		}
-
-		// Stop the RTD buzzer if it is past the deadline.
-		if (timeCurrent >= timeoutBuzzer)
-			palClearLine (LINE_BUZZER);
+		stateThreadUpdate (timePrevious, timeCurrent, &timeoutBuzzer, &timeoutHv);
 
 		++messageCounter;
 		if (messageCounter >= STATE_MESSAGE_PRESCALAR)
@@ -85,10 +56,6 @@ THD_FUNCTION (stateThread, arg)
 			transmitStatusMessage (&CAND1, TIME_MS2I (100));
 			messageCounter = 0;
 		}
-
-		// TODO(Barach): This is slow.
-		// Update the VCU indicator
-		stateThreadSetIndicator ();
 
 		// Sleep until the next loop
 		systime_t timeNext = chTimeAddX (timePrevious, STATE_CONTROL_PERIOD);
@@ -104,9 +71,97 @@ void stateThreadStart (tprio_t priority)
 	chThdCreateStatic (&stateThreadWa, sizeof (stateThreadWa), priority, stateThread, NULL);
 }
 
-void stateThreadSetIndicator (void)
+void stateThreadUpdate (systime_t timePrevious, systime_t timeCurrent, systime_t* timeoutBuzzer, systime_t* timeoutHv)
 {
-	palWriteLine (LINE_IND_RED, torquePlausible);
-	palWriteLine (LINE_IND_GRN, true);
-	palWriteLine (LINE_IND_BLU, ~(uint32_t) canFault);
+	// If a failure occured previously, transition to LV and attempt to recover.
+	if (vehicleState == VEHICLE_STATE_FAILED)
+		vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
+
+	bool tractiveSystemsActive = true;
+
+	// Check RL inverter state.
+	canNodeLock ((canNode_t*) &amkRl);
+	if (amkRl.state != CAN_NODE_VALID)
+		vehicleState = VEHICLE_STATE_FAILED;
+
+	// TODO(Barach): Voltage check
+	// tractiveSystemsActive &= amkRl.dcBusVoltage > HV_VOLTAGE;
+
+	canNodeUnlock ((canNode_t*) &amkRl);
+
+	// TODO(Barch): Check other inverters.
+	// // Check RR inverter state.
+	// canNodeLock ((canNode_t*) &amkRr);
+	// if (amkRr.state != CAN_NODE_VALID)
+	// 	vehicleState = VEHICLE_STATE_FAILED;
+
+	// tractiveSystemsActive &= amkRr.dcBusVoltage > HV_VOLTAGE;
+
+	// canNodeUnlock ((canNode_t*) &amkRr);
+
+	// // Check FL inverter state.
+	// canNodeLock ((canNode_t*) &amkFl);
+	// if (amkFl.state != CAN_NODE_VALID)
+	// 	vehicleState = VEHICLE_STATE_FAILED;
+
+	// tractiveSystemsActive &= amkFl.dcBusVoltage > HV_VOLTAGE;
+
+	// canNodeUnlock ((canNode_t*) &amkFl);
+
+	// // Check FR inverter state.
+	// canNodeLock ((canNode_t*) &amkFr);
+	// if (amkFr.state != CAN_NODE_VALID)
+	// 	vehicleState = VEHICLE_STATE_FAILED;
+
+	// tractiveSystemsActive &= amkFr.dcBusVoltage > HV_VOLTAGE;
+
+	// canNodeUnlock ((canNode_t*) &amkFr);
+
+	// Check vehicle state
+	if (vehicleState == VEHICLE_STATE_LOW_VOLTAGE)
+	{
+		// Transition LV to HV
+		if (tractiveSystemsActive)
+			vehicleState = VEHICLE_STATE_HIGH_VOLTAGE;
+	}
+	else if (vehicleState == VEHICLE_STATE_HIGH_VOLTAGE)
+	{
+		// Transition HV to RTD
+		if (pedals.isBraking && !pedals.isAccelerating && !palReadLine (LINE_START_BUTTON_IN))
+		{
+			vehicleState = VEHICLE_STATE_READY_TO_DRIVE;
+			palSetLine (LINE_BUZZER);
+			*timeoutBuzzer = chTimeAddX (timeCurrent, BUZZER_TIME_PERIOD);
+		}
+
+		// Check TS are still active
+		if (tractiveSystemsActive)
+		{
+			// Postpone the deadline if TS are active.
+			*timeoutHv = chTimeAddX (timeCurrent, HV_INACTIVE_PERIOD);
+		}
+		else if (chTimeIsInRangeX (timeCurrent, timePrevious, *timeoutHv))
+		{
+			// Transition HV to LV if the deadline expires.
+			vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
+		}
+	}
+	else if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
+	{
+		// Check TS are still active
+		if (tractiveSystemsActive)
+		{
+			// Postpone the deadline if TS are active.
+			*timeoutHv = chTimeAddX (timeCurrent, HV_INACTIVE_PERIOD);
+		}
+		else if (!chTimeIsInRangeX (timeCurrent, timePrevious, *timeoutHv))
+		{
+			// Transition RTD to LV if the deadline expires.
+			vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
+		}
+	}
+
+	// Stop the RTD buzzer if it is past the deadline.
+	if (!chTimeIsInRangeX (timeCurrent, timePrevious, *timeoutBuzzer))
+		palClearLine (LINE_BUZZER);
 }

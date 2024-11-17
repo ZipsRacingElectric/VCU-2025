@@ -49,24 +49,26 @@ THD_FUNCTION (torqueThread, arg)
 
 		// Perform torque vectoring
 		tvOutput_t output = tvAlgorithms [algoritmIndex] (0.1f, torqueLimit);
-		output.valid &= pedals.plausible;
-
-		TORQUE_THREAD_PRINTF ("Torque output, algorithm %u\r\n", algoritmIndex);
-		TORQUE_THREAD_PRINTF ("\tValid: %u\r\n",	output.valid);
-		TORQUE_THREAD_PRINTF ("\tFL: %f\r\n",		output.torqueFl);
-		TORQUE_THREAD_PRINTF ("\tFR: %f\r\n",		output.torqueFr);
-		TORQUE_THREAD_PRINTF ("\tRL: %f\r\n",		output.torqueRl);
-		TORQUE_THREAD_PRINTF ("\tRR: %f\r\n",		output.torqueRr);
-
-		torquePlausible = output.valid;
+		torquePlausible = output.valid && pedals.plausible;
 
 		// TODO(Barach): Invalidity handling.
 
-		// TODO(Barach): Proper timeouts.
-		amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueLimit, 0, TIME_MS2I (100));
-		amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueLimit, 0, TIME_MS2I (100));
-		amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueLimit, 0, TIME_MS2I (100));
-		amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueLimit, 0, TIME_MS2I (100));
+		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
+		{
+			// TODO(Barach): Proper timeouts.
+			amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueLimit, 0, TIME_MS2I (100));
+			amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueLimit, 0, TIME_MS2I (100));
+			amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueLimit, 0, TIME_MS2I (100));
+			amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueLimit, 0, TIME_MS2I (100));
+		}
+		else
+		{
+			// TODO(Barach): Proper timeouts.
+			amkSendMotorRequest (&amkFl, false, false, false, 0, 0, 0, TIME_MS2I (100));
+			amkSendMotorRequest (&amkFr, false, false, false, 0, 0, 0, TIME_MS2I (100));
+			amkSendMotorRequest (&amkRl, false, false, false, 0, 0, 0, TIME_MS2I (100));
+			amkSendMotorRequest (&amkRr, false, false, false, 0, 0, 0, TIME_MS2I (100));
+		}
 
 		// Broadcast the sensor input messages
 		transmitSensorInputPercent (&CAND1, TIME_MS2I (100));

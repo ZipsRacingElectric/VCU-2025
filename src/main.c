@@ -29,17 +29,17 @@ int main (void)
 	// Debug Initialization
 	debugInit ("Vehicle Control Board, Revision AA");
 
-	// Peripheral Initialization
+	// Peripheral initialization
 	peripheralsInit ();
 
-	// CAN Thread Initialization
+	// CAN thread initialization
 	canThreadStart (NORMALPRIO);
 
-	// Torque Thread Initialization
-	torqueThreadStart (NORMALPRIO);
-
-	// State Thread Initialization
+	// State thread initialization.
 	stateThreadStart (NORMALPRIO);
+
+	// Torque thread initialization
+	torqueThreadStart (NORMALPRIO);
 
 	// Do nothing.
 	while (true)

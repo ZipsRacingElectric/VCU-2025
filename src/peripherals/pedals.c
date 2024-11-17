@@ -6,6 +6,9 @@
 /// @brief The maximum acceptable delta of the APPS-1 and APPS-2 sensor values.
 #define APPS_DELTA_MAX 0.1
 
+#define APPS_ACCELERATING_VALUE 0.1
+#define BSE_BRAKING_VALUE		0.1
+
 // Function Prototypes --------------------------------------------------------------------------------------------------------
 
 bool pedalSensorInit (pedalSensor_t* sensor, pedalSensorConfig_t* config);
@@ -116,6 +119,9 @@ void pedalsSample (pedals_t* pedals, systime_t timeCurrent)
 	// Calculate the average of both sensors.
 	pedals->appsRequest	= (pedals->apps1.value + pedals->apps2.value) / 2.0;
 	pedals->bseRequest = (pedals->bseF.value + pedals->bseR.value) / 2.0;
+
+	pedals->isAccelerating	= pedals->appsRequest > APPS_ACCELERATING_VALUE;
+	pedals->isBraking		= pedals->bseRequest > BSE_BRAKING_VALUE;
 
 	// APPS 10% check (TODO(Barach): Rule no.)
 	float appsDelta = pedals->apps1.value - pedals->apps2.value;

@@ -5,9 +5,8 @@
 //
 // Author: Cole Barach
 // Date Created: 2024.09.29
-// 
-// To do:
-// - Implement timeout for CAN nodes.
+//
+// Description: Thread for managing the VCU's CAN interface. All received messages are parsed by this thread.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -22,14 +21,14 @@
 // Constants ------------------------------------------------------------------------------------------------------------------
 
 /// @brief Enables / disables debugging messages from the CAN thread.
-#define CAN_THREAD_DEBUGGING 1
+#define CAN_THREAD_DEBUGGING 0
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
-extern amkInverter_t	amkFl;
-extern amkInverter_t	amkFr;
 extern amkInverter_t	amkRl;
 extern amkInverter_t	amkRr;
+extern amkInverter_t	amkFl;
+extern amkInverter_t	amkFr;
 extern bms_t			bms;
 extern ecumasterGps_t	gps;
 
