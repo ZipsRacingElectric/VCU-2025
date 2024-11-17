@@ -82,8 +82,13 @@ static pedalsConfig_t pedalsConfig =
 	}
 };
 
-/// @brief Configuration for the steering-angle sensor. (computed at runtime).
-static sasConfig_t sasConfig;
+/// @brief Configuration for the steering-angle sensor.
+static sasConfig_t sasConfig =
+{
+	.rawMin	= 0,
+	.rawMax	= 0,
+	.range	= 0
+};
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -116,25 +121,28 @@ void peripheralsInit ()
 
 void peripheralsReconfigure (void)
 {
-	if (eeprom.device.state != MC24LC32_STATE_READY)
-		return;
-
 	// Pedals initialization
-	pedalsConfig.apps1Config.rawMin	= *eeprom.apps1Min;
-	pedalsConfig.apps1Config.rawMax	= *eeprom.apps1Max;
-	pedalsConfig.apps2Config.rawMin	= *eeprom.apps2Min;
-	pedalsConfig.apps2Config.rawMax	= *eeprom.apps2Max;
-	pedalsConfig.bseFConfig.rawMin	= *eeprom.bseFMin;
-	pedalsConfig.bseFConfig.rawMax	= *eeprom.bseFMax;
-	pedalsConfig.bseRConfig.rawMin	= *eeprom.bseRMin;
-	pedalsConfig.bseRConfig.rawMax	= *eeprom.bseRMax;
+	if (eeprom.device.state != MC24LC32_STATE_READY)
+	{
+		pedalsConfig.apps1Config.rawMin	= *eeprom.apps1Min;
+		pedalsConfig.apps1Config.rawMax	= *eeprom.apps1Max;
+		pedalsConfig.apps2Config.rawMin	= *eeprom.apps2Min;
+		pedalsConfig.apps2Config.rawMax	= *eeprom.apps2Max;
+		pedalsConfig.bseFConfig.rawMin	= *eeprom.bseFMin;
+		pedalsConfig.bseFConfig.rawMax	= *eeprom.bseFMax;
+		pedalsConfig.bseRConfig.rawMin	= *eeprom.bseRMin;
+		pedalsConfig.bseRConfig.rawMax	= *eeprom.bseRMax;
+	}
 
 	if (!pedalsInit (&pedals, &pedalsConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize the pedals.");
 
 	// SAS initialization
-	sasConfig.rawMin = *eeprom.sasMin;
-	sasConfig.rawMax = *eeprom.sasMax;
+	if (eeprom.device.state != MC24LC32_STATE_READY)
+	{
+		sasConfig.rawMin = *eeprom.sasMin;
+		sasConfig.rawMax = *eeprom.sasMax;
+	}
 
 	if (!sasInit (&sas, &sasConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize the SAS.");
@@ -146,6 +154,7 @@ void peripheralsReconfigure (void)
 
 void glvBatteryCallback (void* arg, uint16_t value)
 {
+	// TODO(Barach): Resistor values are wrong.
 	(void) arg;
 	glvBatteryVoltage = (3.3f * value / 4096.0f) * (R24 + R32) / R32;
 }

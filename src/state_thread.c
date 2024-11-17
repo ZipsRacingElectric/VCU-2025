@@ -86,6 +86,7 @@ THD_FUNCTION (stateThread, arg)
 			messageCounter = 0;
 		}
 
+		// TODO(Barach): This is slow.
 		// Update the VCU indicator
 		stateThreadSetIndicator ();
 

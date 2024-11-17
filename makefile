@@ -44,6 +44,7 @@ include common/src/can/can_node.mk
 include common/src/can/ecumaster_gps_v2.mk
 
 # Compiler flags
+# TODO(Barach): -O2 for release.
 USE_OPT = -O0 -Wall -Wextra
 
 # C macro definitions

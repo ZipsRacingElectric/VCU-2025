@@ -49,7 +49,7 @@ THD_FUNCTION (torqueThread, arg)
 
 		// Perform torque vectoring
 		tvOutput_t output = tvAlgorithms [algoritmIndex] (0.1f, torqueLimit);
-		output.valid &= pedals.plausible && torqueLimit != 0.0f;
+		output.valid &= pedals.plausible;
 
 		TORQUE_THREAD_PRINTF ("Torque output, algorithm %u\r\n", algoritmIndex);
 		TORQUE_THREAD_PRINTF ("\tValid: %u\r\n",	output.valid);
@@ -74,7 +74,7 @@ THD_FUNCTION (torqueThread, arg)
 
 		// Control frequency
 		// TODO(Barach): Actual timing.
-		chThdSleepMilliseconds (100);
+		chThdSleepMilliseconds (10);
 	}
 }
 
@@ -88,16 +88,12 @@ void torqueThreadStart (tprio_t priority)
 
 void torqueThreadSetLimit (float torque)
 {
-	if (torque > TORQUE_LIMIT_MAX)
-		return;
-
-	torqueLimit = torque;
+	if (torque <= TORQUE_LIMIT_MAX && torque >= 0)
+		torqueLimit = torque;
 }
 
 void torqueThreadSelectAlgorithm (uint8_t index)
 {
-	if (index >= TV_ALGORITHM_COUNT)
-		return;
-
-	algoritmIndex = index;
+	if (index < TV_ALGORITHM_COUNT)
+		algoritmIndex = index;
 }

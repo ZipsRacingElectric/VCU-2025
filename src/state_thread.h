@@ -3,8 +3,10 @@
 
 // State Thread ---------------------------------------------------------------------------------------------------------------
 //
-// Description: ???
-// Date Created: ???
+// Author: Cole Barach
+// Date Created: 2024.10.16
+//
+// Description: TODO(Barach)
 //
 // To do:
 // - Header
