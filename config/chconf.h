@@ -787,6 +787,9 @@
  */
 #define CH_CFG_SYSTEM_HALT_HOOK(reason) {                                   \
   /* System halt code here.*/                                               \
+  (void) reason;                                                            \
+  void hardFaultCallback (void);                                            \
+  hardFaultCallback ();                                                     \
 }
 
 /**

@@ -17,6 +17,7 @@
 
 extern eepromMap_t	eeprom;
 extern float		glvBatteryVoltage;
+extern uint16_t		glvBatteryVoltageRaw;
 extern pedals_t		pedals;
 extern sas_t		sas;
 

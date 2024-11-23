@@ -27,6 +27,7 @@
 
 eepromMap_t	eeprom;
 float		glvBatteryVoltage;
+uint16_t	glvBatteryVoltageRaw;
 pedals_t	pedals;
 sas_t		sas;
 
@@ -154,7 +155,7 @@ void peripheralsReconfigure (void)
 
 void glvBatteryCallback (void* arg, uint16_t value)
 {
-	// TODO(Barach): Resistor values are wrong.
 	(void) arg;
+	glvBatteryVoltageRaw = value;
 	glvBatteryVoltage = (3.3f * value / 4096.0f) * (R24 + R32) / R32;
 }

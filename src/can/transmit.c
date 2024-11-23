@@ -58,10 +58,11 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 	//   Bit 5: BSE-F Config Plausible
 	//   Bit 6: BSE-R Plausible
 	//   Bit 7: BSE-R Config Plausible
+	// Byte 2: GLV battery voltage
 
 	CANTxFrame frame =
 	{
-		.DLC	= 2,
+		.DLC	= 3,
 		.IDE	= CAN_IDE_STD,
 		.SID	= STATUS_MESSAGE_ID,
 		.data8	=
@@ -77,7 +78,8 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_1_BSE_F_PLAUSIBLE (pedals.bseF.plausible) |
 			STATUS_WORD_1_BSE_F_CONFIG_PLAUSIBLE (pedals.bseF.configPlausible) |
 			STATUS_WORD_1_BSE_R_PLAUSIBLE (pedals.bseR.plausible) |
-			STATUS_WORD_1_BSE_R_CONFIG_PLAUSIBLE (pedals.bseR.configPlausible)
+			STATUS_WORD_1_BSE_R_CONFIG_PLAUSIBLE (pedals.bseR.configPlausible),
+			glvBatteryVoltageRaw
 		}
 	};
 
