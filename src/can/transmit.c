@@ -28,6 +28,7 @@
 #define STATUS_WORD_0_VEHICLE_STATE(state)					(((uint16_t) (state))		<< 0)
 #define STATUS_WORD_0_TORQUE_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 2)
 #define STATUS_WORD_0_PEDALS_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 3)
+#define STATUS_WORD_0_CAN_PLAUSIBLE(plausible)				(((uint16_t) (plausible))	<< 7)
 
 // VCU Status Word 1
 #define STATUS_WORD_1_APPS_1_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 0)
@@ -47,6 +48,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 	//   Bit 0 & 1: Vehicle state
 	//   Bit 2: Torque plausible
 	//   Bit 3: Pedals plausible
+	//   Bit 7: CAN plausible
 	// Byte 1:
 	//   Bit 0: APPS-1 Plausible
 	//   Bit 1: APPS-1 Config Plausible
@@ -66,7 +68,8 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 		{
 			STATUS_WORD_0_VEHICLE_STATE (vehicleState) |
 			STATUS_WORD_0_TORQUE_PLAUSIBLE (torquePlausible) |
-			STATUS_WORD_0_PEDALS_PLAUSIBLE (pedals.plausible),
+			STATUS_WORD_0_PEDALS_PLAUSIBLE (pedals.plausible) |
+			STATUS_WORD_0_CAN_PLAUSIBLE (canPlausible),
 			STATUS_WORD_1_APPS_1_PLAUSIBLE (pedals.apps1.plausible) |
 			STATUS_WORD_1_APPS_1_CONFIG_PLAUSIBLE (pedals.apps1.configPlausible) |
 			STATUS_WORD_1_APPS_2_PLAUSIBLE (pedals.apps2.plausible) |

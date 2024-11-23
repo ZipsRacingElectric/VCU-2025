@@ -59,9 +59,3 @@ void hardFaultCallback (void)
 	palSetLine (LINE_IND_GRN);
 	palSetLine (LINE_IND_BLU);
 }
-
-void canFaultCallback (msg_t result)
-{
-	(void) result;
-	canFault = true;
-}

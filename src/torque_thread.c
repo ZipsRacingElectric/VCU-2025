@@ -19,6 +19,10 @@
 	#define TORQUE_THREAD_PRINTF(format, ...) while (false)
 #endif // TORQUE_THREAD_DEBUGGING
 
+// Constants ------------------------------------------------------------------------------------------------------------------
+
+#define TORQUE_THREAD_PERIOD TIME_MS2I (10)
+
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
 /// @brief The global torque limit. Configured by the driver.
@@ -42,6 +46,8 @@ THD_FUNCTION (torqueThread, arg)
 	(void) arg;
 	chRegSetThreadName ("torque_control");
 
+	systime_t timePrevious = chVTGetSystemTimeX ();
+
 	while (true)
 	{
 		// Sample the sensor inputs
@@ -49,34 +55,31 @@ THD_FUNCTION (torqueThread, arg)
 
 		// Perform torque vectoring
 		tvOutput_t output = tvAlgorithms [algoritmIndex] (0.1f, torqueLimit);
-		torquePlausible = output.valid && pedals.plausible;
+		stateThreadSetTorquePlausibility (output.valid && pedals.plausible);
 
-		// TODO(Barach): Invalidity handling.
-
-		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
+		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE && torquePlausible)
 		{
-			// TODO(Barach): Proper timeouts.
-			amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueLimit, 0, TIME_MS2I (100));
-			amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueLimit, 0, TIME_MS2I (100));
-			amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueLimit, 0, TIME_MS2I (100));
-			amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueLimit, 0, TIME_MS2I (100));
+			amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueLimit, 0, TORQUE_THREAD_PERIOD / 4);
+			amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueLimit, 0, TORQUE_THREAD_PERIOD / 4);
+			amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueLimit, 0, TORQUE_THREAD_PERIOD / 4);
+			amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueLimit, 0, TORQUE_THREAD_PERIOD / 4);
 		}
 		else
 		{
-			// TODO(Barach): Proper timeouts.
-			amkSendMotorRequest (&amkFl, false, false, false, 0, 0, 0, TIME_MS2I (100));
-			amkSendMotorRequest (&amkFr, false, false, false, 0, 0, 0, TIME_MS2I (100));
-			amkSendMotorRequest (&amkRl, false, false, false, 0, 0, 0, TIME_MS2I (100));
-			amkSendMotorRequest (&amkRr, false, false, false, 0, 0, 0, TIME_MS2I (100));
+			amkSendMotorRequest (&amkFl, false, false, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 4);
+			amkSendMotorRequest (&amkFr, false, false, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 4);
+			amkSendMotorRequest (&amkRl, false, false, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 4);
+			amkSendMotorRequest (&amkRr, false, false, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 4);
 		}
 
 		// Broadcast the sensor input messages
 		transmitSensorInputPercent (&CAND1, TIME_MS2I (100));
 		transmitSensorInputRaw (&CAND1, TIME_MS2I (100));
 
-		// Control frequency
-		// TODO(Barach): Actual timing.
-		chThdSleepMilliseconds (10);
+		// Sleep until next loop
+		systime_t timeNext = chTimeAddX (timePrevious, TORQUE_THREAD_PERIOD);
+		chThdSleepUntilWindowed (timePrevious, timeNext);
+		timePrevious = chVTGetSystemTimeX ();
 	}
 }
 

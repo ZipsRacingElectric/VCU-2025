@@ -22,16 +22,16 @@
 typedef enum
 {
 	/// @brief Indicates a critical error has occured, the car cannot drive until this is cleared.
-	VEHICLE_STATE_FAILED			= 0,
+	VEHICLE_STATE_FAILED = 0,
 
 	/// @brief Indicates all GLV systems are nominal, the car is ready to be energized.
-	VEHICLE_STATE_LOW_VOLTAGE		= 1,
+	VEHICLE_STATE_LOW_VOLTAGE = 1,
 
 	/// @brief Indicates the car is energized, ready to enter RTD.
-	VEHICLE_STATE_HIGH_VOLTAGE		= 2,
+	VEHICLE_STATE_HIGH_VOLTAGE = 2,
 
 	/// @brief Indicates the car is energized and driving, motors respond to pedal input (if torque plausible).
-	VEHICLE_STATE_READY_TO_DRIVE	= 3
+	VEHICLE_STATE_READY_TO_DRIVE = 3
 } vehicleState_t;
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
@@ -43,10 +43,12 @@ extern vehicleState_t vehicleState;
 extern bool torquePlausible;
 
 /// @brief Indicates the state of the CAN thread.
-extern bool canFault;
+extern bool canPlausible;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 void stateThreadStart (tprio_t priority);
+
+void stateThreadSetTorquePlausibility (bool plausible);
 
 #endif // STATE_THREAD_H
