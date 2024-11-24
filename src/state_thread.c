@@ -15,7 +15,7 @@
 #define STATE_MESSAGE_PRESCALAR	10
 
 #define BUZZER_TIME_PERIOD		TIME_MS2I (1000)
-#define HV_INACTIVE_PERIOD		TIME_MS2I (20)
+#define HV_INACTIVE_PERIOD		TIME_MS2I (100)
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
@@ -136,10 +136,10 @@ bool checkTractiveSystemsActive ()
 	if (!checkInverterHighVoltage (&amkRl))
 		return false;
 
-	if (!checkInverterHighVoltage (&amkRr))
-		return false;
-
 	// TODO(Barach): Check other inverters
+
+	// if (!checkInverterHighVoltage (&amkRr))
+	// 	return false;
 
 	// if (!checkInverterHighVoltage (&amkFl))
 	// 	return false;
@@ -154,6 +154,7 @@ bool checkInverterHighVoltage (amkInverter_t* inverter)
 {
 	canNodeLock ((canNode_t*) inverter);
 
+	// Check the node's data is valid.
 	if (inverter->state != CAN_NODE_VALID)
 	{
 		canNodeUnlock ((canNode_t*) inverter);
@@ -161,12 +162,12 @@ bool checkInverterHighVoltage (amkInverter_t* inverter)
 		return false;
 	}
 
-	// // TODO(Barach): Check bus voltage
-	// if (!inverter->dcOn)
-	// {
-	// 	canNodeUnlock ((canNode_t*) inverter);
-	// 	return false;
-	// }
+	// Check DC bus is energized.
+	if (!inverter->quitDcOn)
+	{
+		canNodeUnlock ((canNode_t*) inverter);
+		return false;
+	}
 
 	canNodeUnlock ((canNode_t*) inverter);
 	return true;

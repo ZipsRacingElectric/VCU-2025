@@ -46,6 +46,9 @@ THD_FUNCTION (torqueThread, arg)
 	(void) arg;
 	chRegSetThreadName ("torque_control");
 
+	// Indicates whether this is the first request message sent to the inverters (if so, the activation message needs sent
+	// first).
+
 	systime_t timePrevious = chVTGetSystemTimeX ();
 
 	while (true)
@@ -57,24 +60,45 @@ THD_FUNCTION (torqueThread, arg)
 		tvOutput_t output = tvAlgorithms [algoritmIndex] (0.1f, torqueLimit);
 		stateThreadSetTorquePlausibility (output.valid && pedals.plausible);
 
-		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE && torquePlausible)
+		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
 		{
-			amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueLimit, 0, TORQUE_THREAD_PERIOD / 4);
-			amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueLimit, 0, TORQUE_THREAD_PERIOD / 4);
-			amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueLimit, 0, TORQUE_THREAD_PERIOD / 4);
-			amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueLimit, 0, TORQUE_THREAD_PERIOD / 4);
+			if (!amkRl.quitInverter)
+			{
+				// Activation message.
+				amkSendMotorRequest (&amkFl, true, true, true, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
+				amkSendMotorRequest (&amkFr, true, true, true, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
+				amkSendMotorRequest (&amkRl, true, true, true, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
+				amkSendMotorRequest (&amkRr, true, true, true, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
+			}
+			else if (!torquePlausible)
+			{
+				// 0 torque request message.
+				amkSendMotorRequest (&amkFl, true, true, true, 0, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
+				amkSendMotorRequest (&amkFr, true, true, true, 0, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
+				amkSendMotorRequest (&amkRl, true, true, true, 0, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
+				amkSendMotorRequest (&amkRr, true, true, true, 0, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
+			}
+			else
+			{
+				// Torque request message.
+				amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
+				amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
+				amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
+				amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
+			}
 		}
 		else
 		{
-			amkSendMotorRequest (&amkFl, false, false, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 4);
-			amkSendMotorRequest (&amkFr, false, false, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 4);
-			amkSendMotorRequest (&amkRl, false, false, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 4);
-			amkSendMotorRequest (&amkRr, false, false, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 4);
+			// De-activation message.
+			amkSendMotorRequest (&amkFl, false, true, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
+			amkSendMotorRequest (&amkFr, false, true, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
+			amkSendMotorRequest (&amkRl, false, true, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
+			amkSendMotorRequest (&amkRr, false, true, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
 		}
 
 		// Broadcast the sensor input messages
-		transmitSensorInputPercent (&CAND1, TIME_MS2I (100));
-		transmitSensorInputRaw (&CAND1, TIME_MS2I (100));
+		transmitSensorInputPercent (&CAND1, TORQUE_THREAD_PERIOD / 6);
+		transmitSensorInputRaw (&CAND1, TORQUE_THREAD_PERIOD / 6);
 
 		// Sleep until next loop
 		systime_t timeNext = chTimeAddX (timePrevious, TORQUE_THREAD_PERIOD);
