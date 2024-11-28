@@ -46,7 +46,12 @@ typedef struct
 	float* sasAngleRange;
 
 	float* torqueLimit;
-	uint8_t* torqueAlgoritmIndex;
+	float* torqueBias;
+	float* regenLimit;
+	float* regenBias;
+	uint16_t* torqueAlgoritmIndex;
+
+	float** chatfieldLut;
 } eepromMap_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

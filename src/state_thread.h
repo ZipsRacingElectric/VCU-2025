@@ -8,7 +8,7 @@
 //
 // Description: TODO(Barach)
 //
-// To do:
+// TODO(Barach):
 // - Header
 // - Time overflow
 

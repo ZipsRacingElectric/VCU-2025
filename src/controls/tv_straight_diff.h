@@ -11,6 +11,10 @@
 //
 // Sensor Requirements:
 // - Pedals
+//
+// Algorithm Description:
+//   Requested torque is distributed equally left to right. Front to rear distribution is configured by the input torque bias.
+//   Regen is not implemented in this mode.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -19,6 +23,6 @@
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-tvOutput_t tvStraightDiff (float deltaTime, float torqueLimit);
+tvOutput_t tvStraightDiff (const tvInput_t* input);
 
 #endif // TV_STRAIGHT_DIFF_H

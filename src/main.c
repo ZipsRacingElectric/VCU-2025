@@ -3,8 +3,8 @@
 // Author: Cole Barach
 // Date Created: 2024.09.21
 //
-// To do:
-// - Thread priorities.
+// TODO(Barach):
+// - Tune thread priorities.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 

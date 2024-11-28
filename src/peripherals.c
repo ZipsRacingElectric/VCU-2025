@@ -149,7 +149,10 @@ void peripheralsReconfigure (void)
 		PERIPHERAL_PRINTF ("Failed to initialize the SAS.");
 
 	// Torque thread configuration
-	torqueThreadSetLimit (*eeprom.torqueLimit);
+	torqueThreadSetTorqueLimit (*eeprom.torqueLimit);
+	torqueThreadSetTorqueBias (*eeprom.torqueBias);
+	torqueThreadSetRegenLimit (*eeprom.regenLimit);
+	torqueThreadSetRegenBias (*eeprom.regenBias);
 	torqueThreadSelectAlgorithm (*eeprom.torqueAlgoritmIndex);
 }
 

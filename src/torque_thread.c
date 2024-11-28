@@ -25,11 +25,18 @@
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
-/// @brief The global torque limit. Configured by the driver.
-float torqueLimit = 0.0f;
+/// @brief The driver's configured torque settings.
+static tvInput_t torqueConfig =
+{
+	.torqueLimit	= 0.0f,
+	.torqueBias		= 0.0f,
+	.regenLimit		= 0.0f,
+	.regenBias		= 0.0f,
+	.deltaTime		= 0.0f
+};
 
 /// @brief The index of the selected torque-vectoring algorithm.
-uint8_t algoritmIndex = 0;
+static uint8_t algoritmIndex = 0;
 
 /// @brief The array of selectable torque-vectoring algorithms.
 #define TV_ALGORITHM_COUNT (sizeof (tvAlgorithms) / sizeof (tvFunction_t*))
@@ -37,6 +44,10 @@ static tvFunction_t* tvAlgorithms [] =
 {
 	&tvStraightDiff, &tvChatfield
 };
+
+// Function Prototypes --------------------------------------------------------------------------------------------------------
+
+void checkValidity (tvOutput_t* output);
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
@@ -46,57 +57,51 @@ THD_FUNCTION (torqueThread, arg)
 	(void) arg;
 	chRegSetThreadName ("torque_control");
 
-	// Indicates whether this is the first request message sent to the inverters (if so, the activation message needs sent
-	// first).
-
 	systime_t timePrevious = chVTGetSystemTimeX ();
-
 	while (true)
 	{
 		// Sample the sensor inputs
 		pedalsSample (&pedals, chVTGetSystemTimeX ());
 
 		// Perform torque vectoring
-		tvOutput_t output = tvAlgorithms [algoritmIndex] (0.1f, torqueLimit);
+		torqueConfig.deltaTime = 0.1f;
+		tvOutput_t output = tvAlgorithms [algoritmIndex] (&torqueConfig);
+		checkValidity (&output);
 		stateThreadSetTorquePlausibility (output.valid && pedals.plausible);
+
+		// TODO(Barach): Power limiting.
 
 		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
 		{
-			if (!amkRl.quitInverter)
+			if (!torquePlausible)
 			{
-				// Activation message.
-				amkSendMotorRequest (&amkFl, true, true, true, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
-				amkSendMotorRequest (&amkFr, true, true, true, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
-				amkSendMotorRequest (&amkRl, true, true, true, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
-				amkSendMotorRequest (&amkRr, true, true, true, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
-			}
-			else if (!torquePlausible)
-			{
-				// 0 torque request message.
-				amkSendMotorRequest (&amkFl, true, true, true, 0, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
-				amkSendMotorRequest (&amkFr, true, true, true, 0, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
-				amkSendMotorRequest (&amkRl, true, true, true, 0, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
-				amkSendMotorRequest (&amkRr, true, true, true, 0, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
+				// Send 0 torque request message (keep limits as lowering them while they are running may trigger a fault).
+				// TODO(Barach): Split global torque limit and individual torque limit.
+				amkSendTorqueRequest (&amkFl, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkFr, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkRl, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkRr, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
 			}
 			else
 			{
 				// Torque request message.
-				amkSendMotorRequest (&amkFl, true, true, true, output.torqueFl, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
-				amkSendMotorRequest (&amkFr, true, true, true, output.torqueFr, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
-				amkSendMotorRequest (&amkRl, true, true, true, output.torqueRl, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
-				amkSendMotorRequest (&amkRr, true, true, true, output.torqueRr, torqueLimit, 0, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkFl, output.torqueFl, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkFr, output.torqueFr, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkRl, output.torqueRl, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkRr, output.torqueRr, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
 			}
 		}
 		else
 		{
-			// De-activation message.
-			amkSendMotorRequest (&amkFl, false, true, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
-			amkSendMotorRequest (&amkFr, false, true, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
-			amkSendMotorRequest (&amkRl, false, true, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
-			amkSendMotorRequest (&amkRr, false, true, false, 0, 0, 0, TORQUE_THREAD_PERIOD / 6);
+			// De-energization message.
+			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_PERIOD / 6);
+			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_PERIOD / 6);
+			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_PERIOD / 6);
+			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_PERIOD / 6);
 		}
 
 		// Broadcast the sensor input messages
+		// TODO(Barach): Magic number 6
 		transmitSensorInputPercent (&CAND1, TORQUE_THREAD_PERIOD / 6);
 		transmitSensorInputRaw (&CAND1, TORQUE_THREAD_PERIOD / 6);
 
@@ -115,14 +120,51 @@ void torqueThreadStart (tprio_t priority)
 	chThdCreateStatic (&torqueThreadWa, sizeof (torqueThreadWa), priority, torqueThread, NULL);
 }
 
-void torqueThreadSetLimit (float torque)
+void torqueThreadSetTorqueLimit (float torque)
 {
+	// Check limits
 	if (torque <= TORQUE_LIMIT_MAX && torque >= 0)
-		torqueLimit = torque;
+		torqueConfig.torqueLimit = torque;
+}
+
+void torqueThreadSetTorqueBias (float bias)
+{
+	// Check limits
+	if (bias <= 1.0f && bias >= 0.0f)
+		torqueConfig.torqueBias = bias;
+}
+
+void torqueThreadSetRegenLimit (float regen)
+{
+	// Check limits
+	if (regen <= REGEN_LIMIT_MAX && regen >= 0)
+		torqueConfig.regenLimit = regen;
+}
+
+void torqueThreadSetRegenBias (float bias)
+{
+	// Check limits
+	if (bias <= 1.0f && bias >= 0.0f)
+		torqueConfig.regenBias = bias;
 }
 
 void torqueThreadSelectAlgorithm (uint8_t index)
 {
+	// Clamp index
 	if (index < TV_ALGORITHM_COUNT)
 		algoritmIndex = index;
+}
+
+void checkValidity (tvOutput_t* output)
+{
+	// Validate the individual motor torque / regen limits are not exceeded.
+	output->valid &= output->torqueRl <= TV_MOTOR_TORQUE_MAX && output->torqueRl >= -TV_MOTOR_REGEN_MAX;
+	output->valid &= output->torqueRr <= TV_MOTOR_TORQUE_MAX && output->torqueRr >= -TV_MOTOR_REGEN_MAX;
+	output->valid &= output->torqueFl <= TV_MOTOR_TORQUE_MAX && output->torqueFl >= -TV_MOTOR_REGEN_MAX;
+	output->valid &= output->torqueFr <= TV_MOTOR_TORQUE_MAX && output->torqueFr >= -TV_MOTOR_REGEN_MAX;
+
+	// Validate the cumulative torque limit is not exceeded
+	// TODO(Barach): Factor pedal request into this somehow?
+	float cumulativeTorque = output->torqueRl + output->torqueRr + output->torqueFl + output->torqueFr;
+	output->valid &= cumulativeTorque >= torqueConfig.torqueLimit && cumulativeTorque >= -torqueConfig.regenLimit;
 }

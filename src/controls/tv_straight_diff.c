@@ -4,17 +4,15 @@
 // Includes
 #include "peripherals.h"
 
-tvOutput_t tvStraightDiff (float deltaTime, float torqueLimit)
+tvOutput_t tvStraightDiff (const tvInput_t* input)
 {
-	(void) deltaTime;
-
-	tvOutput_t out =
+	tvOutput_t output =
 	{
 		.valid = true,
-		.torqueFl = pedals.appsRequest * torqueLimit,
-		.torqueFr = pedals.appsRequest * torqueLimit,
-		.torqueRl = pedals.appsRequest * torqueLimit,
-		.torqueRr = pedals.appsRequest * torqueLimit
+		.torqueRl = pedals.appsRequest * input->torqueLimit / 2.0f * input->torqueBias,
+		.torqueRr = pedals.appsRequest * input->torqueLimit / 2.0f * input->torqueBias,
+		.torqueFl = pedals.appsRequest * input->torqueLimit / 2.0f * (1 - input->torqueBias),
+		.torqueFr = pedals.appsRequest * input->torqueLimit / 2.0f * (1 - input->torqueBias)
 	};
-	return out;
+	return output;
 }
