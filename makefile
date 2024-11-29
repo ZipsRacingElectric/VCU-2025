@@ -11,7 +11,7 @@ DEPDIR   := ./build/dep
 BOARDDIR := ./build/board
 
 # Include
-ALLINC += $(CURDIR)/src
+ALLINC += src
 
 # Source files
 CSRC =	$(ALLCSRC)							\
