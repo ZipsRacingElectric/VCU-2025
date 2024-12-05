@@ -43,6 +43,7 @@ void handlerEepromValidateMessage (CANRxFrame* frame)
 	 	mc34lc32Invalidate (&eeprom.device);
 
 	mc24lc32Write (&eeprom.device);
+	peripheralsReconfigure ();
 }
 
 bool receiveMessage (CANRxFrame* frame)
@@ -58,6 +59,6 @@ bool receiveMessage (CANRxFrame* frame)
 		handlerEepromValidateMessage (frame);
 		return true;
 	}
-	
+
 	return false;
 }

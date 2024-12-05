@@ -123,7 +123,7 @@ void peripheralsInit ()
 void peripheralsReconfigure (void)
 {
 	// Pedals initialization
-	if (eeprom.device.state != MC24LC32_STATE_READY)
+	if (eeprom.device.state == MC24LC32_STATE_READY)
 	{
 		pedalsConfig.apps1Config.rawMin	= *eeprom.apps1Min;
 		pedalsConfig.apps1Config.rawMax	= *eeprom.apps1Max;

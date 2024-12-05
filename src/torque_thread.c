@@ -67,7 +67,8 @@ THD_FUNCTION (torqueThread, arg)
 		torqueConfig.deltaTime = 0.1f;
 		tvOutput_t output = tvAlgorithms [algoritmIndex] (&torqueConfig);
 		checkValidity (&output);
-		stateThreadSetTorquePlausibility (output.valid && pedals.plausible);
+		bool plas = output.valid && pedals.plausible;
+		stateThreadSetTorquePlausibility (plas);
 
 		// TODO(Barach): Power limiting.
 
@@ -77,27 +78,27 @@ THD_FUNCTION (torqueThread, arg)
 			{
 				// Send 0 torque request message (keep limits as lowering them while they are running may trigger a fault).
 				// TODO(Barach): Split global torque limit and individual torque limit.
-				amkSendTorqueRequest (&amkFl, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
-				amkSendTorqueRequest (&amkFr, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
 				amkSendTorqueRequest (&amkRl, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
 				amkSendTorqueRequest (&amkRr, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkFl, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkFr, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
 			}
 			else
 			{
 				// Torque request message.
-				amkSendTorqueRequest (&amkFl, output.torqueFl, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
-				amkSendTorqueRequest (&amkFr, output.torqueFr, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
 				amkSendTorqueRequest (&amkRl, output.torqueRl, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
 				amkSendTorqueRequest (&amkRr, output.torqueRr, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkFl, output.torqueFl, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&amkFr, output.torqueFr, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
 			}
 		}
 		else
 		{
 			// De-energization message.
+			amkSendEnergizationRequest (&amkRl, false, TORQUE_THREAD_PERIOD / 6);
+			amkSendEnergizationRequest (&amkRr, false, TORQUE_THREAD_PERIOD / 6);
 			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_PERIOD / 6);
-			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_PERIOD / 6);
-			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_PERIOD / 6);
-			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_PERIOD / 6);
+			amkSendEnergizationRequest (&amkFr, false, TORQUE_THREAD_PERIOD / 6);
 		}
 
 		// Broadcast the sensor input messages
@@ -166,5 +167,5 @@ void checkValidity (tvOutput_t* output)
 	// Validate the cumulative torque limit is not exceeded
 	// TODO(Barach): Factor pedal request into this somehow?
 	float cumulativeTorque = output->torqueRl + output->torqueRr + output->torqueFl + output->torqueFr;
-	output->valid &= cumulativeTorque >= torqueConfig.torqueLimit && cumulativeTorque >= -torqueConfig.regenLimit;
+	output->valid &= cumulativeTorque <= torqueConfig.torqueLimit && cumulativeTorque >= -torqueConfig.regenLimit;
 }
