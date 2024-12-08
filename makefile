@@ -40,6 +40,7 @@ include common/src/can/amk_inverter.mk
 include common/src/can/bms.mk
 include common/src/can/can_node.mk
 include common/src/can/ecumaster_gps_v2.mk
+include common/src/controls/pid_controller.mk
 
 # Compiler flags
 USE_OPT = -O2 -Wall -Wextra
