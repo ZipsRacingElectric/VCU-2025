@@ -43,7 +43,7 @@ include common/src/can/ecumaster_gps_v2.mk
 include common/src/controls/pid_controller.mk
 
 # Compiler flags
-USE_OPT = -O2 -Wall -Wextra
+USE_OPT = -Og -Wall -Wextra
 
 # C macro definitions
 UDEFS = -DCHPRINTF_USE_FLOAT=1

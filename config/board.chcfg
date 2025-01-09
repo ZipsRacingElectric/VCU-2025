@@ -29,28 +29,28 @@
         Mode="Analog"
         Alternate="0" />
       <pin1
-        ID="IND_RED"
+        ID=""
         Type="PushPull"
         Level="High"
         Speed="Minimum"
         Resistor="Floating"
-        Mode="Output"
+        Mode="Input"
         Alternate="0" />
       <pin2
-        ID="IND_BLU"
+        ID=""
         Type="PushPull"
         Level="High"
         Speed="Minimum"
         Resistor="Floating"
-        Mode="Output"
+        Mode="Input"
         Alternate="0" />
       <pin3
-        ID="IND_GRN"
+        ID=""
         Type="PushPull"
         Level="High"
         Speed="Minimum"
         Resistor="Floating"
-        Mode="Output"
+        Mode="Input"
         Alternate="0" />
       <pin4
         ID=""
@@ -61,21 +61,21 @@
         Mode="Input"
         Alternate="0" />
       <pin5
-        ID=""
+        ID="SPI1_CLK"
         Type="PushPull"
         Level="High"
         Speed="Minimum"
         Resistor="Floating"
-        Mode="Input"
-        Alternate="0" />
+        Mode="Alternate"
+        Alternate="5" />
       <pin6
-        ID=""
+        ID="SPI1_MISO"
         Type="PushPull"
         Level="High"
         Speed="Minimum"
         Resistor="Floating"
-        Mode="Input"
-        Alternate="0" />
+        Mode="Alternate"
+        Alternate="5" />
       <pin7
         ID=""
         Type="PushPull"
@@ -191,20 +191,20 @@
         Mode="Output"
         Alternate="0" />
       <pin5
-        ID="FAN3"
+        ID=""
         Type="PushPull"
-        Level="Low"
+        Level="High"
         Speed="Minimum"
         Resistor="Floating"
-        Mode="Output"
+        Mode="Input"
         Alternate="0" />
       <pin6
-        ID="FAN4"
+        ID=""
         Type="PushPull"
-        Level="Low"
+        Level="High"
         Speed="Minimum"
         Resistor="Floating"
-        Mode="Output"
+        Mode="Input"
         Alternate="0" />
       <pin7
         ID="BUZZER"
@@ -239,7 +239,7 @@
         Mode="Output"
         Alternate="0" />
       <pin11
-        ID="BSPD_FLT"
+        ID=""
         Type="PushPull"
         Level="High"
         Speed="Minimum"
@@ -297,7 +297,7 @@
         Mode="Analog"
         Alternate="0" />
       <pin2
-        ID="BRK1"
+        ID="BSE1"
         Type="PushPull"
         Level="High"
         Speed="Minimum"
@@ -305,7 +305,7 @@
         Mode="Analog"
         Alternate="0" />
       <pin3
-        ID="BRK2"
+        ID="BSE2"
         Type="PushPull"
         Level="High"
         Speed="Minimum"
@@ -321,12 +321,12 @@
         Mode="Analog"
         Alternate="0" />
       <pin5
-        ID="STEERANG2"
+        ID=""
         Type="PushPull"
         Level="High"
         Speed="Minimum"
         Resistor="Floating"
-        Mode="Analog"
+        Mode="Input"
         Alternate="0" />
       <pin6
         ID=""
@@ -341,7 +341,7 @@
         Type="PushPull"
         Level="High"
         Speed="Minimum"
-        Resistor="Pullup"
+        Resistor="PullUp"
         Mode="Input"
         Alternate="0" />
       <pin8

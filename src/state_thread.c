@@ -108,7 +108,7 @@ THD_FUNCTION (stateThread, arg)
 			messageCounter = 0;
 		}
 
-		palWriteLine (LINE_IND_RED, torquePlausible && vehicleState != VEHICLE_STATE_FAILED);
+		palWriteLine (LINE_VCU_FLT, torquePlausible && vehicleState != VEHICLE_STATE_FAILED);
 
 		// Sleep until the next loop
 		systime_t timeNext = chTimeAddX (timePrevious, STATE_CONTROL_PERIOD);

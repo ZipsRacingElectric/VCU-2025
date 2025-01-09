@@ -27,7 +27,7 @@ int main (void)
 	chSysInit ();
 
 	// Debug Initialization
-	debugInit ("Vehicle Control Board, Revision AA");
+	debugInit ("Vehicle Control Board, Revision AB");
 
 	// Peripheral initialization
 	peripheralsInit ();
@@ -53,9 +53,6 @@ void hardFaultCallback (void)
 	// Open the shutdown loop
 	palClearLine (LINE_SHUTDOWN_EN);
 
-	// Set the fault LEDs
+	// Set the fault LED
 	palClearLine (LINE_VCU_FLT);
-	palClearLine (LINE_IND_RED);
-	palSetLine (LINE_IND_GRN);
-	palSetLine (LINE_IND_BLU);
 }
