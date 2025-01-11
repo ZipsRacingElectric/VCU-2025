@@ -242,9 +242,10 @@ void applyPowerLimit (tvOutput_t* output, float deltaTime)
 	// function can only reduce the power consumption.
 	float torqueRatio = pidAntiWindup (&powerLimitPid, cumulativePower, deltaTime, 0, 1);
 
+	// TODO(Barach): NaN
 	// Scale the torque requests equally by the reduction ratio.
-	output->torqueRl *= torqueRatio;
-	output->torqueRr *= torqueRatio;
-	output->torqueFl *= torqueRatio;
-	output->torqueFr *= torqueRatio;
+	// output->torqueRl *= torqueRatio;
+	// output->torqueRr *= torqueRatio;
+	// output->torqueFl *= torqueRatio;
+	// output->torqueFr *= torqueRatio;
 }

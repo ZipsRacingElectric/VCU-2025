@@ -19,7 +19,7 @@
 /**
  * @brief Handles the received CAN message, if it is intended for the VCU.
  * @param frame The received CAN message.
- * @return True if the message was handled, false otherwise. 
+ * @return True if the message was handled, false otherwise.
  */
 bool receiveMessage (CANRxFrame* frame);
 

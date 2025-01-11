@@ -14,7 +14,7 @@
 #define STATE_CONTROL_PERIOD	TIME_MS2I (10)
 #define STATE_MESSAGE_PRESCALAR	10
 
-#define BUZZER_TIME_PERIOD		TIME_MS2I (1000)
+#define BUZZER_TIME_PERIOD		TIME_MS2I (3000)
 #define HV_INACTIVE_PERIOD		TIME_MS2I (100)
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ THD_FUNCTION (stateThread, arg)
 			messageCounter = 0;
 		}
 
-		palWriteLine (LINE_VCU_FLT, torquePlausible && vehicleState != VEHICLE_STATE_FAILED);
+		palWriteLine (LINE_VCU_FLT, !torquePlausible || vehicleState == VEHICLE_STATE_FAILED);
 
 		// Sleep until the next loop
 		systime_t timeNext = chTimeAddX (timePrevious, STATE_CONTROL_PERIOD);

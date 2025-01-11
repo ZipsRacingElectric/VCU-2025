@@ -54,5 +54,5 @@ void hardFaultCallback (void)
 	palClearLine (LINE_SHUTDOWN_EN);
 
 	// Set the fault LED
-	palClearLine (LINE_VCU_FLT);
+	palSetLine (LINE_VCU_FLT);
 }
