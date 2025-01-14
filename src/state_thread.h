@@ -42,6 +42,9 @@ extern vehicleState_t vehicleState;
 /// @brief Indicates the state of the torque thread.
 extern bool torquePlausible;
 
+/// @brief Indicates whether the output torque is being derated for any reason.
+extern bool torqueDerating;
+
 /// @brief Indicates the state of the CAN thread.
 extern bool canPlausible;
 
@@ -49,6 +52,6 @@ extern bool canPlausible;
 
 void stateThreadStart (tprio_t priority);
 
-void stateThreadSetTorquePlausibility (bool plausible);
+void stateThreadSetTorquePlausibility (bool plausible, bool derating);
 
 #endif // STATE_THREAD_H

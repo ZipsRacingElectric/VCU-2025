@@ -139,7 +139,7 @@ void peripheralsReconfigure (void)
 		PERIPHERAL_PRINTF ("Failed to initialize the pedals.");
 
 	// SAS initialization
-	if (eeprom.device.state != MC24LC32_STATE_READY)
+	if (eeprom.device.state == MC24LC32_STATE_READY)
 	{
 		sasConfig.rawMin = *eeprom.sasMin;
 		sasConfig.rawMax = *eeprom.sasMax;
@@ -149,11 +149,22 @@ void peripheralsReconfigure (void)
 		PERIPHERAL_PRINTF ("Failed to initialize the SAS.");
 
 	// Torque thread configuration
-	torqueThreadSetTorqueLimit (*eeprom.torqueLimit);
-	torqueThreadSetTorqueBias (*eeprom.torqueBias);
-	torqueThreadSetRegenLimit (*eeprom.regenLimit);
-	torqueThreadSetRegenBias (*eeprom.regenBias);
-	torqueThreadSelectAlgorithm (*eeprom.torqueAlgoritmIndex);
+	if (eeprom.device.state == MC24LC32_STATE_READY)
+	{
+		torqueThreadSetTorqueLimit (*eeprom.torqueLimit);
+		torqueThreadSetTorqueBias (*eeprom.torqueBias);
+		torqueThreadSetRegenLimit (*eeprom.regenLimit);
+		torqueThreadSetRegenBias (*eeprom.regenBias);
+		torqueThreadSelectAlgorithm (*eeprom.torqueAlgoritmIndex);
+		torqueThreadSetPowerLimit (*eeprom.powerLimit);
+		torqueThreadConfigurePowerLimit
+		(
+			*eeprom.powerLimitPidKp,
+			*eeprom.powerLimitPidKi,
+			*eeprom.powerLimitPidKd
+		);
+	}
+
 }
 
 void glvBatteryCallback (void* arg, uint16_t value)

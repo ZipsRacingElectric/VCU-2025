@@ -12,6 +12,9 @@
 #include "peripherals.h"
 #include "state_thread.h"
 
+// C Standard Library
+#include <float.h>
+
 // Macros ---------------------------------------------------------------------------------------------------------------------
 
 #if TORQUE_THREAD_DEBUGGING
@@ -56,10 +59,10 @@ static tvFunction_t* tvAlgorithms [] =
 /// reduction will only occur when the current power consumption exceeds the set-point, which is the target power limit.
 static pidController_t powerLimitPid =
 {
-	.kp			= 0.01,
-	.ki			= 1,
+	.kp			= 0,
+	.ki			= 0,
 	.kd			= 0,
-	.ySetPoint	= 60,
+	.ySetPoint	= 0,
 	.iPrime		= 0,
 	.dPrime		= 0
 };
@@ -86,8 +89,9 @@ void validateRequest (tvOutput_t* output);
  * equally across all 4 inverters to not interfere with torque distribution.
  * @param output The torque request to apply the limit to.
  * @param deltaTime The amount of time that has passed since the last call to this function.
+ * @return True if the requested torque was limited, false otherwise.
  */
-void applyPowerLimit (tvOutput_t* output, float deltaTime);
+bool applyPowerLimit (tvOutput_t* output, float deltaTime);
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
@@ -105,8 +109,8 @@ THD_FUNCTION (torqueThread, arg)
 		pedalsSample (&pedals, timePrevious);
 
 		// Calculate the torque request and apply power limiting.
-		tvOutput_t request = calculateRequest (0.1f);
-		applyPowerLimit (&request, 0.1f);
+		tvOutput_t request = calculateRequest (0.01f);
+		applyPowerLimit (&request, 0.01f);
 
 		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
 		{
@@ -192,14 +196,26 @@ void torqueThreadSelectAlgorithm (uint8_t index)
 		algoritmIndex = index;
 }
 
+void torqueThreadSetPowerLimit (float powerLimit)
+{
+	powerLimitPid.ySetPoint = powerLimit;
+}
+
+void torqueThreadConfigurePowerLimit (float kp, float ki, float kd)
+{
+	powerLimitPid.kp = kp;
+	powerLimitPid.ki = ki;
+	powerLimitPid.kd = kd;
+}
+
 tvOutput_t calculateRequest (float deltaTime)
 {
 	// Invoke the torque-vectoring algorithm and validate the output request.
 	torqueConfig.deltaTime = deltaTime;
 	tvOutput_t request = tvAlgorithms [algoritmIndex] (&torqueConfig);
 	validateRequest (&request);
-	bool plausible = request.valid && pedals.plausible;
-	stateThreadSetTorquePlausibility (plausible);
+	// TODO(Barach): Global
+	torquePlausible = request.valid && pedals.plausible;
 	return request;
 }
 
@@ -217,7 +233,7 @@ void validateRequest (tvOutput_t* output)
 	output->valid &= cumulativeTorque <= torqueConfig.torqueLimit && cumulativeTorque >= -torqueConfig.regenLimit;
 }
 
-void applyPowerLimit (tvOutput_t* output, float deltaTime)
+bool applyPowerLimit (tvOutput_t* output, float deltaTime)
 {
 	// Calculate the cumulative power consumption of the inverters.
 	float cumulativePower = 0.0f;
@@ -242,10 +258,13 @@ void applyPowerLimit (tvOutput_t* output, float deltaTime)
 	// function can only reduce the power consumption.
 	float torqueRatio = pidAntiWindup (&powerLimitPid, cumulativePower, deltaTime, 0, 1);
 
-	// TODO(Barach): NaN
 	// Scale the torque requests equally by the reduction ratio.
-	// output->torqueRl *= torqueRatio;
-	// output->torqueRr *= torqueRatio;
-	// output->torqueFl *= torqueRatio;
-	// output->torqueFr *= torqueRatio;
+	output->torqueRl *= torqueRatio;
+	output->torqueRr *= torqueRatio;
+	output->torqueFl *= torqueRatio;
+	output->torqueFr *= torqueRatio;
+
+	// TODO(Barach): Global
+	torqueDerating = !(torqueRatio >= 1.0f - FLT_EPSILON);
+	return torqueDerating;
 }

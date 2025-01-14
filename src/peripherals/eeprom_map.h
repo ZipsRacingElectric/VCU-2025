@@ -51,6 +51,11 @@ typedef struct
 	float* regenBias;
 	uint16_t* torqueAlgoritmIndex;
 
+	float* powerLimit;
+	float* powerLimitPidKp;
+	float* powerLimitPidKi;
+	float* powerLimitPidKd;
+
 	float** chatfieldLut;
 } eepromMap_t;
 

@@ -21,6 +21,7 @@
 
 vehicleState_t vehicleState	= VEHICLE_STATE_LOW_VOLTAGE;
 bool torquePlausible		= true;
+bool torqueDerating			= false;
 bool canPlausible			= true;
 
 // Function Prototypes --------------------------------------------------------------------------------------------------------
@@ -124,10 +125,11 @@ void stateThreadStart (tprio_t priority)
 	chThdCreateStatic (&stateThreadWa, sizeof (stateThreadWa), priority, stateThread, NULL);
 }
 
-void stateThreadSetTorquePlausibility (bool plausible)
+void stateThreadSetTorquePlausibility (bool plausible, bool derating)
 {
 	// TODO(Barach): Instant fault indicator
 	torquePlausible = plausible;
+	torqueDerating = derating;
 }
 
 bool checkTractiveSystemsActive ()

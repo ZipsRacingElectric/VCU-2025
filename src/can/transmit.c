@@ -32,6 +32,7 @@
 #define STATUS_WORD_0_VEHICLE_STATE(state)					(((uint16_t) (state))		<< 0)
 #define STATUS_WORD_0_TORQUE_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 2)
 #define STATUS_WORD_0_PEDALS_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 3)
+#define STATUS_WORD_0_TORQUE_DERATING(derating)				(((uint16_t) (derating))	<< 4)
 #define STATUS_WORD_0_CAN_PLAUSIBLE(plausible)				(((uint16_t) (plausible))	<< 7)
 
 // VCU Status Word 1
@@ -80,6 +81,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_0_VEHICLE_STATE (vehicleState) |
 			STATUS_WORD_0_TORQUE_PLAUSIBLE (torquePlausible) |
 			STATUS_WORD_0_PEDALS_PLAUSIBLE (pedals.plausible) |
+			STATUS_WORD_0_TORQUE_DERATING (torqueDerating) |
 			STATUS_WORD_0_CAN_PLAUSIBLE (canPlausible),
 			STATUS_WORD_1_APPS_1_PLAUSIBLE (pedals.apps1.plausible) |
 			STATUS_WORD_1_APPS_1_CONFIG_PLAUSIBLE (pedals.apps1.configPlausible) |

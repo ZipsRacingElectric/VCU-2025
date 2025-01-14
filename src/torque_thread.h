@@ -61,4 +61,18 @@ void torqueThreadSetRegenBias (float bias);
  */
 void torqueThreadSelectAlgorithm (uint8_t index);
 
+/**
+ * @brief Sets the cumulative power limit of the torque thread.
+ * @param powerLimit The limit to set, in Watts.
+ */
+void torqueThreadSetPowerLimit (float powerLimit);
+
+/**
+ * @brief Configures the PID coefficients of the power limit PID controller.
+ * @param kp The proportional coefficient to set, in Nm / Watt.
+ * @param ki The integral coefficient to set, in TODO(Barach)
+ * @param kd The derivative coefficient to set, in TODO(Barach)
+ */
+void torqueThreadConfigurePowerLimit (float kp, float ki, float kd);
+
 #endif // TORQUE_THREAD_H
