@@ -8,8 +8,8 @@
     <output_path>..</output_path>
     <hal_version>5.0.x</hal_version>
   </configuration_settings>
-  <board_name>Vehicle Control Board Rev.AA</board_name>
-  <board_id>VCB_AA_2025</board_id>
+  <board_name>Vehicle Control Board Rev.AB</board_name>
+  <board_id>VCB_AB_2025</board_id>
   <board_functions></board_functions>
   <subtype>STM32F405xx</subtype>
   <clocks
