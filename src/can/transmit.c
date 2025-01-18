@@ -33,6 +33,7 @@
 #define STATUS_WORD_0_TORQUE_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 2)
 #define STATUS_WORD_0_PEDALS_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 3)
 #define STATUS_WORD_0_TORQUE_DERATING(derating)				(((uint16_t) (derating))	<< 4)
+#define STATUS_WORD_0_EEPROM_STATE(state)					(((uint16_t) (state))		<< 5)
 #define STATUS_WORD_0_CAN_PLAUSIBLE(plausible)				(((uint16_t) (plausible))	<< 7)
 
 // VCU Status Word 1
@@ -56,9 +57,11 @@
 msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 {
 	// Byte 0:
-	//   Bit 0 & 1: Vehicle state
+	//   Bits 0 & 1: Vehicle state
 	//   Bit 2: Torque plausible
 	//   Bit 3: Pedals plausible
+	//   Bit 4: Torque derating
+	//   Bits 5 & 6: EEPROM state
 	//   Bit 7: CAN plausible
 	// Byte 1:
 	//   Bit 0: APPS-1 Plausible
@@ -81,6 +84,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_0_VEHICLE_STATE (vehicleState) |
 			STATUS_WORD_0_TORQUE_PLAUSIBLE (torquePlausible) |
 			STATUS_WORD_0_PEDALS_PLAUSIBLE (pedals.plausible) |
+			STATUS_WORD_0_EEPROM_STATE (eeprom.device.state) |
 			STATUS_WORD_0_TORQUE_DERATING (torqueDerating) |
 			STATUS_WORD_0_CAN_PLAUSIBLE (canPlausible),
 			STATUS_WORD_1_APPS_1_PLAUSIBLE (pedals.apps1.plausible) |
