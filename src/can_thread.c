@@ -20,16 +20,13 @@
 
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
-amkInverter_t	amkRl;
-amkInverter_t	amkRr;
-amkInverter_t	amkFl;
-amkInverter_t	amkFr;
+amkInverter_t	amks [AMK_COUNT];
 bms_t			bms;
 ecumasterGps_t	gps;
 
 canNode_t* nodes [] =
 {
-	(canNode_t*) &amkRl, (canNode_t*) &amkRr, (canNode_t*) &amkFl, (canNode_t*) &amkFr,
+	(canNode_t*) &AMK_RL, (canNode_t*) &AMK_RR, (canNode_t*) &AMK_FL, (canNode_t*) &AMK_FR,
 	(canNode_t*) &bms, (canNode_t*) &gps
 };
 
@@ -54,32 +51,32 @@ static CANConfig canConfig =
 			CAN_BTR_BRP (2)		// Baudrate divisor of 3 (1 Mbps)
 };
 
-amkInverterConfig_t amkRlConfig =
+amkInverterConfig_t amkConfigs [AMK_COUNT] =
 {
-	.driver			= &CAND1,
-	.baseId			= 0x200,
-	.timeoutPeriod	= TIME_MS2I (100),
-};
-
-amkInverterConfig_t amkRrConfig =
-{
-	.driver			= &CAND1,
-	.baseId			= 0x201,
-	.timeoutPeriod	= TIME_MS2I (100),
-};
-
-amkInverterConfig_t amkFlConfig =
-{
-	.driver			= &CAND1,
-	.baseId			= 0x202,
-	.timeoutPeriod	= TIME_MS2I (100),
-};
-
-amkInverterConfig_t amkFrConfig =
-{
-	.driver			= &CAND1,
-	.baseId			= 0x203,
-	.timeoutPeriod	= TIME_MS2I (100),
+	// RL
+	{
+		.driver			= &CAND1,
+		.baseId			= 0x200,
+		.timeoutPeriod	= TIME_MS2I (100),
+	},
+	// RR
+	{
+		.driver			= &CAND1,
+		.baseId			= 0x201,
+		.timeoutPeriod	= TIME_MS2I (100),
+	},
+	// FL
+	{
+		.driver			= &CAND1,
+		.baseId			= 0x202,
+		.timeoutPeriod	= TIME_MS2I (100),
+	},
+	// FR
+	{
+		.driver			= &CAND1,
+		.baseId			= 0x203,
+		.timeoutPeriod	= TIME_MS2I (100),
+	}
 };
 
 bmsConfig_t bmsConfig =
@@ -140,10 +137,8 @@ void canThreadStart (tprio_t priority)
 	palClearLine (LINE_CAN1_STBY);
 
 	// Initialize the CAN nodes
-	amkInit (&amkFl, &amkFlConfig);
-	amkInit (&amkFr, &amkFrConfig);
-	amkInit (&amkRl, &amkRlConfig);
-	amkInit (&amkRr, &amkRrConfig);
+	for (uint8_t index = 0; index < AMK_COUNT; ++index)
+		amkInit (amks + index, amkConfigs + index);
 	bmsInit (&bms, &bmsConfig);
 	ecumasterInit (&gps, &gpsConfig);
 

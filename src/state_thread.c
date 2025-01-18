@@ -24,12 +24,6 @@ bool torquePlausible		= true;
 bool torqueDerating			= false;
 bool canPlausible			= true;
 
-// Function Prototypes --------------------------------------------------------------------------------------------------------
-
-bool checkTractiveSystemsActive (void);
-
-bool checkInverterHighVoltage (amkInverter_t* inverter);
-
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
 static THD_WORKING_AREA (stateThreadWa, 512);
@@ -52,7 +46,12 @@ THD_FUNCTION (stateThread, arg)
 		if (vehicleState == VEHICLE_STATE_FAILED)
 			vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
 
-		bool tractiveSystemsActive = checkTractiveSystemsActive ();
+		// TODO(Barach): Macro
+		amkInverterState_t amksState = amksGetState (amks, 1);
+		if (amksState == AMK_STATE_INVALID || amksState == AMK_STATE_ERROR)
+			vehicleState = VEHICLE_STATE_FAILED;
+
+		bool tractiveSystemsActive = amksState == AMK_STATE_READY_HIGH_VOLTAGE || amksState == AMK_STATE_READY_ENERGIZED;
 
 		// Check vehicle state
 		if (vehicleState == VEHICLE_STATE_LOW_VOLTAGE)
@@ -130,48 +129,6 @@ void stateThreadSetTorquePlausibility (bool plausible, bool derating)
 	// TODO(Barach): Instant fault indicator
 	torquePlausible = plausible;
 	torqueDerating = derating;
-}
-
-bool checkTractiveSystemsActive ()
-{
-	if (!checkInverterHighVoltage (&amkRl))
-		return false;
-
-	// TODO(Barach): Check other inverters
-
-	// if (!checkInverterHighVoltage (&amkRr))
-	// 	return false;
-
-	// if (!checkInverterHighVoltage (&amkFl))
-	// 	return false;
-
-	// if (!checkInverterHighVoltage (&amkFr))
-	// 	return false;
-
-	return true;
-}
-
-bool checkInverterHighVoltage (amkInverter_t* inverter)
-{
-	canNodeLock ((canNode_t*) inverter);
-
-	// Check the node's data is valid.
-	if (inverter->state != CAN_NODE_VALID)
-	{
-		canNodeUnlock ((canNode_t*) inverter);
-		vehicleState = VEHICLE_STATE_FAILED;
-		return false;
-	}
-
-	// Check DC bus is energized.
-	if (!inverter->quitDcOn)
-	{
-		canNodeUnlock ((canNode_t*) inverter);
-		return false;
-	}
-
-	canNodeUnlock ((canNode_t*) inverter);
-	return true;
 }
 
 void canFaultCallback (msg_t result)

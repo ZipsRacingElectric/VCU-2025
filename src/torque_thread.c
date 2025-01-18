@@ -117,28 +117,28 @@ THD_FUNCTION (torqueThread, arg)
 			if (!torquePlausible)
 			{
 				// Send 0 torque request message (keep torque limits, as lowering them in motion will trigger a fault).
-				amkSendTorqueRequest (&amkRl, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
-				amkSendTorqueRequest (&amkRr, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
-				amkSendTorqueRequest (&amkFl, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
-				amkSendTorqueRequest (&amkFr, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&AMK_RL, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&AMK_RR, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&AMK_FL, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&AMK_FR, 0, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
 			}
 			else
 			{
 				// TODO(Barach): Split global torque limit and individual torque limit.
 				// Torque request message.
-				amkSendTorqueRequest (&amkRl, request.torqueRl, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
-				amkSendTorqueRequest (&amkRr, request.torqueRr, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
-				amkSendTorqueRequest (&amkFl, request.torqueFl, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
-				amkSendTorqueRequest (&amkFr, request.torqueFr, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&AMK_RL, request.torqueRl, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&AMK_RR, request.torqueRr, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&AMK_FL, request.torqueFl, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
+				amkSendTorqueRequest (&AMK_FR, request.torqueFr, TV_MOTOR_TORQUE_MAX, -TV_MOTOR_REGEN_MAX, TORQUE_THREAD_PERIOD / 6);
 			}
 		}
 		else
 		{
 			// De-energization message.
-			amkSendEnergizationRequest (&amkRl, false, TORQUE_THREAD_PERIOD / 6);
-			amkSendEnergizationRequest (&amkRr, false, TORQUE_THREAD_PERIOD / 6);
-			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_PERIOD / 6);
-			amkSendEnergizationRequest (&amkFr, false, TORQUE_THREAD_PERIOD / 6);
+			amkSendEnergizationRequest (&AMK_RL, false, TORQUE_THREAD_PERIOD / 6);
+			amkSendEnergizationRequest (&AMK_RR, false, TORQUE_THREAD_PERIOD / 6);
+			amkSendEnergizationRequest (&AMK_FL, false, TORQUE_THREAD_PERIOD / 6);
+			amkSendEnergizationRequest (&AMK_FR, false, TORQUE_THREAD_PERIOD / 6);
 		}
 
 		// Broadcast the sensor input messages
@@ -235,24 +235,9 @@ void validateRequest (tvOutput_t* output)
 
 bool applyPowerLimit (tvOutput_t* output, float deltaTime)
 {
+	// TODO(Barach): Macro
 	// Calculate the cumulative power consumption of the inverters.
-	float cumulativePower = 0.0f;
-
-	canNodeLock ((canNode_t*) &amkRl);
-	cumulativePower += amkRl.actualPower;
-	canNodeUnlock ((canNode_t*) &amkRl);
-
-	// canNodeLock ((canNode_t*) &amkRr);
-	// cumulativePower += amkRr.actualPower;
-	// canNodeUnlock ((canNode_t*) &amkRr);
-
-	// canNodeLock ((canNode_t*) &amkFl);
-	// cumulativePower += amkFl.actualPower;
-	// canNodeUnlock ((canNode_t*) &amkFl);
-
-	// canNodeLock ((canNode_t*) &amkFr);
-	// cumulativePower += amkFr.actualPower;
-	// canNodeUnlock ((canNode_t*) &amkFr);
+	float cumulativePower = amksGetCumulativePower (amks, 1);
 
 	// Calculate the ratio to globally reduce the power consumption by. This value is clamped from 0 to 1, meaning this
 	// function can only reduce the power consumption.

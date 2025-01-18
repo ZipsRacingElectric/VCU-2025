@@ -23,12 +23,17 @@
 /// @brief Enables / disables debugging messages from the CAN thread.
 #define CAN_THREAD_DEBUGGING 0
 
+/// @brief The number of AMK inverters on the CAN bus.
+#define AMK_COUNT 4
+
+#define AMK_RL (amks [0])
+#define AMK_RR (amks [1])
+#define AMK_FL (amks [2])
+#define AMK_FR (amks [3])
+
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
-extern amkInverter_t	amkRl;
-extern amkInverter_t	amkRr;
-extern amkInverter_t	amkFl;
-extern amkInverter_t	amkFr;
+extern amkInverter_t	amks [AMK_COUNT];
 extern bms_t			bms;
 extern ecumasterGps_t	gps;
 
