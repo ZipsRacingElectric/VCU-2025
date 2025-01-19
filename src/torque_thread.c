@@ -15,20 +15,9 @@
 // C Standard Library
 #include <float.h>
 
-// Macros ---------------------------------------------------------------------------------------------------------------------
-
-#if TORQUE_THREAD_DEBUGGING
-	#define TORQUE_THREAD_PRINTF(format, ...) DEBUG_PRINTF ("[Torque Thread] " format, ##__VA_ARGS__)
-#else
-	#define TORQUE_THREAD_PRINTF(format, ...) while (false)
-#endif // TORQUE_THREAD_DEBUGGING
-
 // Constants ------------------------------------------------------------------------------------------------------------------
 
 #define TORQUE_THREAD_PERIOD TIME_MS2I (10)
-
-// TODO(Barach): Move to EEPROM
-#define CUMULATIVE_POWER_LIMIT 80000.0f
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
@@ -52,7 +41,6 @@ static tvFunction_t* tvAlgorithms [] =
 	&tvStraightDiff, &tvChatfield
 };
 
-// TODO(Barach): Move coefficients/setpoint to EEPROM.
 /// @brief PID controller responsible for enforcing the global power limit. The y variable is the cumulative power consumption,
 /// the x variable is the ratio to reduce the torque request by. The set-point is fixed at the power limit, while the output
 /// value is clamped from 0 to 1. This means that the controller only has the ability to reduce the power consumption, and this
@@ -201,7 +189,7 @@ void torqueThreadSetPowerLimit (float powerLimit)
 	powerLimitPid.ySetPoint = powerLimit;
 }
 
-void torqueThreadConfigurePowerLimit (float kp, float ki, float kd)
+void torqueThreadSetPowerLimitPid (float kp, float ki, float kd)
 {
 	powerLimitPid.kp = kp;
 	powerLimitPid.ki = ki;
@@ -239,17 +227,15 @@ bool applyPowerLimit (tvOutput_t* output, float deltaTime)
 	// Calculate the cumulative power consumption of the inverters.
 	float cumulativePower = amksGetCumulativePower (amks, 1);
 
-	// Calculate the ratio to globally reduce the power consumption by. This value is clamped from 0 to 1, meaning this
-	// function can only reduce the power consumption.
-	float torqueRatio = pidAntiWindup (&powerLimitPid, cumulativePower, deltaTime, 0, 1);
+	float derating = pidAntiWindup (&powerLimitPid, cumulativePower, deltaTime, -1, 0);
 
 	// Scale the torque requests equally by the reduction ratio.
-	output->torqueRl *= torqueRatio;
-	output->torqueRr *= torqueRatio;
-	output->torqueFl *= torqueRatio;
-	output->torqueFr *= torqueRatio;
+	output->torqueRl *= (1 + derating);
+	output->torqueRr *= (1 + derating);
+	output->torqueFl *= (1 + derating);
+	output->torqueFr *= (1 + derating);
 
 	// TODO(Barach): Global
-	torqueDerating = !(torqueRatio >= 1.0f - FLT_EPSILON);
+	torqueDerating = (derating < 0.0f - FLT_EPSILON);
 	return torqueDerating;
 }

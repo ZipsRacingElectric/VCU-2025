@@ -6,11 +6,8 @@
 // Author: Cole Barach
 // Date Created: 2024.10.16
 //
-// Description: TODO(Barach)
-//
-// TODO(Barach):
-// - Header
-// - Time overflow
+// Description: Thread managing the global state of the VCU. This is responsible for implementing the vehicle state, fault
+//   conditions, and indicators.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 

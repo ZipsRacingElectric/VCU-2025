@@ -9,13 +9,9 @@
 // ChibiOS
 #include "ch.h"
 
-// Macros ---------------------------------------------------------------------------------------------------------------------
-
-/// @brief Enables / disables debugging messages from the torque thread.
-#define TORQUE_THREAD_DEBUGGING 1
-
 // Constants ------------------------------------------------------------------------------------------------------------------
 
+// TODO(Barach): These should be injected into the algorithms rather than defined here.
 // TODO(Barach): Better distinction between the cumulative torque limit and the individual torque limit.
 /// @brief The maximum value of the global torque limit.
 #define TORQUE_LIMIT_MAX TV_MOTOR_TORQUE_MAX * 4
@@ -69,10 +65,10 @@ void torqueThreadSetPowerLimit (float powerLimit);
 
 /**
  * @brief Configures the PID coefficients of the power limit PID controller.
- * @param kp The proportional coefficient to set, in Nm / Watt.
+ * @param kp The proportional coefficient to set, in TODO(Barach)
  * @param ki The integral coefficient to set, in TODO(Barach)
  * @param kd The derivative coefficient to set, in TODO(Barach)
  */
-void torqueThreadConfigurePowerLimit (float kp, float ki, float kd);
+void torqueThreadSetPowerLimitPid (float kp, float ki, float kd);
 
 #endif // TORQUE_THREAD_H

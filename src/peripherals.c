@@ -157,7 +157,7 @@ void peripheralsReconfigure (void)
 		torqueThreadSetRegenBias (*eeprom.regenBias);
 		torqueThreadSelectAlgorithm (*eeprom.torqueAlgoritmIndex);
 		torqueThreadSetPowerLimit (*eeprom.powerLimit);
-		torqueThreadConfigurePowerLimit
+		torqueThreadSetPowerLimitPid
 		(
 			*eeprom.powerLimitPidKp,
 			*eeprom.powerLimitPidKi,
