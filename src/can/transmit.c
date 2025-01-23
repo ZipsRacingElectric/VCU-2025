@@ -53,12 +53,6 @@
 #define STATUS_WORD_2_AMK_FR_VALID(valid)					(((uint16_t) (valid))		<< 3)
 #define STATUS_WORD_2_GPS_VALID(valid)						(((uint16_t) (valid))		<< 4)
 
-// EEPROM Response Message
-#define EEPROM_RESPONSE_MESSAGE_READ_NOT_WRITE(rnw)			(((uint16_t) (rnw))	<< 0)
-#define EEPROM_RESPONSE_MESSAGE_DATA_NOT_VALIDATION(dnv)	(((uint16_t) (dnv))	<< 1)
-#define EEPROM_RESPONSE_MESSAGE_IS_VALID(iv)				(((uint16_t) (iv))	<< 2)
-#define EEPROM_RESPONSE_MESSAGE_DATA_COUNT(dc)				(((uint16_t) ((dc) - 1)) << 2)
-
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
@@ -217,76 +211,6 @@ msg_t transmitSensorInputRaw (CANDriver* driver, sysinterval_t timeout)
 			(bseRWord >> 4) & 0xFF,
 			sasWord & 0xFF,
 			(sasWord >> 8) & 0xFF
-		}
-	};
-
-	msg_t result = canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
-	if (result != MSG_OK)
-		canFaultCallback (result);
-	return result;
-}
-
-msg_t transmitEepromResponseData (CANDriver* driver, sysinterval_t timeout, uint16_t address, uint8_t* data, uint8_t dataCount)
-{
-	// EEPROM Command Message: (ID 0x751)
-	//   Bytes 0 to 1: Instruction
-	//     Bit 0: Read / Not Write
-	//     Bit 1: Data / Not Validation
-	//     Bit 2: (Validation only) Is Valid
-	//     Bits 2 to 3: (Data only) Data Count - 1
-	//   Bytes 2 to 3: (Data only) Address
-	//   Bytes 4 to 7: (Data only) Data
-
-	uint16_t instruction = EEPROM_RESPONSE_MESSAGE_READ_NOT_WRITE (true)
-		| EEPROM_RESPONSE_MESSAGE_DATA_NOT_VALIDATION (true)
-		| EEPROM_RESPONSE_MESSAGE_DATA_COUNT (dataCount);
-
-	CANTxFrame frame =
-	{
-		.DLC	= 8,
-		.IDE	= CAN_IDE_STD,
-		.SID	= EEPROM_RESPONSE_MESSAGE_ID,
-		.data16	=
-		{
-			instruction,
-			address
-		}
-	};
-
-	memcpy (frame.data8 + 4, data, dataCount);
-
-	msg_t result = canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
-	if (result != MSG_OK)
-		canFaultCallback (result);
-	return result;
-}
-
-msg_t transmitEepromResponseValidation (CANDriver* driver, sysinterval_t timeout, bool isValid)
-{
-	// EEPROM Command Message: (ID 0x751)
-	//   Bytes 0 to 1: Instruction
-	//     Bit 0: Read / Not Write
-	//     Bit 1: Data / Not Validation
-	//     Bit 2: (Validation only) Is Valid
-	//     Bits 2 to 3: (Data only) Data Count - 1
-	//   Bytes 2 to 3: (Data only) Address
-	//   Bytes 4 to 7: (Data only) Data
-
-	uint16_t instruction = EEPROM_RESPONSE_MESSAGE_READ_NOT_WRITE (true)
-		| EEPROM_RESPONSE_MESSAGE_DATA_NOT_VALIDATION (false)
-		| EEPROM_RESPONSE_MESSAGE_IS_VALID (isValid);
-
-	CANTxFrame frame =
-	{
-		.DLC	= 8,
-		.IDE	= CAN_IDE_STD,
-		.SID	= EEPROM_RESPONSE_MESSAGE_ID,
-		.data16	=
-		{
-			instruction,
-			0x0000,
-			0x0000,
-			0x0000
 		}
 	};
 

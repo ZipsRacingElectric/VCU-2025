@@ -39,8 +39,4 @@ msg_t transmitSensorInputPercent (CANDriver* driver, sysinterval_t timeout);
  */
 msg_t transmitSensorInputRaw (CANDriver* driver, sysinterval_t timeout);
 
-msg_t transmitEepromResponseData (CANDriver* driver, sysinterval_t timeout, uint16_t address, uint8_t* data, uint8_t dataCount);
-
-msg_t transmitEepromResponseValidation (CANDriver* driver, sysinterval_t timeout, bool isValid);
-
 #endif // TRANSMIT_H
