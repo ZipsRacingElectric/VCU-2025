@@ -151,17 +151,16 @@ void peripheralsReconfigure (void)
 	// Torque thread configuration
 	if (eeprom.device.state == MC24LC32_STATE_READY)
 	{
-		torqueThreadSetTorqueLimit (*eeprom.torqueLimit);
-		torqueThreadSetTorqueBias (*eeprom.torqueBias);
-		torqueThreadSetRegenLimit (*eeprom.regenLimit);
-		torqueThreadSetRegenBias (*eeprom.regenBias);
+		torqueThreadSetDrivingTorqueLimit (*eeprom.drivingTorqueLimit);
+		torqueThreadSetRegenTorqueLimit (*eeprom.regenTorqueLimit);
 		torqueThreadSelectAlgorithm (*eeprom.torqueAlgoritmIndex);
 		torqueThreadSetPowerLimit (*eeprom.powerLimit);
 		torqueThreadSetPowerLimitPid
 		(
 			*eeprom.powerLimitPidKp,
 			*eeprom.powerLimitPidKi,
-			*eeprom.powerLimitPidKd
+			*eeprom.powerLimitPidKd,
+			*eeprom.powerLimitPidA
 		);
 	}
 

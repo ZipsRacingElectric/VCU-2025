@@ -45,16 +45,17 @@ typedef struct
 	uint16_t* sasMax;
 	float* sasAngleRange;
 
-	float* torqueLimit;
-	float* torqueBias;
-	float* regenLimit;
-	float* regenBias;
+	float* drivingTorqueLimit;
+	float* drivingTorqueBias;
+	float* regenTorqueLimit;
+	float* regenTorqueBias;
 	uint16_t* torqueAlgoritmIndex;
 
 	float* powerLimit;
 	float* powerLimitPidKp;
 	float* powerLimitPidKi;
 	float* powerLimitPidKd;
+	float* powerLimitPidA;
 
 	float** chatfieldLut;
 } eepromMap_t;

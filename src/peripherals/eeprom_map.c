@@ -4,7 +4,7 @@
 // Memory Mapping -------------------------------------------------------------------------------------------------------------
 
 /// @brief The magic string of the EEPROM. Update this value every time the memory map changes to force manual re-programming.
-#define MAGIC_STRING "VCU_2025_01_14"
+#define MAGIC_STRING "VCU_2025_01_19"
 
 #define APPS_1_MIN_ADDR					0x10
 #define APPS_1_MAX_ADDR					0x12
@@ -20,16 +20,17 @@
 #define SAS_MAX_ADDR					0x22
 #define SAS_ANGLE_RANGE_ADDR			0x24
 
-#define TORQUE_LIMIT_ADDR				0x28
-#define TORQUE_BIAS_ADDR				0x2C
-#define REGEN_LIMIT_ADDR				0x30
-#define REGEN_BIAS_ADDR					0x34
+#define DRIVING_TORQUE_LIMIT_ADDR		0x28
+#define DRIVING_TORQUE_BIAS_ADDR		0x2C
+#define REGEN_TORQUE_LIMIT_ADDR			0x30
+#define REGEN_TORQUE_BIAS_ADDR			0x34
 #define TORQUE_ALGORITHM_INDEX_ADDR		0x38
 
 #define POWER_LIMIT_ADDR				0x3C
 #define POWER_LIMIT_PID_KP_ADDR			0x40
 #define POWER_LIMIT_PID_KI_ADDR			0x44
 #define POWER_LIMIT_PID_KD_ADDR			0x48
+#define POWER_LIMIT_PID_A_ADDR			0x4C
 
 #define CHATFIELD_LUT_ADDR				0x80
 
@@ -51,16 +52,17 @@ bool eepromMapInit (eepromMap_t* eeprom, eepromMapConfig_t* config)
 	eeprom->sasMax				= (uint16_t*) (eeprom->device.cache + SAS_MAX_ADDR);
 	eeprom->sasAngleRange		= (float*) (eeprom->device.cache + SAS_ANGLE_RANGE_ADDR);
 
-	eeprom->torqueLimit			= (float*) (eeprom->device.cache + TORQUE_LIMIT_ADDR);
-	eeprom->torqueBias			= (float*) (eeprom->device.cache + TORQUE_BIAS_ADDR);
-	eeprom->regenLimit			= (float*) (eeprom->device.cache + REGEN_LIMIT_ADDR);
-	eeprom->regenBias			= (float*) (eeprom->device.cache + REGEN_BIAS_ADDR);
+	eeprom->drivingTorqueLimit	= (float*) (eeprom->device.cache + DRIVING_TORQUE_LIMIT_ADDR);
+	eeprom->drivingTorqueBias	= (float*) (eeprom->device.cache + DRIVING_TORQUE_BIAS_ADDR);
+	eeprom->regenTorqueLimit	= (float*) (eeprom->device.cache + REGEN_TORQUE_LIMIT_ADDR);
+	eeprom->regenTorqueBias		= (float*) (eeprom->device.cache + REGEN_TORQUE_BIAS_ADDR);
 	eeprom->torqueAlgoritmIndex	= (uint16_t*) (eeprom->device.cache + TORQUE_ALGORITHM_INDEX_ADDR);
 
 	eeprom->powerLimit			= (float*) (eeprom->device.cache + POWER_LIMIT_ADDR);
 	eeprom->powerLimitPidKp		= (float*) (eeprom->device.cache + POWER_LIMIT_PID_KP_ADDR);
 	eeprom->powerLimitPidKi		= (float*) (eeprom->device.cache + POWER_LIMIT_PID_KI_ADDR);
 	eeprom->powerLimitPidKd		= (float*) (eeprom->device.cache + POWER_LIMIT_PID_KD_ADDR);
+	eeprom->powerLimitPidA		= (float*) (eeprom->device.cache + POWER_LIMIT_PID_A_ADDR);
 
 	eeprom->chatfieldLut		= (float**) (eeprom->device.cache + CHATFIELD_LUT_ADDR);
 

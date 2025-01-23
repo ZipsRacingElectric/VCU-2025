@@ -10,6 +10,7 @@
 //   Systems Through Tire and Vehicle Model Simulation".
 //
 // TODO(Barach):
+// - Reimplement all of this.
 // - Not a fan of pedal input being a LUT, look for a better option.
 //
 // Sensor Requirements:

@@ -4,8 +4,8 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "can/receive.h"
 #include "debug.h"
+#include "can/receive.h"
 
 // ChibiOS
 #include "hal.h"
@@ -26,7 +26,7 @@ ecumasterGps_t	gps;
 
 canNode_t* nodes [] =
 {
-	(canNode_t*) &AMK_RL, (canNode_t*) &AMK_RR, (canNode_t*) &AMK_FL, (canNode_t*) &AMK_FR,
+	(canNode_t*) &amkRl, (canNode_t*) &amkRr, (canNode_t*) &amkFl, (canNode_t*) &amkFr,
 	(canNode_t*) &bms, (canNode_t*) &gps
 };
 

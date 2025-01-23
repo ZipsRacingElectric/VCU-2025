@@ -9,12 +9,12 @@
 // Description: Bare minimum torque vectoring algorithm. This is only intended as a fallback for when critical sensors are not
 //   working, please don't run this unless you are desperate.
 //
-// Sensor Requirements:
-// - Pedals
+// Sensor Requirements: None
 //
 // Algorithm Description:
-//   Requested torque is distributed equally left to right. Front to rear distribution is configured by the input torque bias.
-//   Regen is not implemented in this mode.
+//   - Requested torque is distributed equally left to right. Front to rear distribution is configured by the EEPROM's driving
+//     torque bias.
+//   - Regen is not implemented in this mode.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 

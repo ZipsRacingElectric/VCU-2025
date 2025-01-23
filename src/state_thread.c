@@ -126,7 +126,10 @@ void stateThreadStart (tprio_t priority)
 
 void stateThreadSetTorquePlausibility (bool plausible, bool derating)
 {
-	// TODO(Barach): Instant fault indicator
+	// If implausible, set the fault indicator now.
+	if (!plausible)
+		palWriteLine (LINE_VCU_FLT, true);
+
 	torquePlausible = plausible;
 	torqueDerating = derating;
 }

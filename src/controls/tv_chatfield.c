@@ -72,56 +72,76 @@ uint16_t getAngleIndex (float throttleValue)
 
 float getLutRl (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex)
 {
-	float value = lookupTable [throttleIndex][angleIndex];
+	// float value = lookupTable [throttleIndex][angleIndex];
 
-	// Torque / regen scaling
-	if (value >= 0)
-		value *= input->torqueLimit / 2.0f * input->torqueBias;
-	else
-	 	value = input->regenLimit / 2.0f * input->regenBias;
+	// // Torque / regen scaling
+	// if (value >= 0)
+	// 	value *= input->torqueLimit / 2.0f * input->torqueBias;
+	// else
+	//  	value = input->regenLimit / 2.0f * input->regenBias;
 
-	return value;
+	// return value;
+
+	(void) input;
+	(void) throttleIndex;
+	(void) angleIndex;
+	return 0.0;
 }
 
 float getLutRr (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex)
 {
-	// Right LUT is mirror of left LUT.
-	angleIndex = TV_CHATFIELD_LUT_ANGLE_WIDTH - angleIndex - 1;
-	float value = lookupTable [throttleIndex][angleIndex];
+	// // Right LUT is mirror of left LUT.
+	// angleIndex = TV_CHATFIELD_LUT_ANGLE_WIDTH - angleIndex - 1;
+	// float value = lookupTable [throttleIndex][angleIndex];
 
-	// Torque / regen scaling
-	if (value >= 0)
-		value *= input->torqueLimit / 2.0f * input->torqueBias;
-	else
-	 	value = input->regenLimit / 2.0f * input->regenBias;
+	// // Torque / regen scaling
+	// if (value >= 0)
+	// 	value *= input->torqueLimit / 2.0f * input->torqueBias;
+	// else
+	//  	value = input->regenLimit / 2.0f * input->regenBias;
 
-	return value;
+	// return value;
+
+	(void) input;
+	(void) throttleIndex;
+	(void) angleIndex;
+	return 0.0;
 }
 
 float getLutFl (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex)
 {
-	float value = lookupTable [throttleIndex][angleIndex];
+	// float value = lookupTable [throttleIndex][angleIndex];
 
-	// Torque / regen scaling
-	if (value >= 0)
-		value *= input->torqueLimit / 2.0f * (1 - input->torqueBias);
-	else
-	 	value = input->regenLimit / 2.0f * (1 - input->regenBias);
+	// // Torque / regen scaling
+	// if (value >= 0)
+	// 	value *= input->torqueLimit / 2.0f * (1 - input->torqueBias);
+	// else
+	//  	value = input->regenLimit / 2.0f * (1 - input->regenBias);
 
-	return value;
+	// return value;
+
+	(void) input;
+	(void) throttleIndex;
+	(void) angleIndex;
+	return 0.0;
 }
 
 float getLutFr (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex)
 {
-	// Right LUT is mirror of left LUT.
-	angleIndex = TV_CHATFIELD_LUT_ANGLE_WIDTH - angleIndex - 1;
-	float value = lookupTable [throttleIndex][angleIndex];
+	// // Right LUT is mirror of left LUT.
+	// angleIndex = TV_CHATFIELD_LUT_ANGLE_WIDTH - angleIndex - 1;
+	// float value = lookupTable [throttleIndex][angleIndex];
 
-	// Torque / regen scaling
-	if (value >= 0)
-		value *= input->torqueLimit / 2.0f * (1 - input->torqueBias);
-	else
-	 	value = input->regenLimit / 2.0f * (1 - input->regenBias);
+	// // Torque / regen scaling
+	// if (value >= 0)
+	// 	value *= input->torqueLimit / 2.0f * (1 - input->torqueBias);
+	// else
+	//  	value = input->regenLimit / 2.0f * (1 - input->regenBias);
 
-	return value;
+	// return value;
+
+	(void) input;
+	(void) throttleIndex;
+	(void) angleIndex;
+	return 0.0;
 }
