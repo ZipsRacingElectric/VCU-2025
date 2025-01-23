@@ -2,7 +2,7 @@
 #include "transmit.h"
 
 // Includes
-#include "can/can_node.h"
+#include "can_thread.h"
 #include "peripherals.h"
 #include "state_thread.h"
 
@@ -46,6 +46,13 @@
 #define STATUS_WORD_1_BSE_R_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 6)
 #define STATUS_WORD_1_BSE_R_CONFIG_PLAUSIBLE(plausible)		(((uint16_t) (plausible))	<< 7)
 
+// VCU Status Word 2
+#define STATUS_WORD_2_AMK_RL_VALID(valid)					(((uint16_t) (valid))		<< 0)
+#define STATUS_WORD_2_AMK_RR_VALID(valid)					(((uint16_t) (valid))		<< 1)
+#define STATUS_WORD_2_AMK_FL_VALID(valid)					(((uint16_t) (valid))		<< 2)
+#define STATUS_WORD_2_AMK_FR_VALID(valid)					(((uint16_t) (valid))		<< 3)
+#define STATUS_WORD_2_GPS_VALID(valid)						(((uint16_t) (valid))		<< 4)
+
 // EEPROM Response Message
 #define EEPROM_RESPONSE_MESSAGE_READ_NOT_WRITE(rnw)			(((uint16_t) (rnw))	<< 0)
 #define EEPROM_RESPONSE_MESSAGE_DATA_NOT_VALIDATION(dnv)	(((uint16_t) (dnv))	<< 1)
@@ -72,11 +79,17 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 	//   Bit 5: BSE-F Config Plausible
 	//   Bit 6: BSE-R Plausible
 	//   Bit 7: BSE-R Config Plausible
-	// Byte 2: GLV battery voltage
+	// Byte 2:
+	//   Bit 0: AMK RL valid
+	//   Bit 1: AMK RR valid
+	//   Bit 2: AMK FL valid
+	//   Bit 3: AMK FR valid
+	//   Bit 4: GPS valid
+	// Byte 3: GLV battery voltage
 
 	CANTxFrame frame =
 	{
-		.DLC	= 3,
+		.DLC	= 4,
 		.IDE	= CAN_IDE_STD,
 		.SID	= STATUS_MESSAGE_ID,
 		.data8	=
@@ -95,6 +108,12 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_1_BSE_F_CONFIG_PLAUSIBLE (pedals.bseF.configPlausible) |
 			STATUS_WORD_1_BSE_R_PLAUSIBLE (pedals.bseR.plausible) |
 			STATUS_WORD_1_BSE_R_CONFIG_PLAUSIBLE (pedals.bseR.configPlausible),
+			STATUS_WORD_2_AMK_RL_VALID (amkGetValidityLock (&amkRl)) |
+			STATUS_WORD_2_AMK_RR_VALID (amkGetValidityLock (&amkRr)) |
+			STATUS_WORD_2_AMK_FL_VALID (amkGetValidityLock (&amkFl)) |
+			STATUS_WORD_2_AMK_FR_VALID (amkGetValidityLock (&amkFr)) |
+			// TODO(Barach): Check GPS fix here.
+			STATUS_WORD_2_GPS_VALID (gps.state = CAN_NODE_VALID),
 			glvBatteryVoltageRaw
 		}
 	};
