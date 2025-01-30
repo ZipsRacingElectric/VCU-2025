@@ -110,6 +110,9 @@ THD_FUNCTION (stateThread, arg)
 
 		palWriteLine (LINE_VCU_FLT, !torquePlausible || vehicleState == VEHICLE_STATE_FAILED);
 
+		// Brake light
+		palWriteLine (LINE_BRK_LIGHT, pedals.isBraking);
+
 		// Sleep until the next loop
 		systime_t timeNext = chTimeAddX (timePrevious, STATE_CONTROL_PERIOD);
 		timePrevious = chThdSleepUntilWindowed (timePrevious, timeNext);
