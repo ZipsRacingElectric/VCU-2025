@@ -6,6 +6,7 @@
 // Includes
 #include "debug.h"
 #include "torque_thread.h"
+#include "controls/lerp.h"
 
 // ChibiOS
 #include "hal.h"
@@ -25,11 +26,11 @@
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
-eepromMap_t	eeprom;
-float		glvBatteryVoltage;
-uint16_t	glvBatteryVoltageRaw;
-pedals_t	pedals;
-sas_t		sas;
+analog_t		adc1;
+eepromMap_t		eeprom;
+linearSensor_t	glvBattery;
+pedals_t		pedals;
+sas_t			sas;
 
 // Functions Prototypes -------------------------------------------------------------------------------------------------------
 
@@ -45,6 +46,37 @@ static I2CConfig i2cConfig =
 	.duty_cycle		= FAST_DUTY_CYCLE_2
 };
 
+/// @brief Configuration for the ADC1 peripheral.
+static analogConfig_t adc1Config =
+{
+	.driver = &ADCD1,
+	.channels =
+	{
+		ADC_CHANNEL_IN10,	// APPS-1
+		ADC_CHANNEL_IN11,	// APPS-2
+		ADC_CHANNEL_IN12,	// BSE-F
+		ADC_CHANNEL_IN13,	// BSE-R
+		ADC_CHANNEL_IN0		// GLV Battery
+	},
+	.channelCount = 5,
+	.handlers =
+	{
+		linearSensorUpdate,
+		linearSensorUpdate,
+		linearSensorUpdate,
+		linearSensorUpdate,
+		linearSensorUpdate
+	},
+	.objects =
+	{
+		&pedals.apps1,
+		&pedals.apps2,
+		&pedals.bseF,
+		&pedals.bseR,
+		&glvBattery
+	}
+};
+
 /// @brief Configuration for the on-board EEPROM.
 static eepromMapConfig_t eepromConfig =
 {
@@ -52,34 +84,47 @@ static eepromMapConfig_t eepromConfig =
 	.i2c	= &I2CD1
 };
 
+/// @brief Configuration for the GVL battery voltage measurment.
+/// @note Minimum and maximum voltages are loaded from the EEPROM.
+static linearSensorConfig_t glvBatteryConfig =
+{
+	.sampleMin	= 0,
+	.sampleMax	= 4095,
+	.valueMin	= 0,
+	.valueMax	= 0
+};
+
 /// @brief Configuration for the pedal sensors.
-/// @note Minimum & maximum values are loaded from the EEPROM.
+/// @note Minimum & maximum samples are loaded from the EEPROM.
 static pedalsConfig_t pedalsConfig =
 {
-	.adc = &ADCD1,
 	.apps1Config =
 	{
-		.channel	= ADC_CHANNEL_IN10,
-		.rawMin		= 0,
-		.rawMax		= 0
+		.sampleMin		= 0,
+		.sampleMax		= 0,
+		.valueMin		= 0,
+		.valueMax		= 1
 	},
 	.apps2Config =
 	{
-		.channel	= ADC_CHANNEL_IN11,
-		.rawMin		= 0,
-		.rawMax		= 0
+		.sampleMin		= 0,
+		.sampleMax		= 0,
+		.valueMin		= 0,
+		.valueMax		= 1
 	},
 	.bseFConfig =
 	{
-		.channel	= ADC_CHANNEL_IN12,
-		.rawMin		= 0,
-		.rawMax		= 0
+		.sampleMin		= 0,
+		.sampleMax		= 0,
+		.valueMin		= 0,
+		.valueMax		= 1
 	},
 	.bseRConfig =
 	{
-		.channel	= ADC_CHANNEL_IN13,
-		.rawMin		= 0,
-		.rawMax		= 0
+		.sampleMin		= 0,
+		.sampleMax		= 0,
+		.valueMin		= 0,
+		.valueMax		= 1
 	}
 };
 
@@ -99,8 +144,8 @@ void peripheralsInit ()
 	if (i2cStart (&I2CD1, &i2cConfig) != MSG_OK)
 		PERIPHERAL_PRINTF ("Failed to initialize I2C 1.\r\n");
 
-	// ADC initialization
-	if (adcStart (&ADCD1, NULL) != MSG_OK)
+	// ADC1 initialization
+	if (!analogInit (&adc1, &adc1Config))
 		PERIPHERAL_PRINTF ("Failed to initialize ADC 1.\r\n");
 
 	// EEPROM initialization
@@ -125,14 +170,14 @@ void peripheralsReconfigure (void)
 	// Pedals initialization
 	if (eeprom.device.state == MC24LC32_STATE_READY)
 	{
-		pedalsConfig.apps1Config.rawMin	= *eeprom.apps1Min;
-		pedalsConfig.apps1Config.rawMax	= *eeprom.apps1Max;
-		pedalsConfig.apps2Config.rawMin	= *eeprom.apps2Min;
-		pedalsConfig.apps2Config.rawMax	= *eeprom.apps2Max;
-		pedalsConfig.bseFConfig.rawMin	= *eeprom.bseFMin;
-		pedalsConfig.bseFConfig.rawMax	= *eeprom.bseFMax;
-		pedalsConfig.bseRConfig.rawMin	= *eeprom.bseRMin;
-		pedalsConfig.bseRConfig.rawMax	= *eeprom.bseRMax;
+		pedalsConfig.apps1Config.sampleMin	= *eeprom.apps1Min;
+		pedalsConfig.apps1Config.sampleMax	= *eeprom.apps1Max;
+		pedalsConfig.apps2Config.sampleMin	= *eeprom.apps2Min;
+		pedalsConfig.apps2Config.sampleMax	= *eeprom.apps2Max;
+		pedalsConfig.bseFConfig.sampleMin	= *eeprom.bseFMin;
+		pedalsConfig.bseFConfig.sampleMax	= *eeprom.bseFMax;
+		pedalsConfig.bseRConfig.sampleMin	= *eeprom.bseRMin;
+		pedalsConfig.bseRConfig.sampleMax	= *eeprom.bseRMax;
 	}
 
 	if (!pedalsInit (&pedals, &pedalsConfig))
@@ -164,12 +209,13 @@ void peripheralsReconfigure (void)
 		);
 	}
 
-}
-
-void glvBatteryCallback (void* arg, uint16_t value)
-{
-	// TODO(Barach): Callback is unused.
-	(void) arg;
-	glvBatteryVoltageRaw = value;
-	glvBatteryVoltage = (3.3f * value / 4096.0f) * (R24 + R32) / R32;
+	// GLV battery initialization
+	if (eeprom.device.state == MC24LC32_STATE_READY)
+	{
+		uint16_t glvSample11v5 = *eeprom.glvBattery11v5;
+		uint16_t glvSample14v4 = *eeprom.glvBattery14v4;
+		glvBatteryConfig.valueMin = lerp2d (0, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
+		glvBatteryConfig.valueMax = lerp2d (4095, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
+		linearSensorInit (&glvBattery, &glvBatteryConfig);
+	}
 }

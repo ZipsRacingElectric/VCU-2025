@@ -19,6 +19,10 @@
 #define ANGLE_INVERSE_FACTOR		(65535.0f / 360.0f)
 #define ANGLE_TO_WORD(angle)		(int16_t) ((angle) * ANGLE_INVERSE_FACTOR)
 
+// Voltage Value (V)
+#define VOLTAGE_INVERSE_FACTOR		(255.0f / 18.0f)
+#define VOLTAGE_TO_WORD(voltage)	(uint8_t) ((voltage) * VOLTAGE_INVERSE_FACTOR)
+
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
 #define STATUS_MESSAGE_ID				0x100
@@ -37,14 +41,10 @@
 #define STATUS_WORD_0_CAN_PLAUSIBLE(plausible)				(((uint16_t) (plausible))	<< 7)
 
 // VCU Status Word 1
-#define STATUS_WORD_1_APPS_1_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 0)
-#define STATUS_WORD_1_APPS_1_CONFIG_PLAUSIBLE(plausible)	(((uint16_t) (plausible))	<< 1)
-#define STATUS_WORD_1_APPS_2_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 2)
-#define STATUS_WORD_1_APPS_2_CONFIG_PLAUSIBLE(plausible)	(((uint16_t) (plausible))	<< 3)
-#define STATUS_WORD_1_BSE_F_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 4)
-#define STATUS_WORD_1_BSE_F_CONFIG_PLAUSIBLE(plausible)		(((uint16_t) (plausible))	<< 5)
-#define STATUS_WORD_1_BSE_R_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 6)
-#define STATUS_WORD_1_BSE_R_CONFIG_PLAUSIBLE(plausible)		(((uint16_t) (plausible))	<< 7)
+#define STATUS_WORD_1_APPS_1_STATE(state)					(((uint16_t) (state))		<< 0)
+#define STATUS_WORD_1_APPS_2_STATE(state)					(((uint16_t) (state))		<< 2)
+#define STATUS_WORD_1_BSE_F_STATE(state)					(((uint16_t) (state))		<< 4)
+#define STATUS_WORD_1_BSE_R_STATE(state)					(((uint16_t) (state))		<< 6)
 
 // VCU Status Word 2
 #define STATUS_WORD_2_AMK_RL_VALID(valid)					(((uint16_t) (valid))		<< 0)
@@ -94,21 +94,17 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_0_EEPROM_STATE (eeprom.device.state) |
 			STATUS_WORD_0_TORQUE_DERATING (torqueDerating) |
 			STATUS_WORD_0_CAN_PLAUSIBLE (canPlausible),
-			STATUS_WORD_1_APPS_1_PLAUSIBLE (pedals.apps1.plausible) |
-			STATUS_WORD_1_APPS_1_CONFIG_PLAUSIBLE (pedals.apps1.configPlausible) |
-			STATUS_WORD_1_APPS_2_PLAUSIBLE (pedals.apps2.plausible) |
-			STATUS_WORD_1_APPS_2_CONFIG_PLAUSIBLE (pedals.apps2.configPlausible) |
-			STATUS_WORD_1_BSE_F_PLAUSIBLE (pedals.bseF.plausible) |
-			STATUS_WORD_1_BSE_F_CONFIG_PLAUSIBLE (pedals.bseF.configPlausible) |
-			STATUS_WORD_1_BSE_R_PLAUSIBLE (pedals.bseR.plausible) |
-			STATUS_WORD_1_BSE_R_CONFIG_PLAUSIBLE (pedals.bseR.configPlausible),
+			STATUS_WORD_1_APPS_1_STATE (pedals.apps1.state) |
+			STATUS_WORD_1_APPS_2_STATE (pedals.apps2.state) |
+			STATUS_WORD_1_BSE_F_STATE (pedals.bseF.state) |
+			STATUS_WORD_1_BSE_R_STATE (pedals.bseR.state),
 			STATUS_WORD_2_AMK_RL_VALID (amkGetValidityLock (&amkRl)) |
 			STATUS_WORD_2_AMK_RR_VALID (amkGetValidityLock (&amkRr)) |
 			STATUS_WORD_2_AMK_FL_VALID (amkGetValidityLock (&amkFl)) |
 			STATUS_WORD_2_AMK_FR_VALID (amkGetValidityLock (&amkFr)) |
 			// TODO(Barach): Check GPS fix here.
 			STATUS_WORD_2_GPS_VALID (gps.state = CAN_NODE_VALID),
-			glvBatteryVoltageRaw
+			VOLTAGE_TO_WORD (glvBattery.value)
 		}
 	};
 
@@ -190,10 +186,10 @@ msg_t transmitSensorInputRaw (CANDriver* driver, sysinterval_t timeout)
 	// Byte 7:
 	//   Bits 0 to 7: SAS Value HI byte
 
-	uint16_t apps1Word	= pedals.apps1.valueRaw;
-	uint16_t apps2Word	= pedals.apps2.valueRaw;
-	uint16_t bseFWord	= pedals.bseF.valueRaw;
-	uint16_t bseRWord	= pedals.bseR.valueRaw;
+	uint16_t apps1Word	= pedals.apps1.sample;
+	uint16_t apps2Word	= pedals.apps2.sample;
+	uint16_t bseFWord	= pedals.bseF.sample;
+	uint16_t bseRWord	= pedals.bseR.sample;
 	int16_t sasWord		= sas.valueRaw;
 
 	CANTxFrame frame =

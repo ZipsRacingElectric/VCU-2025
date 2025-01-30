@@ -4,7 +4,7 @@
 // Memory Mapping -------------------------------------------------------------------------------------------------------------
 
 /// @brief The magic string of the EEPROM. Update this value every time the memory map changes to force manual re-programming.
-#define MAGIC_STRING "VCU_2025_01_19"
+#define MAGIC_STRING "VCU_2025_01_30"
 
 #define APPS_1_MIN_ADDR					0x10
 #define APPS_1_MAX_ADDR					0x12
@@ -31,6 +31,9 @@
 #define POWER_LIMIT_PID_KI_ADDR			0x44
 #define POWER_LIMIT_PID_KD_ADDR			0x48
 #define POWER_LIMIT_PID_A_ADDR			0x4C
+
+#define GLV_BATTERY_SAMPLE_11V5			0x50
+#define GLV_BATTERY_SAMPLE_14V4			0x52
 
 #define CHATFIELD_LUT_ADDR				0x80
 
@@ -63,6 +66,9 @@ bool eepromMapInit (eepromMap_t* eeprom, eepromMapConfig_t* config)
 	eeprom->powerLimitPidKi		= (float*) (eeprom->device.cache + POWER_LIMIT_PID_KI_ADDR);
 	eeprom->powerLimitPidKd		= (float*) (eeprom->device.cache + POWER_LIMIT_PID_KD_ADDR);
 	eeprom->powerLimitPidA		= (float*) (eeprom->device.cache + POWER_LIMIT_PID_A_ADDR);
+
+	eeprom->glvBattery11v5		= (uint16_t*) (eeprom->device.cache + GLV_BATTERY_SAMPLE_11V5);
+	eeprom->glvBattery14v4		= (uint16_t*) (eeprom->device.cache + GLV_BATTERY_SAMPLE_14V4);
 
 	eeprom->chatfieldLut		= (float**) (eeprom->device.cache + CHATFIELD_LUT_ADDR);
 

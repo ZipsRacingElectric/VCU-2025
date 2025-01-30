@@ -57,6 +57,9 @@ typedef struct
 	float* powerLimitPidKd;
 	float* powerLimitPidA;
 
+	uint16_t* glvBattery11v5;
+	uint16_t* glvBattery14v4;
+
 	float** chatfieldLut;
 } eepromMap_t;
 

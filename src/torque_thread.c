@@ -110,8 +110,8 @@ THD_FUNCTION (torqueThread, arg)
 	while (true)
 	{
 		// Sample the sensor inputs.
-		// TODO(Barach): Sample other ADC values here for simplicity.
-		pedalsSample (&pedals, timePrevious);
+		analogSample (&adc1);
+		pedalsUpdate (&pedals, timePrevious);
 
 		// Calculate the torque request and apply power limiting.
 		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S);
