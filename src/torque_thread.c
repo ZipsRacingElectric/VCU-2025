@@ -122,6 +122,8 @@ THD_FUNCTION (torqueThread, arg)
 		// Nofify the state thread of the current plausibility.
 		stateThreadSetTorquePlausibility (plausible, derating);
 
+		transmitDebugMessage (&CAND1, request.torqueRl, request.torqueRr, request.torqueFl, request.torqueFr, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+
 		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
 		{
 			if (plausible)

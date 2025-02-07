@@ -41,10 +41,6 @@ typedef struct
 	uint16_t* bseRMin;
 	uint16_t* bseRMax;
 
-	uint16_t* sasMin;
-	uint16_t* sasMax;
-	float* sasAngleRange;
-
 	float* drivingTorqueLimit;
 	float* drivingTorqueBias;
 	float* regenTorqueLimit;
@@ -59,6 +55,13 @@ typedef struct
 
 	uint16_t* glvBattery11v5;
 	uint16_t* glvBattery14v4;
+
+	uint16_t* sasSampleOffset;
+	uint16_t* sasPositiveSample;
+	uint16_t* sasNegativeSample;
+	float* sasPositiveAngle;
+	float* sasNegativeAngle;
+	float* sasDeadzoneRange;
 
 	float** chatfieldLut;
 } eepromMap_t;

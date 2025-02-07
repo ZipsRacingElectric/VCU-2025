@@ -9,10 +9,6 @@
 // Description: Chris Chatfield's torque vectoring model, as described in his master's thesis "Analysis of Torque Vectoring
 //   Systems Through Tire and Vehicle Model Simulation".
 //
-// TODO(Barach):
-// - Reimplement all of this.
-// - Not a fan of pedal input being a LUT, look for a better option.
-//
 // Sensor Requirements:
 // - Pedals
 // - Steering Angle

@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "torque_thread.h"
 #include "controls/lerp.h"
+#include "controls/tv_chatfield.h"
 
 // ChibiOS
 #include "hal.h"
@@ -56,15 +57,17 @@ static analogConfig_t adc1Config =
 		ADC_CHANNEL_IN11,	// APPS-2
 		ADC_CHANNEL_IN12,	// BSE-F
 		ADC_CHANNEL_IN13,	// BSE-R
+		ADC_CHANNEL_IN14,	// SAS
 		ADC_CHANNEL_IN0		// GLV Battery
 	},
-	.channelCount = 5,
+	.channelCount = 6,
 	.handlers =
 	{
 		linearSensorUpdate,
 		linearSensorUpdate,
 		linearSensorUpdate,
 		linearSensorUpdate,
+		sasUpdate,
 		linearSensorUpdate
 	},
 	.objects =
@@ -73,6 +76,7 @@ static analogConfig_t adc1Config =
 		&pedals.apps2,
 		&pedals.bseF,
 		&pedals.bseR,
+		&sas,
 		&glvBattery
 	}
 };
@@ -131,9 +135,12 @@ static pedalsConfig_t pedalsConfig =
 /// @brief Configuration for the steering-angle sensor.
 static sasConfig_t sasConfig =
 {
-	.rawMin	= 0,
-	.rawMax	= 0,
-	.range	= 0
+	.sampleOffset	= 0,
+	.sampleNegative	= 0,
+	.samplePositive	= 0,
+	.angleNegative	= 0,
+	.anglePositive	= 0,
+	.angleDeadzone	= 0
 };
 
 // Functions ------------------------------------------------------------------------------------------------------------------
@@ -186,8 +193,12 @@ void peripheralsReconfigure (void)
 	// SAS initialization
 	if (eeprom.device.state == MC24LC32_STATE_READY)
 	{
-		sasConfig.rawMin = *eeprom.sasMin;
-		sasConfig.rawMax = *eeprom.sasMax;
+		sasConfig.sampleOffset		= *eeprom.sasSampleOffset;
+		sasConfig.sampleNegative	= *eeprom.sasNegativeSample;
+		sasConfig.samplePositive	= *eeprom.sasPositiveSample;
+		sasConfig.angleNegative		= *eeprom.sasNegativeAngle;
+		sasConfig.anglePositive		= *eeprom.sasPositiveAngle;
+		sasConfig.angleDeadzone		= *eeprom.sasDeadzoneRange;
 	}
 
 	if (!sasInit (&sas, &sasConfig))
@@ -218,4 +229,7 @@ void peripheralsReconfigure (void)
 		glvBatteryConfig.valueMax = lerp2d (4095, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
 		linearSensorInit (&glvBattery, &glvBatteryConfig);
 	}
+
+	if (eeprom.device.state == MC24LC32_STATE_READY)
+		tvChatfieldInit ();
 }
