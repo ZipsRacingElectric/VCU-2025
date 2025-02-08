@@ -38,7 +38,7 @@
 #define SAS_NEGATIVE_ANGLE_ADDR			0x60
 #define SAS_DEADZONE_RANGE_ADDR			0x64
 
-#define CHATFIELD_LUT_ADDR				0x80
+#define CHATFIELD_LUT_ADDR				0x100
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -76,13 +76,14 @@ bool eepromMapInit (eepromMap_t* eeprom, eepromMapConfig_t* config)
 	eeprom->sasNegativeAngle 	= (float*) (eeprom->device.cache + SAS_NEGATIVE_ANGLE_ADDR);
 	eeprom->sasDeadzoneRange 	= (float*) (eeprom->device.cache + SAS_DEADZONE_RANGE_ADDR);
 
-	eeprom->chatfieldLut		= (float**) (eeprom->device.cache + CHATFIELD_LUT_ADDR);
+	eeprom->chatfieldLut		= (float*) (eeprom->device.cache + CHATFIELD_LUT_ADDR);
 
 	mc24lc32Config_t mc24lc32Config =
 	{
 		.addr			= config->addr,
 		.i2c			= config->i2c,
-		.magicString	= MAGIC_STRING
+		.magicString	= MAGIC_STRING,
+		.timeoutPeriod	= config->timeoutPeriod
 	};
 	return mc24lc32Init (&eeprom->device, &mc24lc32Config);
 }

@@ -46,7 +46,7 @@ include common/src/can/mc24lc32_can.mk
 include common/src/controls/pid_controller.mk
 
 # Compiler flags
-USE_OPT = -Og -Wall -Wextra
+USE_OPT = -Og -Wall -Wextra -lm
 
 # C macro definitions
 UDEFS = -DCHPRINTF_USE_FLOAT=1

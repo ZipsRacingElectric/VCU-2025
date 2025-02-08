@@ -3,145 +3,101 @@
 
 // Includes
 #include "peripherals.h"
+#include "controls/lerp.h"
+
+// C Standard Library
+#include <math.h>
 
 // Global Constants -----------------------------------------------------------------------------------------------------------
 
-float** lookupTable;
+float (*lookupTable) [TV_CHATFIELD_LUT_ANGLE_WIDTH][TV_CHATFIELD_LUT_THROTTLE_WIDTH];
 
-// Function Prototypes --------------------------------------------------------------------------------------------------------
+// Private Functions ----------------------------------------------------------------------------------------------------------
 
-uint16_t getThrottleIndex (float steeringValue);
+float getThrottleIndex (float throttleValue)
+{
+	// TODO(Barach): Clamp before, or will precision kill it?
+	float index = 100.0f * throttleValue / TV_CHATFIELD_THROTTLE_RESOLUTION;
+	if (index < 0.0f)
+		index = 0.0f;
+	if (index > (uint16_t) TV_CHATFIELD_LUT_THROTTLE_WIDTH - 1.0f)
+		index = (uint16_t) TV_CHATFIELD_LUT_THROTTLE_WIDTH - 1.0f;
+	return index;
+}
 
-uint16_t getAngleIndex (float throttleValue);
+float getAngleIndex (float angleValue)
+{
+	float index = (angleValue + TV_CHATFIELD_ANGLE_RANGE) / TV_CHATFIELD_ANGLE_RESOLUTION;
+	if (index < 0.0f)
+		index = 0.0f;
+	if (index > (uint16_t) TV_CHATFIELD_LUT_ANGLE_WIDTH - 1.0f)
+		index = (uint16_t) TV_CHATFIELD_LUT_ANGLE_WIDTH - 1.0f;
+	return index;
+}
 
-float getLutRl (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex);
+float getBiasRightHand (float throttle, float angle)
+{
+	float throttleIndex3 = getThrottleIndex (throttle);
+	uint16_t throttleIndex1 = (uint16_t) floor (throttleIndex3);
+	uint16_t throttleIndex2 = (uint16_t) ceil (throttleIndex3);
 
-float getLutRr (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex);
+	float angleIndex3 = getAngleIndex (angle);
+	uint16_t angleIndex1 = (uint16_t) floor (angleIndex3);
+	uint16_t angleIndex2 = (uint16_t) ceil (angleIndex3);
 
-float getLutFl (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex);
+	float torque11 = (*lookupTable) [angleIndex1][throttleIndex1];
+	float torque12 = (*lookupTable) [angleIndex2][throttleIndex1];
+	float torque21 = (*lookupTable) [angleIndex1][throttleIndex2];
+	float torque22 = (*lookupTable) [angleIndex2][throttleIndex2];
 
-float getLutFr (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex);
+	return bilinearInterpolation (throttleIndex3, angleIndex3, throttleIndex1, angleIndex1, throttleIndex2, angleIndex2,
+		torque11, torque12, torque21, torque22);
+}
+
+float getBiasLeftHand (float throttle, float angle)
+{
+	float throttleIndex3 = getThrottleIndex (throttle);
+	uint16_t throttleIndex1 = (uint16_t) floor (throttleIndex3);
+	uint16_t throttleIndex2 = (uint16_t) ceil (throttleIndex3);
+
+	float angleIndex3 = (uint16_t) TV_CHATFIELD_LUT_ANGLE_WIDTH - 1 - getAngleIndex (angle);
+	uint16_t angleIndex1 = (uint16_t) floor (angleIndex3);
+	uint16_t angleIndex2 = (uint16_t) ceil (angleIndex3);
+
+	float torque11 = (*lookupTable) [angleIndex1][throttleIndex1];
+	float torque12 = (*lookupTable) [angleIndex2][throttleIndex1];
+	float torque21 = (*lookupTable) [angleIndex1][throttleIndex2];
+	float torque22 = (*lookupTable) [angleIndex2][throttleIndex2];
+
+	return bilinearInterpolation (throttleIndex3, angleIndex3, throttleIndex1, angleIndex1, throttleIndex2, angleIndex2,
+		torque11, torque12, torque21, torque22);
+}
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 void tvChatfieldInit (void)
 {
-	lookupTable = eeprom.chatfieldLut;
+	// Cast the EEPROM's LUT into the correct dimension LUT.
+	lookupTable = (float (*) [TV_CHATFIELD_LUT_ANGLE_WIDTH][TV_CHATFIELD_LUT_THROTTLE_WIDTH]) eeprom.chatfieldLut;
 }
 
 tvOutput_t tvChatfield (const tvInput_t* input)
 {
-	// Get the loopup table indices.
-	uint16_t throttleIndex	= getThrottleIndex (pedals.appsRequest);
-	uint16_t angleIndex		= getAngleIndex (sas.value);
+	float throttle = pedals.appsRequest;
+	float angle = sas.value;
+
+	float biasFront = *eeprom.drivingTorqueBias;
+	float biasRear = (1 - biasFront);
+	float biasRightHand = getBiasRightHand (throttle, angle);
+	float biasLeftHand = getBiasLeftHand (throttle, angle);
 
 	tvOutput_t output =
 	{
-		.valid = true,
-		.torqueRl = getLutRl (input, throttleIndex, angleIndex),
-		.torqueRr = getLutRr (input, throttleIndex, angleIndex),
-		.torqueFl = getLutFl (input, throttleIndex, angleIndex),
-		.torqueFr = getLutFr (input, throttleIndex, angleIndex)
+		.valid = sas.state == LINEAR_SENSOR_VALID,
+		.torqueRl = biasRightHand * biasRear  * input->drivingTorqueLimit,
+		.torqueRr = biasLeftHand  * biasRear  * input->drivingTorqueLimit,
+		.torqueFl = biasRightHand * biasFront * input->drivingTorqueLimit,
+		.torqueFr = biasLeftHand  * biasFront * input->drivingTorqueLimit
 	};
 	return output;
-}
-
-uint16_t getThrottleIndex (float steeringValue)
-{
-	// Clamp the input value to the table's range.
-	if (steeringValue < -TV_CHATFIELD_ANGLE_RANGE)
-		steeringValue = -TV_CHATFIELD_ANGLE_RANGE;
-	if (steeringValue > TV_CHATFIELD_ANGLE_RANGE)
-		steeringValue = TV_CHATFIELD_ANGLE_RANGE;
-
-	// Linear interpolation from [-range, range] to [0, width]. (Add 0.5 to make flooring act like rounding).
-	return (uint16_t) ((sas.value + TV_CHATFIELD_ANGLE_RANGE) / TV_CHATFIELD_ANGLE_RESOLUTION + 0.5f);
-}
-
-uint16_t getAngleIndex (float throttleValue)
-{
-	// Clamp the input value to the table's range.
-	if (throttleValue < 0)
-		throttleValue = 0;
-	if (throttleValue > TV_CHATFIELD_THROTTLE_RANGE)
-		throttleValue = TV_CHATFIELD_THROTTLE_RANGE;
-
-	// Linear interpolation from [0, range] to [0, width]. (Add 0.5 to make flooring act like rounding).
-	return (uint16_t) (throttleValue / TV_CHATFIELD_THROTTLE_RESOLUTION + 0.5f);
-}
-
-float getLutRl (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex)
-{
-	// float value = lookupTable [throttleIndex][angleIndex];
-
-	// // Torque / regen scaling
-	// if (value >= 0)
-	// 	value *= input->torqueLimit / 2.0f * input->torqueBias;
-	// else
-	//  	value = input->regenLimit / 2.0f * input->regenBias;
-
-	// return value;
-
-	(void) input;
-	(void) throttleIndex;
-	(void) angleIndex;
-	return 0.0;
-}
-
-float getLutRr (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex)
-{
-	// // Right LUT is mirror of left LUT.
-	// angleIndex = TV_CHATFIELD_LUT_ANGLE_WIDTH - angleIndex - 1;
-	// float value = lookupTable [throttleIndex][angleIndex];
-
-	// // Torque / regen scaling
-	// if (value >= 0)
-	// 	value *= input->torqueLimit / 2.0f * input->torqueBias;
-	// else
-	//  	value = input->regenLimit / 2.0f * input->regenBias;
-
-	// return value;
-
-	(void) input;
-	(void) throttleIndex;
-	(void) angleIndex;
-	return 0.0;
-}
-
-float getLutFl (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex)
-{
-	// float value = lookupTable [throttleIndex][angleIndex];
-
-	// // Torque / regen scaling
-	// if (value >= 0)
-	// 	value *= input->torqueLimit / 2.0f * (1 - input->torqueBias);
-	// else
-	//  	value = input->regenLimit / 2.0f * (1 - input->regenBias);
-
-	// return value;
-
-	(void) input;
-	(void) throttleIndex;
-	(void) angleIndex;
-	return 0.0;
-}
-
-float getLutFr (const tvInput_t* input, uint16_t throttleIndex, uint16_t angleIndex)
-{
-	// // Right LUT is mirror of left LUT.
-	// angleIndex = TV_CHATFIELD_LUT_ANGLE_WIDTH - angleIndex - 1;
-	// float value = lookupTable [throttleIndex][angleIndex];
-
-	// // Torque / regen scaling
-	// if (value >= 0)
-	// 	value *= input->torqueLimit / 2.0f * (1 - input->torqueBias);
-	// else
-	//  	value = input->regenLimit / 2.0f * (1 - input->regenBias);
-
-	// return value;
-
-	(void) input;
-	(void) throttleIndex;
-	(void) angleIndex;
-	return 0.0;
 }

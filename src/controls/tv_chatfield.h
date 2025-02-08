@@ -9,6 +9,9 @@
 // Description: Chris Chatfield's torque vectoring model, as described in his master's thesis "Analysis of Torque Vectoring
 //   Systems Through Tire and Vehicle Model Simulation".
 //
+// TODO(Barach):
+// - The table listed in the results of Chatfield's paper is actually unusable.
+//
 // Sensor Requirements:
 // - Pedals
 // - Steering Angle
@@ -26,8 +29,8 @@
 #define TV_CHATFIELD_ANGLE_RANGE			15
 #define TV_CHATFIELD_ANGLE_RESOLUTION		1
 
-#define TV_CHATFIELD_LUT_THROTTLE_WIDTH		(TV_CHATFIELD_THROTTLE_RANGE / TV_CHATFIELD_THROTTLE_RESOLUTION + 1)
-#define TV_CHATFIELD_LUT_ANGLE_WIDTH		((2 * TV_CHATFIELD_ANGLE_RANGE) / TV_CHATFIELD_ANGLE_RESOLUTION + 1)
+#define TV_CHATFIELD_LUT_THROTTLE_WIDTH		((TV_CHATFIELD_THROTTLE_RANGE / TV_CHATFIELD_THROTTLE_RESOLUTION + 1))
+#define TV_CHATFIELD_LUT_ANGLE_WIDTH		(((2 * TV_CHATFIELD_ANGLE_RANGE) / TV_CHATFIELD_ANGLE_RESOLUTION + 1))
 #define TV_CHATFIELD_LUT_SIZE				(TV_CHATFIELD_LUT_THROTTLE_WIDTH * TV_CHATFIELD_LUT_ANGLE_WIDTH)
 
 // Functions ------------------------------------------------------------------------------------------------------------------

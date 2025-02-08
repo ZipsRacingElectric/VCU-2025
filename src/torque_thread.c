@@ -20,6 +20,8 @@
 #define TORQUE_THREAD_PERIOD_S (TIME_I2US (TORQUE_THREAD_PERIOD) / 1000000.0f)
 #define TORQUE_THREAD_CAN_MESSAGE_TIMEOUT (TORQUE_THREAD_PERIOD / 6)
 
+#define CUMULATIVE_TORQUE_TOLERANCE 0.5f
+
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
 /// @brief The cumulative driving (positive) torque limit.
@@ -251,9 +253,10 @@ bool requestValidate (tvOutput_t* output, tvInput_t* input)
 	valid &= pedals.plausible;
 
 	// Validate the cumulative torque limits are not exceeded.
+	// TODO(Barach): Tolerance should be a percentage, not an offset. 0 should have no tolerance.
 	float cumulativeTorque = output->torqueRl + output->torqueRr + output->torqueFl + output->torqueFr;
-	valid &= cumulativeTorque <= input->drivingTorqueLimit;
-	valid &= cumulativeTorque >= -input->regenTorqueLimit;
+	valid &= cumulativeTorque <= input->drivingTorqueLimit + CUMULATIVE_TORQUE_TOLERANCE;
+	valid &= cumulativeTorque >= -input->regenTorqueLimit - CUMULATIVE_TORQUE_TOLERANCE;
 
 	return valid;
 }

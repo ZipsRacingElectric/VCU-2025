@@ -25,6 +25,10 @@ typedef struct
 
 	/// @brief The IC2 bus of the device.
 	I2CDriver* i2c;
+
+	/// @brief The timeout interval for the device's acknowledgement polling. If the device does not send an acknowledgement
+	/// within this timeframe, it will be considered invalid.
+	sysinterval_t timeoutPeriod;
 } eepromMapConfig_t;
 
 typedef struct
@@ -63,7 +67,7 @@ typedef struct
 	float* sasNegativeAngle;
 	float* sasDeadzoneRange;
 
-	float** chatfieldLut;
+	float* chatfieldLut;
 } eepromMap_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

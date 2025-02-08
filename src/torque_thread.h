@@ -1,6 +1,16 @@
 #ifndef TORQUE_THREAD_H
 #define TORQUE_THREAD_H
 
+// Torque Thread --------------------------------------------------------------------------------------------------------------
+//
+// Author: Cole Barach
+// Date Created: TODO(Barach)?
+//
+// Description: TODO(Barach)
+//
+// TODO(Barach):
+// - The cumulative torque limit should not include regen (see Chatfield's example table, throttle = 0).
+
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // ChibiOS

@@ -84,8 +84,9 @@ static analogConfig_t adc1Config =
 /// @brief Configuration for the on-board EEPROM.
 static eepromMapConfig_t eepromConfig =
 {
-	.addr	= 0x50,
-	.i2c	= &I2CD1
+	.addr			= 0x50,
+	.i2c			= &I2CD1,
+	.timeoutPeriod	= TIME_MS2I (500)
 };
 
 /// @brief Configuration for the GVL battery voltage measurment.
