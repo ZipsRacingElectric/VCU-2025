@@ -164,6 +164,7 @@ void peripheralsReconfigure (void)
 		linearSensorInit (&glvBattery, &glvBatteryConfig);
 	}
 
+	// TODO(Barach): Bad reference if init is skipped
 	if (eeprom.device.state == MC24LC32_STATE_READY)
 		tvChatfieldInit ();
 }

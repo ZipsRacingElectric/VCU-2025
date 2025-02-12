@@ -58,7 +58,7 @@ void pedalSensorUpdate (void* object, adcsample_t sample)
 	// Inverse lerp in request range, saturate otherwise.
 	if (sample < sensor->config->requestMin)
 		sensor->value = 0.0f;
-	if (sample < sensor->config->requestMax)
+	else if (sample < sensor->config->requestMax)
 		sensor->value = inverseLerp (sample, sensor->config->requestMin, sensor->config->requestMax);
 	else
 	 	sensor->value = 1.0f;
@@ -76,8 +76,6 @@ bool pedalsInit (pedals_t* pedals, pedalsConfig_t* config)
 
 void pedalsUpdate (pedals_t* pedals, systime_t timePrevious, systime_t timeCurrent)
 {
-	// TODO(Barach): May be better to make a sensor class like the SAS and allow programmable deadzones.
-
 	// TODO(Barach): Pass on FSG rules compliance.
 
 	// Calculate the APPS & BSE requests (average of both sensors)

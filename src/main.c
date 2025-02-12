@@ -2,8 +2,6 @@
 //
 // Author: Cole Barach
 // Date Created: 2024.09.21
-//
-// TODO(Barach): Made a bunch of pretty volatile changes. Gonna need some thorough testing.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
