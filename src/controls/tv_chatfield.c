@@ -16,7 +16,6 @@ float (*lookupTable) [TV_CHATFIELD_LUT_ANGLE_WIDTH][TV_CHATFIELD_LUT_THROTTLE_WI
 
 float getThrottleIndex (float throttleValue)
 {
-	// TODO(Barach): Clamp before, or will precision kill it?
 	float index = 100.0f * throttleValue / TV_CHATFIELD_THROTTLE_RESOLUTION;
 	if (index < 0.0f)
 		index = 0.0f;
@@ -54,25 +53,6 @@ float getBiasRightHand (float throttle, float angle)
 		torque11, torque12, torque21, torque22);
 }
 
-float getBiasLeftHand (float throttle, float angle)
-{
-	float throttleIndex3 = getThrottleIndex (throttle);
-	uint16_t throttleIndex1 = (uint16_t) floor (throttleIndex3);
-	uint16_t throttleIndex2 = (uint16_t) ceil (throttleIndex3);
-
-	float angleIndex3 = (uint16_t) TV_CHATFIELD_LUT_ANGLE_WIDTH - 1 - getAngleIndex (angle);
-	uint16_t angleIndex1 = (uint16_t) floor (angleIndex3);
-	uint16_t angleIndex2 = (uint16_t) ceil (angleIndex3);
-
-	float torque11 = (*lookupTable) [angleIndex1][throttleIndex1];
-	float torque12 = (*lookupTable) [angleIndex2][throttleIndex1];
-	float torque21 = (*lookupTable) [angleIndex1][throttleIndex2];
-	float torque22 = (*lookupTable) [angleIndex2][throttleIndex2];
-
-	return bilinearInterpolation (throttleIndex3, angleIndex3, throttleIndex1, angleIndex1, throttleIndex2, angleIndex2,
-		torque11, torque12, torque21, torque22);
-}
-
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 void tvChatfieldInit (void)
@@ -87,9 +67,9 @@ tvOutput_t tvChatfield (const tvInput_t* input)
 	float angle = sas.value;
 
 	float biasFront = *eeprom.drivingTorqueBias;
-	float biasRear = (1 - biasFront);
+	float biasRear = 1 - biasFront;
 	float biasRightHand = getBiasRightHand (throttle, angle);
-	float biasLeftHand = getBiasLeftHand (throttle, angle);
+	float biasLeftHand = 1 - biasRightHand;
 
 	tvOutput_t output =
 	{
