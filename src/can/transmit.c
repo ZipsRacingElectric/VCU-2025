@@ -61,6 +61,8 @@
 
 msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 {
+	// TODO(Barach): Overhaul this to incorporate all internal object states.
+
 	// Byte 0:
 	//   Bits 0 & 1: Vehicle state
 	//   Bit 2: Torque plausible

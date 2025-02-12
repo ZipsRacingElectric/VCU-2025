@@ -7,11 +7,17 @@
 // Date Created: 2024.10.22
 //
 // Description: Structing mapping the data of an EEPROM data to variables.
+//
+// TODO(Barach):
+// - Consider creating a map struct that you can cast the EEPROM cache to. This would prevent alignment issues and reduce all
+//   the init duplication.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
 #include "peripherals/mc24lc32.h"
+#include "peripherals/pedals.h"
+#include "peripherals/steering_angle.h"
 
 // C Standard Library
 #include <stdint.h>
@@ -35,15 +41,7 @@ typedef struct
 {
 	mc24lc32_t device;
 
-	uint16_t* apps1Min;
-	uint16_t* apps1Max;
-	uint16_t* apps2Min;
-	uint16_t* apps2Max;
-
-	uint16_t* bseFMin;
-	uint16_t* bseFMax;
-	uint16_t* bseRMin;
-	uint16_t* bseRMax;
+	pedalsConfig_t* pedalConfig;
 
 	float* drivingTorqueLimit;
 	float* drivingTorqueBias;
@@ -60,12 +58,7 @@ typedef struct
 	uint16_t* glvBattery11v5;
 	uint16_t* glvBattery14v4;
 
-	uint16_t* sasSampleOffset;
-	uint16_t* sasPositiveSample;
-	uint16_t* sasNegativeSample;
-	float* sasPositiveAngle;
-	float* sasNegativeAngle;
-	float* sasDeadzoneRange;
+	sasConfig_t* sasConfig;
 
 	float* chatfieldLut;
 } eepromMap_t;

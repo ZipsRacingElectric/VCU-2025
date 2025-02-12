@@ -1,49 +1,129 @@
 // Header
 #include "pedals.h"
 
+// Includes
+#include "controls/lerp.h"
+
 // Constants ------------------------------------------------------------------------------------------------------------------
 
 /// @brief The maximum acceptable delta of the APPS-1 and APPS-2 sensor values.
-#define APPS_DELTA_MAX 0.1
+#define APPS_DELTA_MAX 0.1f
 
-#define APPS_ACCELERATING_VALUE 0.1
-#define BSE_BRAKING_VALUE		0.1
+/// @brief The maximum acceptable delta of the BSE-F and BSE-R sensor values.
+#define BSE_DELTA_MAX 0.1f
 
 // Functions ------------------------------------------------------------------------------------------------------------------
+
+bool pedalSensorInit (pedalSensor_t* sensor, pedalSensorConfig_t* config)
+{
+	// Store the configuration
+	sensor->config = config;
+
+	// Validate the configuration
+	bool configValid =
+		config->absoluteMin < config->requestMin &&
+		config->requestMin < config->requestMax &&
+		config->requestMax < config->absoluteMax;
+
+	sensor->state = configValid ? LINEAR_SENSOR_VALUE_INVALID : LINEAR_SENSOR_CONFIG_INVALID;
+
+	// Set values to their defaults
+	sensor->value = 0.0f;
+	sensor->sample = 0;
+
+	return sensor->state != LINEAR_SENSOR_CONFIG_INVALID;
+}
+
+void pedalSensorUpdate (void* object, adcsample_t sample)
+{
+	pedalSensor_t* sensor = (pedalSensor_t*) object;
+
+	// Store the sample.
+	sensor->sample = sample;
+
+	// If the config is invalid, don't check anything else.
+	if (sensor->state == LINEAR_SENSOR_CONFIG_INVALID)
+		return;
+
+	// Check the sample is in the valid range
+	if (sample < sensor->config->absoluteMin || sample > sensor->config->absoluteMax)
+	{
+		sensor->state = LINEAR_SENSOR_VALUE_INVALID;
+		sensor->value = 0;
+		return;
+	}
+
+	sensor->state = LINEAR_SENSOR_VALID;
+
+	// Inverse lerp in request range, saturate otherwise.
+	if (sample < sensor->config->requestMin)
+		sensor->value = 0.0f;
+	if (sample < sensor->config->requestMax)
+		sensor->value = inverseLerp (sample, sensor->config->requestMin, sensor->config->requestMax);
+	else
+	 	sensor->value = 1.0f;
+}
 
 bool pedalsInit (pedals_t* pedals, pedalsConfig_t* config)
 {
 	// Configure and validate the individual sensors
-	bool result = linearSensorInit (&pedals->apps1, &config->apps1Config);
-	result &= linearSensorInit (&pedals->apps2, &config->apps2Config);
-	result &= linearSensorInit (&pedals->bseF, &config->bseFConfig);
-	result &= linearSensorInit (&pedals->bseR, &config->bseRConfig);
+	bool result = pedalSensorInit (&pedals->apps1, &config->apps1Config);
+	result &= pedalSensorInit (&pedals->apps2, &config->apps2Config);
+	result &= pedalSensorInit (&pedals->bseF, &config->bseFConfig);
+	result &= pedalSensorInit (&pedals->bseR, &config->bseRConfig);
 	return result;
 }
 
-void pedalsUpdate (pedals_t* pedals, systime_t timeCurrent)
+void pedalsUpdate (pedals_t* pedals, systime_t timePrevious, systime_t timeCurrent)
 {
-	// TODO(Barach): Deadlines
-	(void) timeCurrent;
+	// TODO(Barach): May be better to make a sensor class like the SAS and allow programmable deadzones.
 
-	// Calculate the average of both sensors.
-	pedals->appsRequest	= (pedals->apps1.value + pedals->apps2.value) / 2.0;
-	pedals->bseRequest = (pedals->bseF.value + pedals->bseR.value) / 2.0;
+	// TODO(Barach): Pass on FSG rules compliance.
 
-	pedals->isAccelerating	= pedals->appsRequest > APPS_ACCELERATING_VALUE;
-	pedals->isBraking		= pedals->bseRequest > BSE_BRAKING_VALUE;
+	// Calculate the APPS & BSE requests (average of both sensors)
+	pedals->appsRequest = (pedals->apps1.value + pedals->apps2.value) / 2.0f;
+	pedals->bseRequest = (pedals->bseF.value + pedals->bseR.value) / 2.0f;
 
-	// APPS 10% check (TODO(Barach): Rule no.)
+	// Get the pedals states
+	// TODO(Barach): Higher tolerance for braking?
+	pedals->accelerating = pedals->appsRequest > 0.0f;
+	pedals->braking = pedals->bseRequest > 0.0f;
+
+	// APPS 10% check (FSAE Rules T.4.2.4)
 	float appsDelta = pedals->apps1.value - pedals->apps2.value;
 	pedals->apps10PercentPlausible = appsDelta <= APPS_DELTA_MAX && appsDelta >= -APPS_DELTA_MAX;
 
-	// TODO(Barach): APPS 25/5
+	// BSE 10% check (not required by FSAE rules, but might as well have it).
+	float bseDelta = pedals->bseF.value - pedals->bseR.value;
+	pedals->bse10PercentPlausible = bseDelta <= BSE_DELTA_MAX && bseDelta >= -BSE_DELTA_MAX;
 
-	// TODO(Barach): 100ms timeout
-	pedals->plausible =
+	// APPS 25/5 check (FSAE Rules EV.4.7)
+	if (pedals->appsRequest > 0.25 && pedals->braking)
+		pedals->apps25_5Plausible = false;
+	else if (pedals->appsRequest < 0.05)
+		pedals->apps25_5Plausible = true;
+
+	// Instantaneous plausiblity check
+	pedals->plausibleInst =
 		pedals->apps1.state == LINEAR_SENSOR_VALID &&
 		pedals->apps2.state == LINEAR_SENSOR_VALID &&
 		pedals->bseF.state == LINEAR_SENSOR_VALID &&
 		pedals->bseR.state == LINEAR_SENSOR_VALID &&
-		pedals->apps10PercentPlausible;
+		pedals->apps10PercentPlausible &&
+		pedals->bse10PercentPlausible &&
+		pedals->apps25_5Plausible;
+
+	// 100ms plausibility timeout (FSAE Rules T.4.2.5)
+	if (pedals->plausibleInst)
+	{
+		// If we are plausible now, postpone the deadline and set the plausibility true.
+		pedals->plausible = true;
+		pedals->plausibilityDeadline = chTimeAddX (timeCurrent, TIME_MS2I (100));
+	}
+	else
+	{
+		// If we are implausible, check for the deadline expiry.
+		if (chTimeIsInRangeX (pedals->plausibilityDeadline, timePrevious, timeCurrent))
+			pedals->plausible = false;
+	}
 }

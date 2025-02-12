@@ -4,12 +4,11 @@
 // Torque Thread --------------------------------------------------------------------------------------------------------------
 //
 // Author: Cole Barach
-// Date Created: TODO(Barach)?
+// Date Created: 2024.10.12
 //
-// Description: TODO(Barach)
-//
-// TODO(Barach):
-// - The cumulative torque limit should not include regen (see Chatfield's example table, throttle = 0).
+// Description: Thread implementing the torque control loop. The torque thread has a internal array of torque-vectoring
+//   algorithms, allowing the user to select a specific implementation to use. The overall power level of algorithm can be
+//   set using the driving and regen torque limits.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 

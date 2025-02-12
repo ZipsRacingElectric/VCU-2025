@@ -3,8 +3,7 @@
 // Author: Cole Barach
 // Date Created: 2024.09.21
 //
-// TODO(Barach):
-// - Tune thread priorities.
+// TODO(Barach): Made a bunch of pretty volatile changes. Gonna need some thorough testing.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -32,14 +31,14 @@ int main (void)
 	// Peripheral initialization
 	peripheralsInit ();
 
-	// CAN thread initialization
+	// CAN thread initialization. Do this first as to invalidate all can nodes before any reads are done.
 	canThreadStart (NORMALPRIO);
 
-	// State thread initialization.
-	stateThreadStart (NORMALPRIO);
+	// Torque thread initialization.
+	torqueThreadStart (NORMALPRIO + 1);
 
-	// Torque thread initialization
-	torqueThreadStart (NORMALPRIO);
+	// State thread initialization.
+	stateThreadStart (NORMALPRIO - 1);
 
 	// Do nothing.
 	while (true)

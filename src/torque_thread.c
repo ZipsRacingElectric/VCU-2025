@@ -20,7 +20,7 @@
 #define TORQUE_THREAD_PERIOD_S (TIME_I2US (TORQUE_THREAD_PERIOD) / 1000000.0f)
 #define TORQUE_THREAD_CAN_MESSAGE_TIMEOUT (TORQUE_THREAD_PERIOD / 6)
 
-#define CUMULATIVE_TORQUE_TOLERANCE 0.5f
+#define CUMULATIVE_TORQUE_TOLERANCE 0.05f
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
@@ -108,12 +108,18 @@ THD_FUNCTION (torqueThread, arg)
 	(void) arg;
 	chRegSetThreadName ("torque_control");
 
-	systime_t timePrevious = chVTGetSystemTimeX ();
+	systime_t timeCurrent = chVTGetSystemTimeX ();
 	while (true)
 	{
+		// Sleep until next loop.
+		systime_t timePrevious = timeCurrent;
+		systime_t timeNext = chTimeAddX (timeCurrent, TORQUE_THREAD_PERIOD);
+		chThdSleepUntilWindowed (timeCurrent, timeNext);
+		timeCurrent = chVTGetSystemTimeX ();
+
 		// Sample the sensor inputs.
 		analogSample (&adc1);
-		pedalsUpdate (&pedals, timePrevious);
+		pedalsUpdate (&pedals, timePrevious, timeCurrent);
 
 		// Calculate the torque request and apply power limiting.
 		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S);
@@ -123,8 +129,6 @@ THD_FUNCTION (torqueThread, arg)
 
 		// Nofify the state thread of the current plausibility.
 		stateThreadSetTorquePlausibility (plausible, derating);
-
-		transmitDebugMessage (&CAND1, request.torqueRl, request.torqueRr, request.torqueFl, request.torqueFr, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 
 		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
 		{
@@ -155,13 +159,12 @@ THD_FUNCTION (torqueThread, arg)
 		}
 
 		// Broadcast the sensor input messages
+		// TODO(Barach): Move these to state thread.
 		transmitSensorInputPercent (&CAND1, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 		transmitSensorInputRaw (&CAND1, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 
-		// Sleep until next loop
-		systime_t timeNext = chTimeAddX (timePrevious, TORQUE_THREAD_PERIOD);
-		chThdSleepUntilWindowed (timePrevious, timeNext);
-		timePrevious = chVTGetSystemTimeX ();
+		// TODO(Barach): Need a more robust system than this, consider programming something in EEPROM.
+		transmitDebugMessage (&CAND1, request.torqueRl, request.torqueRr, request.torqueFl, request.torqueFr, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 	}
 }
 
@@ -252,11 +255,34 @@ bool requestValidate (tvOutput_t* output, tvInput_t* input)
 	// Check the pedal plausibility.
 	valid &= pedals.plausible;
 
+	// Calculate the cumulative driving and regen torques. These are calculated separately, as regen shouldn't allow more than
+	// the max driving torque to be requested, and vice versa.
+	float drivingTorque = 0.0f;
+	float regenTorque = 0.0f;
+
+	if (output->torqueRl >= 0.0f)
+		drivingTorque += output->torqueRl;
+	else
+	 	regenTorque += output->torqueRl;
+
+	if (output->torqueRr >= 0.0f)
+		drivingTorque += output->torqueRr;
+	else
+	 	regenTorque += output->torqueRr;;
+
+	if (output->torqueFl >= 0.0f)
+		drivingTorque += output->torqueFl;
+	else
+		regenTorque += output->torqueFl;
+
+	if (output->torqueFr >= 0.0f)
+		drivingTorque += output->torqueFr;
+	else
+	 	regenTorque += output->torqueFr;
+
 	// Validate the cumulative torque limits are not exceeded.
-	// TODO(Barach): Tolerance should be a percentage, not an offset. 0 should have no tolerance.
-	float cumulativeTorque = output->torqueRl + output->torqueRr + output->torqueFl + output->torqueFr;
-	valid &= cumulativeTorque <= input->drivingTorqueLimit + CUMULATIVE_TORQUE_TOLERANCE;
-	valid &= cumulativeTorque >= -input->regenTorqueLimit - CUMULATIVE_TORQUE_TOLERANCE;
+	valid &= drivingTorque <= input->drivingTorqueLimit * (1 + CUMULATIVE_TORQUE_TOLERANCE);
+	valid &= regenTorque >= -input->regenTorqueLimit * (1 + CUMULATIVE_TORQUE_TOLERANCE);
 
 	return valid;
 }

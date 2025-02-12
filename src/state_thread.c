@@ -46,7 +46,7 @@ THD_FUNCTION (stateThread, arg)
 		if (vehicleState == VEHICLE_STATE_FAILED)
 			vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
 
-		// TODO(Barach): Macro
+		// TODO(Barach): Replace once all inverters are running.
 		amkInverterState_t amksState = amksGetState (amks, 1);
 		if (amksState == AMK_STATE_INVALID || amksState == AMK_STATE_ERROR)
 			vehicleState = VEHICLE_STATE_FAILED;
@@ -63,7 +63,7 @@ THD_FUNCTION (stateThread, arg)
 		else if (vehicleState == VEHICLE_STATE_HIGH_VOLTAGE)
 		{
 			// Transition HV to RTD
-			if (pedals.isBraking && !pedals.isAccelerating && !palReadLine (LINE_START_BUTTON_IN))
+			if (pedals.braking && !pedals.accelerating && !palReadLine (LINE_START_BUTTON_IN))
 			{
 				vehicleState = VEHICLE_STATE_READY_TO_DRIVE;
 				palSetLine (LINE_BUZZER);
@@ -111,7 +111,7 @@ THD_FUNCTION (stateThread, arg)
 		palWriteLine (LINE_VCU_FLT, !torquePlausible || vehicleState == VEHICLE_STATE_FAILED);
 
 		// Brake light
-		palWriteLine (LINE_BRK_LIGHT, pedals.isBraking);
+		palWriteLine (LINE_BRK_LIGHT, pedals.braking);
 
 		// Sleep until the next loop
 		systime_t timeNext = chTimeAddX (timePrevious, STATE_CONTROL_PERIOD);

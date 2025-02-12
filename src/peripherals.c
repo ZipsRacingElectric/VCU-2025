@@ -63,10 +63,10 @@ static analogConfig_t adc1Config =
 	.channelCount = 6,
 	.handlers =
 	{
-		linearSensorUpdate,
-		linearSensorUpdate,
-		linearSensorUpdate,
-		linearSensorUpdate,
+		pedalSensorUpdate,
+		pedalSensorUpdate,
+		pedalSensorUpdate,
+		pedalSensorUpdate,
 		sasUpdate,
 		linearSensorUpdate
 	},
@@ -97,51 +97,6 @@ static linearSensorConfig_t glvBatteryConfig =
 	.sampleMax	= 4095,
 	.valueMin	= 0,
 	.valueMax	= 0
-};
-
-/// @brief Configuration for the pedal sensors.
-/// @note Minimum & maximum samples are loaded from the EEPROM.
-static pedalsConfig_t pedalsConfig =
-{
-	.apps1Config =
-	{
-		.sampleMin		= 0,
-		.sampleMax		= 0,
-		.valueMin		= 0,
-		.valueMax		= 1
-	},
-	.apps2Config =
-	{
-		.sampleMin		= 0,
-		.sampleMax		= 0,
-		.valueMin		= 0,
-		.valueMax		= 1
-	},
-	.bseFConfig =
-	{
-		.sampleMin		= 0,
-		.sampleMax		= 0,
-		.valueMin		= 0,
-		.valueMax		= 1
-	},
-	.bseRConfig =
-	{
-		.sampleMin		= 0,
-		.sampleMax		= 0,
-		.valueMin		= 0,
-		.valueMax		= 1
-	}
-};
-
-/// @brief Configuration for the steering-angle sensor.
-static sasConfig_t sasConfig =
-{
-	.sampleOffset	= 0,
-	.sampleNegative	= 0,
-	.samplePositive	= 0,
-	.angleNegative	= 0,
-	.anglePositive	= 0,
-	.angleDeadzone	= 0
 };
 
 // Functions ------------------------------------------------------------------------------------------------------------------
@@ -176,33 +131,11 @@ void peripheralsInit ()
 void peripheralsReconfigure (void)
 {
 	// Pedals initialization
-	if (eeprom.device.state == MC24LC32_STATE_READY)
-	{
-		pedalsConfig.apps1Config.sampleMin	= *eeprom.apps1Min;
-		pedalsConfig.apps1Config.sampleMax	= *eeprom.apps1Max;
-		pedalsConfig.apps2Config.sampleMin	= *eeprom.apps2Min;
-		pedalsConfig.apps2Config.sampleMax	= *eeprom.apps2Max;
-		pedalsConfig.bseFConfig.sampleMin	= *eeprom.bseFMin;
-		pedalsConfig.bseFConfig.sampleMax	= *eeprom.bseFMax;
-		pedalsConfig.bseRConfig.sampleMin	= *eeprom.bseRMin;
-		pedalsConfig.bseRConfig.sampleMax	= *eeprom.bseRMax;
-	}
-
-	if (!pedalsInit (&pedals, &pedalsConfig))
+	if (!pedalsInit (&pedals, eeprom.pedalConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize the pedals.");
 
 	// SAS initialization
-	if (eeprom.device.state == MC24LC32_STATE_READY)
-	{
-		sasConfig.sampleOffset		= *eeprom.sasSampleOffset;
-		sasConfig.sampleNegative	= *eeprom.sasNegativeSample;
-		sasConfig.samplePositive	= *eeprom.sasPositiveSample;
-		sasConfig.angleNegative		= *eeprom.sasNegativeAngle;
-		sasConfig.anglePositive		= *eeprom.sasPositiveAngle;
-		sasConfig.angleDeadzone		= *eeprom.sasDeadzoneRange;
-	}
-
-	if (!sasInit (&sas, &sasConfig))
+	if (!sasInit (&sas, eeprom.sasConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize the SAS.");
 
 	// Torque thread configuration
