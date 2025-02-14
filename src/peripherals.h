@@ -7,6 +7,7 @@
 #include "peripherals/analog.h"
 #include "peripherals/eeprom_map.h"
 #include "peripherals/linear_sensor.h"
+#include "peripherals/mc24lc32.h"
 #include "peripherals/pedals.h"
 #include "peripherals/steering_angle.h"
 
@@ -17,8 +18,9 @@
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
-extern analog_t			adc1;
-extern eepromMap_t		eeprom;
+extern analog_t			adc;
+extern mc24lc32_t		eeprom;
+extern eepromMap_t*		eepromMap;
 extern linearSensor_t	glvBattery;
 extern pedals_t			pedals;
 extern sas_t			sas;

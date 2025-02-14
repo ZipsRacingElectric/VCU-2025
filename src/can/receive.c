@@ -14,7 +14,7 @@
 void handleEepromCommandMessage (CANRxFrame* frame)
 {
 	// Handle the command.
-	mc24lc32HandleCanCommand (frame, &CAND1, &eeprom.device);
+	mc24lc32HandleCanCommand (frame, &CAND1, &eeprom, eepromMapReadonlyCallback);
 
 	// Reinitialize the peripherals to update any changes.
 	peripheralsReconfigure ();

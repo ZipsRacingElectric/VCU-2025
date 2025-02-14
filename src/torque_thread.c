@@ -118,7 +118,7 @@ THD_FUNCTION (torqueThread, arg)
 		timeCurrent = chVTGetSystemTimeX ();
 
 		// Sample the sensor inputs.
-		analogSample (&adc1);
+		analogSample (&adc);
 		pedalsUpdate (&pedals, timePrevious, timeCurrent);
 
 		// Calculate the torque request and apply power limiting.

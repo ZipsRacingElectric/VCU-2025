@@ -7,64 +7,50 @@
 // Date Created: 2024.10.22
 //
 // Description: Structing mapping the data of an EEPROM data to variables.
-//
-// TODO(Barach):
-// - Consider creating a map struct that you can cast the EEPROM cache to. This would prevent alignment issues and reduce all
-//   the init duplication.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "peripherals/mc24lc32.h"
 #include "peripherals/pedals.h"
 #include "peripherals/steering_angle.h"
 
-// C Standard Library
-#include <stdint.h>
+// Constants ------------------------------------------------------------------------------------------------------------------
+
+/// @brief The magic string of the EEPROM. Update this value every time the memory map changes to force manual re-programming.
+#define EEPROM_MAP_STRING "VCU_2025_02_10"
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
 typedef struct
 {
-	/// @brief The 7-bit I2C address of the device.
-	uint8_t addr;
+	uint8_t pad0 [16];				// 0x0000
 
-	/// @brief The IC2 bus of the device.
-	I2CDriver* i2c;
+	pedalsConfig_t pedalConfig;		// 0x0010
 
-	/// @brief The timeout interval for the device's acknowledgement polling. If the device does not send an acknowledgement
-	/// within this timeframe, it will be considered invalid.
-	sysinterval_t timeoutPeriod;
-} eepromMapConfig_t;
+	float drivingTorqueLimit;		// 0x0030
+	float drivingTorqueBias;		// 0x0034
+	float regenTorqueLimit;			// 0x0038
+	float regenTorqueBias;			// 0x003C
+	uint16_t torqueAlgoritmIndex;	// 0x0040
 
-typedef struct
-{
-	mc24lc32_t device;
+	float powerLimit;				// 0x0044
+	float powerLimitPidKp;			// 0x0048
+	float powerLimitPidKi;			// 0x004C
+	float powerLimitPidKd;			// 0x0050
+	float powerLimitPidA;			// 0x0054
 
-	pedalsConfig_t* pedalConfig;
+	uint16_t glvBattery11v5;		// 0x0058
+	uint16_t glvBattery14v4;		// 0x005A
 
-	float* drivingTorqueLimit;
-	float* drivingTorqueBias;
-	float* regenTorqueLimit;
-	float* regenTorqueBias;
-	uint16_t* torqueAlgoritmIndex;
+	sasConfig_t sasConfig;			// 0x005C
 
-	float* powerLimit;
-	float* powerLimitPidKp;
-	float* powerLimitPidKi;
-	float* powerLimitPidKd;
-	float* powerLimitPidA;
+	uint8_t pad1 [144];				// 0x0070
 
-	uint16_t* glvBattery11v5;
-	uint16_t* glvBattery14v4;
-
-	sasConfig_t* sasConfig;
-
-	float* chatfieldLut;
+	float chatfieldLut;				// 0x0100
 } eepromMap_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-bool eepromMapInit (eepromMap_t* eeprom, eepromMapConfig_t* config);
+bool eepromMapReadonlyCallback (uint16_t addr, void** data, uint8_t* dataCount);
 
 #endif // EEPROM_MAP_H

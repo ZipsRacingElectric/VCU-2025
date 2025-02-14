@@ -9,14 +9,6 @@
 #include "controls/lerp.h"
 #include "controls/tv_chatfield.h"
 
-// ChibiOS
-#include "hal.h"
-
-// Constants ------------------------------------------------------------------------------------------------------------------
-
-#define R24 10000.0f
-#define R32 2290.0f
-
 // Macros ---------------------------------------------------------------------------------------------------------------------
 
 #if PERIPHERAL_DEBUGGING
@@ -27,15 +19,12 @@
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
-analog_t		adc1;
-eepromMap_t		eeprom;
+analog_t		adc;
+mc24lc32_t		eeprom;
+eepromMap_t*	eepromMap;
 linearSensor_t	glvBattery;
 pedals_t		pedals;
 sas_t			sas;
-
-// Functions Prototypes -------------------------------------------------------------------------------------------------------
-
-void glvBatteryCallback (void* arg, uint16_t value);
 
 // Configuration --------------------------------------------------------------------------------------------------------------
 
@@ -48,7 +37,7 @@ static I2CConfig i2cConfig =
 };
 
 /// @brief Configuration for the ADC1 peripheral.
-static analogConfig_t adc1Config =
+static analogConfig_t adcConfig =
 {
 	.driver = &ADCD1,
 	.channels =
@@ -82,11 +71,12 @@ static analogConfig_t adc1Config =
 };
 
 /// @brief Configuration for the on-board EEPROM.
-static eepromMapConfig_t eepromConfig =
+static mc24lc32Config_t eepromConfig =
 {
 	.addr			= 0x50,
 	.i2c			= &I2CD1,
-	.timeoutPeriod	= TIME_MS2I (500)
+	.timeoutPeriod	= TIME_MS2I (500),
+	.magicString	= EEPROM_MAP_STRING
 };
 
 /// @brief Configuration for the GVL battery voltage measurment.
@@ -108,13 +98,13 @@ void peripheralsInit ()
 		PERIPHERAL_PRINTF ("Failed to initialize I2C 1.\r\n");
 
 	// ADC1 initialization
-	if (!analogInit (&adc1, &adc1Config))
+	if (!analogInit (&adc, &adcConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize ADC 1.\r\n");
 
 	// EEPROM initialization
-	if (!eepromMapInit (&eeprom, &eepromConfig))
+	if (!mc24lc32Init (&eeprom, &eepromConfig))
 	{
-		switch (eeprom.device.state)
+		switch (eeprom.state)
 		{
 		case MC24LC32_STATE_INVALID:
 			PERIPHERAL_PRINTF ("EEPROM memory is invalid.\r\n");
@@ -125,46 +115,41 @@ void peripheralsInit ()
 		}
 	}
 
+	eepromMap = (eepromMap_t*) eeprom.cache;
+
 	peripheralsReconfigure ();
 }
 
 void peripheralsReconfigure (void)
 {
 	// Pedals initialization
-	if (!pedalsInit (&pedals, eeprom.pedalConfig))
+	if (!pedalsInit (&pedals, &eepromMap->pedalConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize the pedals.");
 
 	// SAS initialization
-	if (!sasInit (&sas, eeprom.sasConfig))
+	if (!sasInit (&sas, &eepromMap->sasConfig))
 		PERIPHERAL_PRINTF ("Failed to initialize the SAS.");
 
 	// Torque thread configuration
-	if (eeprom.device.state == MC24LC32_STATE_READY)
-	{
-		torqueThreadSetDrivingTorqueLimit (*eeprom.drivingTorqueLimit);
-		torqueThreadSetRegenTorqueLimit (*eeprom.regenTorqueLimit);
-		torqueThreadSelectAlgorithm (*eeprom.torqueAlgoritmIndex);
-		torqueThreadSetPowerLimit (*eeprom.powerLimit);
-		torqueThreadSetPowerLimitPid
-		(
-			*eeprom.powerLimitPidKp,
-			*eeprom.powerLimitPidKi,
-			*eeprom.powerLimitPidKd,
-			*eeprom.powerLimitPidA
-		);
-	}
+	torqueThreadSetDrivingTorqueLimit (eepromMap->drivingTorqueLimit);
+	torqueThreadSetRegenTorqueLimit (eepromMap->regenTorqueLimit);
+	torqueThreadSelectAlgorithm (eepromMap->torqueAlgoritmIndex);
+	torqueThreadSetPowerLimit (eepromMap->powerLimit);
+	torqueThreadSetPowerLimitPid
+	(
+		eepromMap->powerLimitPidKp,
+		eepromMap->powerLimitPidKi,
+		eepromMap->powerLimitPidKd,
+		eepromMap->powerLimitPidA
+	);
 
 	// GLV battery initialization
-	if (eeprom.device.state == MC24LC32_STATE_READY)
-	{
-		uint16_t glvSample11v5 = *eeprom.glvBattery11v5;
-		uint16_t glvSample14v4 = *eeprom.glvBattery14v4;
-		glvBatteryConfig.valueMin = lerp2d (0, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
-		glvBatteryConfig.valueMax = lerp2d (4095, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
-		linearSensorInit (&glvBattery, &glvBatteryConfig);
-	}
+	uint16_t glvSample11v5 = eepromMap->glvBattery11v5;
+	uint16_t glvSample14v4 = eepromMap->glvBattery14v4;
+	glvBatteryConfig.valueMin = lerp2d (0, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
+	glvBatteryConfig.valueMax = lerp2d (4095, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
+	linearSensorInit (&glvBattery, &glvBatteryConfig);
 
-	// TODO(Barach): Bad reference if init is skipped
-	if (eeprom.device.state == MC24LC32_STATE_READY)
-		tvChatfieldInit ();
+	// Chatfield LUT initialization
+	tvChatfieldInit ();
 }

@@ -58,7 +58,7 @@ float getBiasRightHand (float throttle, float angle)
 void tvChatfieldInit (void)
 {
 	// Cast the EEPROM's LUT into the correct dimension LUT.
-	lookupTable = (float (*) [TV_CHATFIELD_LUT_ANGLE_WIDTH][TV_CHATFIELD_LUT_THROTTLE_WIDTH]) eeprom.chatfieldLut;
+	lookupTable = (float (*) [TV_CHATFIELD_LUT_ANGLE_WIDTH][TV_CHATFIELD_LUT_THROTTLE_WIDTH]) &eepromMap->chatfieldLut;
 }
 
 tvOutput_t tvChatfield (const tvInput_t* input)
@@ -66,7 +66,7 @@ tvOutput_t tvChatfield (const tvInput_t* input)
 	float throttle = pedals.appsRequest;
 	float angle = sas.value;
 
-	float biasFront = *eeprom.drivingTorqueBias;
+	float biasFront = eepromMap->drivingTorqueBias;
 	float biasRear = 1 - biasFront;
 	float biasRightHand = getBiasRightHand (throttle, angle);
 	float biasLeftHand = 1 - biasRightHand;

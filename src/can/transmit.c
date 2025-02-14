@@ -97,7 +97,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_0_VEHICLE_STATE (vehicleState) |
 			STATUS_WORD_0_TORQUE_PLAUSIBLE (torquePlausible) |
 			STATUS_WORD_0_PEDALS_PLAUSIBLE (pedals.plausible) |
-			STATUS_WORD_0_EEPROM_STATE (eeprom.device.state) |
+			STATUS_WORD_0_EEPROM_STATE (eeprom.state) |
 			STATUS_WORD_0_TORQUE_DERATING (torqueDerating) |
 			STATUS_WORD_0_CAN_PLAUSIBLE (canPlausible),
 			STATUS_WORD_1_APPS_1_STATE (pedals.apps1.state) |

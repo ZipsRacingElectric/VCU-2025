@@ -6,8 +6,8 @@
 
 tvOutput_t tvStraightDiff (const tvInput_t* input)
 {
-	float torqueRear	= input->drivingTorqueLimit / 2.0f * (1 - *eeprom.drivingTorqueBias);
-	float torqueFront	= input->drivingTorqueLimit / 2.0f * ((*eeprom.drivingTorqueBias));
+	float torqueRear	= input->drivingTorqueLimit / 2.0f * (1 - eepromMap->drivingTorqueBias);
+	float torqueFront	= input->drivingTorqueLimit / 2.0f * eepromMap->drivingTorqueBias;
 
 	tvOutput_t output =
 	{
