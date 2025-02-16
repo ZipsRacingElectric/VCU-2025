@@ -18,7 +18,7 @@
 
 #define TORQUE_THREAD_PERIOD TIME_MS2I (10)
 #define TORQUE_THREAD_PERIOD_S (TIME_I2US (TORQUE_THREAD_PERIOD) / 1000000.0f)
-#define TORQUE_THREAD_CAN_MESSAGE_TIMEOUT (TORQUE_THREAD_PERIOD / 6)
+#define TORQUE_THREAD_CAN_MESSAGE_TIMEOUT (TORQUE_THREAD_PERIOD / 5)
 
 #define CUMULATIVE_TORQUE_TOLERANCE 0.05f
 
@@ -157,11 +157,6 @@ THD_FUNCTION (torqueThread, arg)
 			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 			amkSendEnergizationRequest (&amkFr, false, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 		}
-
-		// Broadcast the sensor input messages
-		// TODO(Barach): Move these to state thread.
-		transmitSensorInputPercent (&CAND1, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-		transmitSensorInputRaw (&CAND1, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 
 		// TODO(Barach): Need a more robust system than this, consider programming something in EEPROM.
 		transmitDebugMessage (&CAND1, request.torqueRl, request.torqueRr, request.torqueFl, request.torqueFr, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);

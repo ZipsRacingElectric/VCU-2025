@@ -8,6 +8,9 @@
 //
 // Description: Thread managing the global state of the VCU. This is responsible for implementing the vehicle state, fault
 //   conditions, and indicators.
+//
+// TODO(Barach):
+// - This has the same period as the torque thread, does it really need to be this fast?
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -49,6 +52,11 @@ extern bool canPlausible;
 
 void stateThreadStart (tprio_t priority);
 
+/**
+ * @brief Sets the torque plausibility / derating value of the vehicle.
+ * @param plausible The value to write to @c torqueDerating .
+ * @param derating The value to write to @c torqueDerating .
+ */
 void stateThreadSetTorquePlausibility (bool plausible, bool derating);
 
 #endif // STATE_THREAD_H

@@ -113,6 +113,9 @@ THD_FUNCTION (stateThread, arg)
 		// Brake light
 		palWriteLine (LINE_BRK_LIGHT, pedals.braking);
 
+		// Broadcast the sensor input messages
+		transmitSensorInputPercent (&CAND1, STATE_CONTROL_PERIOD);
+
 		// Sleep until the next loop
 		systime_t timeNext = chTimeAddX (timePrevious, STATE_CONTROL_PERIOD);
 		timePrevious = chThdSleepUntilWindowed (timePrevious, timeNext);

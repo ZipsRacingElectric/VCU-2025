@@ -1,6 +1,15 @@
 #ifndef PEDALS_H
 #define PEDALS_H
 
+// Pedals ---------------------------------------------------------------------------------------------------------------------
+//
+// Author: Cole Barach
+// Date Created: 2024.10.04
+//
+// Description: Objects and functions related to the pedals of the vehicle.
+
+// Includes -------------------------------------------------------------------------------------------------------------------
+
 // Includes
 #include "peripherals/linear_sensor.h"
 
@@ -8,12 +17,19 @@
 
 typedef struct
 {
+	/// @brief The absolute minimum plausible sample, any lower indicates implausibility.
 	adcsample_t absoluteMin;
+	/// @brief The starting sample at which the sensor request begins increasing.
 	adcsample_t requestMin;
+	/// @brief The ending sample at which the sensor request stops increasing.
 	adcsample_t requestMax;
+	/// @brief The absolute maximum plausible sample, any higher indicates implausibility.
 	adcsample_t absoluteMax;
 } pedalSensorConfig_t;
 
+/**
+ * @brief Represents an sensor measuring the position of a pedal.
+ */
 typedef struct
 {
 	linearSensorState_t		state;
@@ -24,9 +40,13 @@ typedef struct
 
 typedef struct
 {
+	/// @brief The configuration of the APPS-1 sensor.
 	pedalSensorConfig_t apps1Config;
+	/// @brief The configuration of the APPS-2 sensor.
 	pedalSensorConfig_t apps2Config;
+	/// @brief The configuration of the BSE-F sensor.
 	pedalSensorConfig_t bseFConfig;
+	/// @brief The configuration of the BSE-R sensor.
 	pedalSensorConfig_t bseRConfig;
 } pedalsConfig_t;
 
@@ -35,32 +55,36 @@ typedef struct
  */
 typedef struct
 {
-	// TODO(Barach): Docs
-
+	/// @brief The 1st accelerator pedal position sensor (APPS).
 	pedalSensor_t apps1;
+	/// @brief The 2nd accelerator pedal position sensor (APPS).
 	pedalSensor_t apps2;
+	/// @brief The front brake system encoder sensor (BSE).
 	pedalSensor_t bseF;
+	/// @brief The rear brake system encoder sensor (BSE).
 	pedalSensor_t bseR;
 
 	/// @brief Indicates the complete validity of the pedal requests (includes 100ms timeout).
 	bool plausible;
-
 	/// @brief Indicates the instantaneous plausibility of the pedal requests.
 	bool plausibleInst;
-
+	/// @brief The deadline for the pedals' plausibility to expire.
+	systime_t plausibilityDeadline;
 	/// @brief Indicates the instantaneous APPS 10% plausibility.
 	bool apps10PercentPlausible;
-
+	/// @brief Indicates the instantaneous BSE 10% plausibility.
 	bool bse10PercentPlausible;
-
+	/// @brief Indicates the instantaneous APPS 25% / 5% plausibility.
 	bool apps25_5Plausible;
 
-	systime_t plausibilityDeadline;
-
+	/// @brief Indicates whether the request to accelerate is being made.
 	bool accelerating;
+	/// @brief Indicates whether the request to brake is being made.
 	bool braking;
 
+	/// @brief The requested throttle value.
 	float appsRequest;
+	/// @brief The requested braking value.
 	float bseRequest;
 
 } pedals_t;
@@ -69,10 +93,21 @@ typedef struct
 
 bool pedalSensorInit (pedalSensor_t* sensor, pedalSensorConfig_t* config);
 
+/**
+ * @brief Updates the value of a pedal sensor based on a read sample.
+ * @param object The pedal sensor to update (must be @c pedalSensor_t ).
+ * @param sample The read sample.
+ */
 void pedalSensorUpdate (void* object, adcsample_t sample);
 
 bool pedalsInit (pedals_t* pedals, pedalsConfig_t* config);
 
+/**
+ * @brief Updates the state of a pedals peripheral based on the last read samples of the APPS and BSE sensors.
+ * @param pedals The peripheral to update.
+ * @param timePrevious The system time this function was last called.
+ * @param timeCurrent The current system time.
+ */
 void pedalsUpdate (pedals_t* pedals, systime_t timePrevious, systime_t timeCurrent);
 
 #endif // PEDALS_H

@@ -9,9 +9,6 @@
 // Description: Chris Chatfield's torque vectoring model, as described in his master's thesis "Analysis of Torque Vectoring
 //   Systems Through Tire and Vehicle Model Simulation".
 //
-// TODO(Barach):
-// - The table listed in the results of Chatfield's paper is actually unusable.
-//
 // Sensor Requirements:
 // - Pedals
 // - Steering Angle
@@ -37,6 +34,7 @@
 
 void tvChatfieldInit (void);
 
+/// @brief Entrypoint to the chatfield torque vectoring algorithm.
 tvOutput_t tvChatfield (const tvInput_t* input);
 
 #endif // TV_CHATFIELD_H

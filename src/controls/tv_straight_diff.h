@@ -23,6 +23,7 @@
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
+/// @brief Entrypoint to the straight-diff torque vectoring algorithm.
 tvOutput_t tvStraightDiff (const tvInput_t* input);
 
 #endif // TV_STRAIGHT_DIFF_H

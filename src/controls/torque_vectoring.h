@@ -32,7 +32,7 @@ typedef struct
 /// @brief Output to TV algoritms.
 typedef struct
 {
-		/// @brief Output request validity. Indicates whether the the output of this algoritm is usable.
+	/// @brief Output request validity. Indicates whether the the output of this algoritm is usable.
 	bool valid;
 
 	/// @brief The torque to request to the rear-left motor. Positive means actual torque, negative means regen torque.

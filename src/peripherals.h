@@ -1,6 +1,13 @@
 #ifndef PERIPHERALS_H
 #define PERIPHERALS_H
 
+// Peripherals ----------------------------------------------------------------------------------------------------------------
+//
+// Author: Cole Barach
+// Date Created: 2024.09.29
+//
+// Description: Global objects representing the on-board hardware of the VCU.
+
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
@@ -18,22 +25,33 @@
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
-extern analog_t			adc;
-extern mc24lc32_t		eeprom;
-extern eepromMap_t*		eepromMap;
-extern linearSensor_t	glvBattery;
-extern pedals_t			pedals;
-extern sas_t			sas;
+/// @brief The VCU's ADC. This is responsible for sampling all analog inputs ( @c pedals , @c sas , & @c glvBattery ).
+extern analog_t adc;
+
+/// @brief The VCU's EEPROM. This is responsible for storing all non-volatile variables.
+extern mc24lc32_t eeprom;
+
+/// @brief Structure mapping the EEPROM's contents to C datatypes.
+extern eepromMap_t* eepromMap;
+
+/// @brief Analog sensor measuring the voltage of the GLV battery.
+extern linearSensor_t glvBattery;
+
+/// @brief Analog sensors measuring the requests of the throttle and brake pedals.
+extern pedals_t pedals;
+
+/// @brief Analog sensor measuring the steering angle of the vehicle.
+extern sas_t sas;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 /**
- * @brief Initializes the devices peripherals.
+ * @brief Initializes the VCU's peripherals.
  */
 void peripheralsInit (void);
 
 /**
- * @brief Re-initializes the device peripherals after a change has been made to the device EEPROM.
+ * @brief Re-initializes the VCU's peripherals after a change has been made to the on-board EEPROM.
  */
 void peripheralsReconfigure (void);
 
