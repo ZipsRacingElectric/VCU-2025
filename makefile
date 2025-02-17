@@ -10,7 +10,7 @@ BUILDDIR := ./build
 DEPDIR   := ./build/dep
 BOARDDIR := ./build/board
 
-# Include
+# Includes
 ALLINC += src
 
 # Source files
