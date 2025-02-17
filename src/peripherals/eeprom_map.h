@@ -44,7 +44,12 @@ typedef struct
 
 	sasConfig_t sasConfig;			// 0x005C
 
-	uint8_t pad1 [144];				// 0x0070
+	uint16_t debugAddress0;			// 0x0070
+	uint16_t debugAddress1;			// 0x0072
+	uint16_t debugAddress2;			// 0x0074
+	uint16_t debugAddress3;			// 0x0076
+
+	uint8_t pad1 [136];				// 0x0078
 
 	float chatfieldLut;				// 0x0100
 } eepromMap_t;
@@ -52,5 +57,7 @@ typedef struct
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 bool eepromMapReadonlyCallback (uint16_t addr, void** data, uint8_t* dataCount);
+
+float eepromMapGetReadonly (uint16_t addr);
 
 #endif // EEPROM_MAP_H

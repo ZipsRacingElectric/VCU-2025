@@ -18,11 +18,14 @@
 
 #define TORQUE_THREAD_PERIOD TIME_MS2I (10)
 #define TORQUE_THREAD_PERIOD_S (TIME_I2US (TORQUE_THREAD_PERIOD) / 1000000.0f)
-#define TORQUE_THREAD_CAN_MESSAGE_TIMEOUT (TORQUE_THREAD_PERIOD / 5)
+#define TORQUE_THREAD_CAN_MESSAGE_TIMEOUT (TORQUE_THREAD_PERIOD / 4)
 
 #define CUMULATIVE_TORQUE_TOLERANCE 0.05f
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
+
+/// @brief The last calculated torque request.
+tvOutput_t torqueRequest;
 
 /// @brief The cumulative driving (positive) torque limit.
 static float drivingTorqueLimit = 0.0f;
@@ -123,9 +126,9 @@ THD_FUNCTION (torqueThread, arg)
 
 		// Calculate the torque request and apply power limiting.
 		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S);
-		tvOutput_t request = requestCalculateOutput (&input);
-		bool derating = requestApplyPowerLimit (&request, TORQUE_THREAD_PERIOD_S);
-		bool plausible = requestValidate (&request, &input);
+		torqueRequest = requestCalculateOutput (&input);
+		bool derating = requestApplyPowerLimit (&torqueRequest, TORQUE_THREAD_PERIOD_S);
+		bool plausible = requestValidate (&torqueRequest, &input);
 
 		// Nofify the state thread of the current plausibility.
 		stateThreadSetTorquePlausibility (plausible, derating);
@@ -135,10 +138,10 @@ THD_FUNCTION (torqueThread, arg)
 			if (plausible)
 			{
 				// Torque request message.
-				amkSendTorqueRequest (&amkRl, request.torqueRl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-				amkSendTorqueRequest (&amkRr, request.torqueRr, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-				amkSendTorqueRequest (&amkFl, request.torqueFl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-				amkSendTorqueRequest (&amkFr, request.torqueFr, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkRl, torqueRequest.torqueRl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkRr, torqueRequest.torqueRr, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkFl, torqueRequest.torqueFl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkFr, torqueRequest.torqueFr, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 			}
 			else
 			{
@@ -157,9 +160,6 @@ THD_FUNCTION (torqueThread, arg)
 			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 			amkSendEnergizationRequest (&amkFr, false, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 		}
-
-		// TODO(Barach): Need a more robust system than this, consider programming something in EEPROM.
-		transmitDebugMessage (&CAND1, request.torqueRl, request.torqueRr, request.torqueFl, request.torqueFr, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 	}
 }
 

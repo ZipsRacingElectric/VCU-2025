@@ -24,15 +24,14 @@
 #define VOLTAGE_TO_WORD(voltage)	(uint8_t) ((voltage) * VOLTAGE_INVERSE_FACTOR)
 
 // Debug Value
-#define DEBUG_INVERSE_FACTOR		(100.0f)
+#define DEBUG_INVERSE_FACTOR		(10.0f)
 #define DEBUG_TO_WORD(debug)		(int16_t) ((debug) * DEBUG_INVERSE_FACTOR)
 
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
 #define STATUS_MESSAGE_ID				0x100
 #define SENSOR_INPUT_PERCENT_MESSAGE_ID	0x600
-#define SENSOR_INPUT_RAW_MESSAGE_ID		0x601
-#define DEBUG_MESSAGE_ID				0x752
+#define DEBUG_MESSAGE_ID				0x651
 
 // Message Packing ------------------------------------------------------------------------------------------------------------
 
@@ -171,7 +170,7 @@ msg_t transmitSensorInputPercent (CANDriver* driver, sysinterval_t timeout)
 	return result;
 }
 
-msg_t transmitDebugMessage (CANDriver* driver, float value0, float value1, float value2, float value3, sysinterval_t timeout)
+msg_t transmitDebugMessage (CANDriver* driver, sysinterval_t timeout)
 {
 	CANTxFrame frame =
 	{
@@ -180,10 +179,10 @@ msg_t transmitDebugMessage (CANDriver* driver, float value0, float value1, float
 		.SID	= DEBUG_MESSAGE_ID,
 		.data16	=
 		{
-			DEBUG_TO_WORD (value0),
-			DEBUG_TO_WORD (value1),
-			DEBUG_TO_WORD (value2),
-			DEBUG_TO_WORD (value3)
+			DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress0)),
+			DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress1)),
+			DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress2)),
+			DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress3))
 		}
 	};
 

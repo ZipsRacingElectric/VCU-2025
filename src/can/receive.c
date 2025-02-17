@@ -14,10 +14,11 @@
 void handleEepromCommandMessage (CANRxFrame* frame)
 {
 	// Handle the command.
-	mc24lc32HandleCanCommand (frame, &CAND1, &eeprom, eepromMapReadonlyCallback);
+	bool dirty = mc24lc32HandleCanCommand (frame, &CAND1, &eeprom, eepromMapReadonlyCallback);
 
 	// Reinitialize the peripherals to update any changes.
-	peripheralsReconfigure ();
+	if (dirty)
+		peripheralsReconfigure ();
 }
 
 bool receiveMessage (CANRxFrame* frame)
