@@ -18,11 +18,6 @@
 #include "peripherals/pedals.h"
 #include "peripherals/steering_angle.h"
 
-// Debugging ------------------------------------------------------------------------------------------------------------------
-
-/// @brief Enables / disables debugging messages from peripherals.
-#define PERIPHERAL_DEBUGGING 1
-
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
 /// @brief The VCU's ADC. This is responsible for sampling all analog inputs ( @c pedals , @c sas , & @c glvBattery ).
@@ -47,8 +42,9 @@ extern sas_t sas;
 
 /**
  * @brief Initializes the VCU's peripherals.
+ * @return False if a fatal peripheral failed to initialize, true otherwise.
  */
-void peripheralsInit (void);
+bool peripheralsInit (void);
 
 /**
  * @brief Re-initializes the VCU's peripherals after a change has been made to the on-board EEPROM.

@@ -4,30 +4,20 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "debug.h"
 #include "can/receive.h"
 
 // ChibiOS
 #include "hal.h"
 
-// Macros ---------------------------------------------------------------------------------------------------------------------
-
-#if CAN_THREAD_DEBUGGING
-	#define CAN_THREAD_PRINTF(format, ...) DEBUG_PRINTF ("[CAN Thread] " format, ##__VA_ARGS__)
-#else
-	#define CAN_THREAD_PRINTF(format, ...) while (false)
-#endif // CAN_THREAD_DEBUGGING
-
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
 amkInverter_t	amks [AMK_COUNT];
-bms_t			bms;
 ecumasterGps_t	gps;
 
 canNode_t* nodes [] =
 {
 	(canNode_t*) &amkRl, (canNode_t*) &amkRr, (canNode_t*) &amkFl, (canNode_t*) &amkFr,
-	(canNode_t*) &bms, (canNode_t*) &gps
+	(canNode_t*) &gps
 };
 
 #define NODE_COUNT (sizeof (nodes) / sizeof (canNode_t*))
@@ -40,7 +30,7 @@ canNode_t* nodes [] =
  * @brief Configuration of the CAN 1 & CAN 2 peripherals.
  * @note See section 32.9 of the STM32F405 Reference Manual for more details.
  */
-static CANConfig canConfig =
+static const CANConfig CAN1_CONFIG =
 {
 	.mcr = 	CAN_MCR_ABOM |		// Automatic bus-off management.
 			CAN_MCR_AWUM |		// Automatic wakeup mode.
@@ -51,7 +41,7 @@ static CANConfig canConfig =
 			CAN_BTR_BRP (2)		// Baudrate divisor of 3 (1 Mbps)
 };
 
-amkInverterConfig_t amkConfigs [AMK_COUNT] =
+static const amkInverterConfig_t AMK_CONFIGS [AMK_COUNT] =
 {
 	// RL
 	{
@@ -79,13 +69,7 @@ amkInverterConfig_t amkConfigs [AMK_COUNT] =
 	}
 };
 
-bmsConfig_t bmsConfig =
-{
-	.driver			= &CAND1,
-	.timeoutPeriod	= TIME_MS2I (100),
-};
-
-ecumasterGpsConfig_t gpsConfig =
+static const ecumasterGpsConfig_t GPS_CONFIG =
 {
 	.driver			= &CAND1,
 	.timeoutPeriod	= TIME_MS2I (100),
@@ -117,31 +101,29 @@ THD_FUNCTION (canRxThread, arg)
 			if (!canNodesReceive (nodes, NODE_COUNT, &frame))
 			{
 				// If no node handled the message, check if it is directly for the VCU.
-				if (!receiveMessage (&frame))
-					CAN_THREAD_PRINTF ("Received unknown CAN message. ID: 0x%X.\r\n", frame.SID);
+				receiveMessage (&frame);
 			}
 		}
-		else if (result != MSG_TIMEOUT)
-			CAN_THREAD_PRINTF ("Failed to receive from CAN1: Error %i.\r\n", result);
 
 		canNodesCheckTimeout (nodes, NODE_COUNT, timePrevious, timeCurrent);
 	}
 }
 
-void canThreadStart (tprio_t priority)
+bool canThreadStart (tprio_t priority)
 {
 	// CAN 1 driver initialization
-	if (canStart (&CAND1, &canConfig) != MSG_OK)
-		CAN_THREAD_PRINTF ("Failed to initialize CAN1.");
+	if (canStart (&CAND1, &CAN1_CONFIG) != MSG_OK)
+		return false;
 
 	palClearLine (LINE_CAN1_STBY);
 
 	// Initialize the CAN nodes
 	for (uint8_t index = 0; index < AMK_COUNT; ++index)
-		amkInit (amks + index, amkConfigs + index);
-	bmsInit (&bms, &bmsConfig);
-	ecumasterInit (&gps, &gpsConfig);
+		amkInit (amks + index, AMK_CONFIGS + index);
+
+	ecumasterInit (&gps, &GPS_CONFIG);
 
 	// Create the CAN thread
 	chThdCreateStatic (&canRxThreadWa, sizeof (canRxThreadWa), priority, canRxThread, NULL);
+	return true;
 }

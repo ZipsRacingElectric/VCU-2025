@@ -18,34 +18,6 @@
 // ChibiOS
 #include "hal.h"
 
-// Entrypoint -----------------------------------------------------------------------------------------------------------------
-
-int main (void)
-{
-	// ChibiOS Initialization
-	halInit ();
-	chSysInit ();
-
-	// Debug Initialization
-	debugInit ("Vehicle Control Board, Revision AB");
-
-	// Peripheral initialization
-	peripheralsInit ();
-
-	// CAN thread initialization. Do this first as to invalidate all can nodes before any reads are done.
-	canThreadStart (NORMALPRIO);
-
-	// Torque thread initialization.
-	torqueThreadStart (NORMALPRIO + 1);
-
-	// State thread initialization.
-	stateThreadStart (NORMALPRIO - 1);
-
-	// Do nothing.
-	while (true)
-		chThdSleepMilliseconds (500);
-}
-
 // Interrupts -----------------------------------------------------------------------------------------------------------------
 
 void hardFaultCallback (void)
@@ -55,4 +27,42 @@ void hardFaultCallback (void)
 
 	// Set the fault LED
 	palSetLine (LINE_VCU_FLT);
+}
+
+// Entrypoint -----------------------------------------------------------------------------------------------------------------
+
+int main (void)
+{
+	// ChibiOS Initialization
+	halInit ();
+	chSysInit ();
+
+	// Debug initialization
+	ioline_t ledLine = LINE_LED_HEARTBEAT;
+	debugHeartbeatStart (&ledLine, LOWPRIO);
+
+	// Peripheral initialization
+	if (!peripheralsInit ())
+	{
+		hardFaultCallback ();
+		while (true);
+	}
+
+	// CAN thread initialization. Start this first as to invalidate all can nodes before any other threads attempt reading
+	// any data.
+	if (!canThreadStart (NORMALPRIO))
+	{
+		hardFaultCallback ();
+		while (true);
+	}
+
+	// Torque thread initialization. Start this at the highest priority as it has the strictest timing.
+	torqueThreadStart (NORMALPRIO + 1);
+
+	// State thread initialization. Start this at a lower priority as it has the least strict timing.
+	stateThreadStart (NORMALPRIO - 1);
+
+	// Do nothing.
+	while (true)
+		chThdSleepMilliseconds (500);
 }

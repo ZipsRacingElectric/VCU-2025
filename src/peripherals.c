@@ -4,18 +4,9 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "debug.h"
 #include "torque_thread.h"
 #include "controls/lerp.h"
 #include "controls/tv_chatfield.h"
-
-// Macros ---------------------------------------------------------------------------------------------------------------------
-
-#if PERIPHERAL_DEBUGGING
-	#define PERIPHERAL_PRINTF(format, ...) DEBUG_PRINTF ("[Peripherals] " format, ##__VA_ARGS__)
-#else
-	#define PERIPHERAL_PRINTF(format, ...) while (false)
-#endif // PERIPHERAL_DEBUGGING
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
@@ -29,7 +20,7 @@ sas_t			sas;
 // Configuration --------------------------------------------------------------------------------------------------------------
 
 /// @brief Configuration for the I2C1 bus.
-static I2CConfig i2cConfig =
+static const I2CConfig I2C1_CONFIG =
 {
 	.op_mode		= OPMODE_I2C,
 	.clock_speed	= 400000,
@@ -37,7 +28,7 @@ static I2CConfig i2cConfig =
 };
 
 /// @brief Configuration for the ADC1 peripheral.
-static analogConfig_t adcConfig =
+static const analogConfig_t ADC_CONFIG =
 {
 	.driver = &ADCD1,
 	.channels =
@@ -71,7 +62,7 @@ static analogConfig_t adcConfig =
 };
 
 /// @brief Configuration for the on-board EEPROM.
-static mc24lc32Config_t eepromConfig =
+static const mc24lc32Config_t EEPROM_CONFIG =
 {
 	.addr			= 0x50,
 	.i2c			= &I2CD1,
@@ -91,44 +82,33 @@ static linearSensorConfig_t glvBatteryConfig =
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-void peripheralsInit ()
+bool peripheralsInit ()
 {
-	// I2C 3 driver initialization
-	if (i2cStart (&I2CD1, &i2cConfig) != MSG_OK)
-		PERIPHERAL_PRINTF ("Failed to initialize I2C 1.\r\n");
+	// I2C 1 driver initialization.
+	if (i2cStart (&I2CD1, &I2C1_CONFIG) != MSG_OK)
+		return false;
 
-	// ADC1 initialization
-	if (!analogInit (&adc, &adcConfig))
-		PERIPHERAL_PRINTF ("Failed to initialize ADC 1.\r\n");
+	// ADC 1 driver initialization.
+	if (!analogInit (&adc, &ADC_CONFIG))
+		return false;
 
-	// EEPROM initialization
-	if (!mc24lc32Init (&eeprom, &eepromConfig))
-	{
-		switch (eeprom.state)
-		{
-		case MC24LC32_STATE_INVALID:
-			PERIPHERAL_PRINTF ("EEPROM memory is invalid.\r\n");
-			break;
-		default:
-			PERIPHERAL_PRINTF ("Failed to initialize the EEPROM.\r\n");
-			break;
-		}
-	}
-
+	// EEPROM initialization (only exit early if a failure occurred).
+	if (!mc24lc32Init (&eeprom, &EEPROM_CONFIG) && eeprom.state == MC24LC32_STATE_FAILED)
+		return false;
 	eepromMap = (eepromMap_t*) eeprom.cache;
 
+	// Re-configurable peripherals are not considered fatal.
 	peripheralsReconfigure ();
+	return true;
 }
 
 void peripheralsReconfigure (void)
 {
 	// Pedals initialization
-	if (!pedalsInit (&pedals, &eepromMap->pedalConfig))
-		PERIPHERAL_PRINTF ("Failed to initialize the pedals.");
+	pedalsInit (&pedals, &eepromMap->pedalConfig);
 
 	// SAS initialization
-	if (!sasInit (&sas, &eepromMap->sasConfig))
-		PERIPHERAL_PRINTF ("Failed to initialize the SAS.");
+	sasInit (&sas, &eepromMap->sasConfig);
 
 	// Torque thread configuration
 	torqueThreadSetDrivingTorqueLimit (eepromMap->drivingTorqueLimit);
