@@ -3,7 +3,6 @@
 
 // Includes
 #include "can_thread.h"
-#include "can/transmit.h"
 #include "controls/pid_controller.h"
 #include "controls/torque_vectoring.h"
 #include "controls/tv_chatfield.h"
@@ -123,6 +122,7 @@ THD_FUNCTION (torqueThread, arg)
 		// Sample the sensor inputs.
 		analogSample (&adc);
 		pedalsUpdate (&pedals, timePrevious, timeCurrent);
+		am4096Sample (&sas);
 
 		// Calculate the torque request and apply power limiting.
 		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S);

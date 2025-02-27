@@ -3,7 +3,7 @@
 
 // Includes
 #include "peripherals.h"
-#include "can/mc24lc32_can.h"
+#include "can/eeprom_can.h"
 
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
@@ -11,21 +11,11 @@
 
 // Receive Functions ----------------------------------------------------------------------------------------------------------
 
-void handleEepromCommandMessage (CANRxFrame* frame)
-{
-	// Handle the command.
-	bool dirty = mc24lc32HandleCanCommand (frame, &CAND1, &eeprom, eepromMapReadonlyCallback);
-
-	// Reinitialize the peripherals to update any changes.
-	if (dirty)
-		peripheralsReconfigure ();
-}
-
 bool receiveMessage (CANRxFrame* frame)
 {
 	if (frame->SID == EEPROM_COMMAND_MESSAGE_ID)
 	{
-		handleEepromCommandMessage (frame);
+		eepromHandleCanCommand (frame, &CAND1, (eeprom_t*) &virtualMemory);
 		return true;
 	}
 

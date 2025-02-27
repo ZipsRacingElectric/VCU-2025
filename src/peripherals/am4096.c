@@ -44,8 +44,6 @@ bool am4096Init (am4096_t* am4096, const am4096Config_t* config)
 {
 	am4096->writeHandler	= writeBlock;
 	am4096->readHandler		= readBlock;
-	// TODO(Barach)
-	//am4096->dirtyHook		= NULL;
 	am4096->config			= config;
 
 	return am4096Sample (am4096);
@@ -62,7 +60,7 @@ bool am4096Sample (am4096_t* am4096)
 	if (result)
 		am4096->sample = RELATIVE_POS_GET_RPOS (relativePos);
 
-	// TODO(Barach): Analog sensor callback?
+	// TODO(Barach): Analog sensor callback
 
 	#if I2C_USE_MUTUAL_EXCLUSION
 	i2cReleaseBus (am4096->config->i2c);
@@ -145,6 +143,8 @@ bool readRegister (am4096_t* am4096, uint8_t addr, uint16_t* data)
 
 bool writeBlock (void* object, uint16_t addr, const void* data, uint16_t dataCount)
 {
+	am4096_t* am4096 = (am4096_t*) object;
+
 	// Force operations to use 16-bit alignment and data size.
 	if (addr % sizeof (uint16_t) != 0 || dataCount % sizeof (uint16_t) != 0)
 		return false;
@@ -154,16 +154,32 @@ bool writeBlock (void* object, uint16_t addr, const void* data, uint16_t dataCou
 	const uint16_t* registerData = data;
 	uint16_t registerCount = dataCount / sizeof (uint16_t);
 
-	// Write each register, one by one.
-	for (uint16_t registerOffset = 0; registerOffset < registerCount; ++registerOffset)
-		if (!writeRegister (object, registerAddr + registerOffset, registerData [registerOffset]))
-			return false;
+	#if I2C_USE_MUTUAL_EXCLUSION
+	i2cAcquireBus (am4096->config->i2c);
+	#endif // I2C_USE_MUTUAL_EXCLUSION
 
-	return true;
+	// Write each register, one by one.
+	bool result = true;
+	for (uint16_t registerOffset = 0; registerOffset < registerCount; ++registerOffset)
+	{
+		if (!writeRegister (am4096, registerAddr + registerOffset, registerData [registerOffset]))
+		{
+			result = false;
+			break;
+		}
+	}
+
+	#if I2C_USE_MUTUAL_EXCLUSION
+	i2cReleaseBus (am4096->config->i2c);
+	#endif // I2C_USE_MUTUAL_EXCLUSION
+
+	return result;
 }
 
 bool readBlock (void* object, uint16_t addr, void* data, uint16_t dataCount)
 {
+	am4096_t* am4096 = (am4096_t*) object;
+
 	// Force operations to use 16-bit alignment and data size.
 	if (addr % sizeof (uint16_t) != 0 || dataCount % sizeof (uint16_t) != 0)
 		return false;
@@ -173,10 +189,24 @@ bool readBlock (void* object, uint16_t addr, void* data, uint16_t dataCount)
 	uint16_t* registerData = data;
 	uint16_t registerCount = dataCount / sizeof (uint16_t);
 
-	// Read each register, one by one.
-	for (uint16_t registerOffset = 0; registerOffset < registerCount; ++registerOffset)
-		if (!readRegister (object, registerAddr + registerOffset, registerData + registerOffset))
-			return false;
+	#if I2C_USE_MUTUAL_EXCLUSION
+	i2cAcquireBus (am4096->config->i2c);
+	#endif // I2C_USE_MUTUAL_EXCLUSION
 
-	return true;
+	// Read each register, one by one.
+	bool result = true;
+	for (uint16_t registerOffset = 0; registerOffset < registerCount; ++registerOffset)
+	{
+		if (!readRegister (object, registerAddr + registerOffset, registerData + registerOffset))
+		{
+			result = false;
+			break;
+		}
+	}
+
+	#if I2C_USE_MUTUAL_EXCLUSION
+	i2cReleaseBus (am4096->config->i2c);
+	#endif // I2C_USE_MUTUAL_EXCLUSION
+
+	return result;
 }

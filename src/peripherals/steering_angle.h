@@ -7,6 +7,8 @@
 // Date Created: 2024.10.24
 //
 // Description: Object and functions related to the steering angle sensor.
+//
+// TODO(Barach): Integrate this with the AM4096 driver somehow.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 

@@ -15,7 +15,8 @@ mc24lc32_t		eeprom;
 eepromMap_t*	eepromMap;
 linearSensor_t	glvBattery;
 pedals_t		pedals;
-sas_t			sas;
+am4096_t		sas;
+virtualEeprom_t virtualMemory;
 
 // Configuration --------------------------------------------------------------------------------------------------------------
 
@@ -25,6 +26,13 @@ static const I2CConfig I2C1_CONFIG =
 	.op_mode		= OPMODE_I2C,
 	.clock_speed	= 400000,
 	.duty_cycle		= FAST_DUTY_CYCLE_2
+};
+
+static const am4096Config_t SAS_CONFIG =
+{
+	.addr		= 0x00, // TODO(Barach): Move this to EEPROM so it can be changed.
+	.i2c		= &I2CD1,
+	.timeout	= TIME_MS2I (500)
 };
 
 /// @brief Configuration for the ADC1 peripheral.
@@ -37,17 +45,15 @@ static const analogConfig_t ADC_CONFIG =
 		ADC_CHANNEL_IN11,	// APPS-2
 		ADC_CHANNEL_IN12,	// BSE-F
 		ADC_CHANNEL_IN13,	// BSE-R
-		ADC_CHANNEL_IN14,	// SAS
 		ADC_CHANNEL_IN0		// GLV Battery
 	},
-	.channelCount = 6,
+	.channelCount = 5,
 	.handlers =
 	{
 		pedalSensorUpdate,
 		pedalSensorUpdate,
 		pedalSensorUpdate,
 		pedalSensorUpdate,
-		sasUpdate,
 		linearSensorUpdate
 	},
 	.objects =
@@ -56,7 +62,6 @@ static const analogConfig_t ADC_CONFIG =
 		&pedals.apps2,
 		&pedals.bseF,
 		&pedals.bseR,
-		&sas,
 		&glvBattery
 	}
 };
@@ -66,8 +71,36 @@ static const mc24lc32Config_t EEPROM_CONFIG =
 {
 	.addr			= 0x50,
 	.i2c			= &I2CD1,
-	.timeoutPeriod	= TIME_MS2I (500),
-	.magicString	= EEPROM_MAP_STRING
+	.timeout		= TIME_MS2I (500),
+	.magicString	= EEPROM_MAP_STRING,
+	.dirtyHook		= peripheralsReconfigure
+};
+
+// TODO(Barach): Figure out how to make these const. Also cleanup.
+static eeprom_t* VIRTUAL_MEMORY_EEPROMS [] =
+{
+	(eeprom_t*) &eeprom,
+	(eeprom_t*) &sas
+};
+
+static uint16_t VIRTUAL_MEMORY_ADDRS [] =
+{
+	0x0000,
+	0x2000
+};
+
+static uint16_t VIRTUAL_MEMORY_SIZES [] =
+{
+	0x1000,
+	0x0038
+};
+
+static const virtualEepromConfig_t VIRTUAL_MEMORY_CONFIG =
+{
+	.eeproms	= VIRTUAL_MEMORY_EEPROMS,
+	.addrs		= VIRTUAL_MEMORY_ADDRS,
+	.sizes		= VIRTUAL_MEMORY_SIZES,
+	.count		= sizeof (VIRTUAL_MEMORY_EEPROMS) / sizeof (eeprom_t*)
 };
 
 /// @brief Configuration for the GVL battery voltage measurment.
@@ -97,18 +130,24 @@ bool peripheralsInit ()
 		return false;
 	eepromMap = (eepromMap_t*) eeprom.cache;
 
+	// Virtual memory initialization.
+	virtualEepromInit (&virtualMemory, &VIRTUAL_MEMORY_CONFIG);
+
 	// Re-configurable peripherals are not considered fatal.
-	peripheralsReconfigure ();
+	peripheralsReconfigure (NULL);
 	return true;
 }
 
-void peripheralsReconfigure (void)
+void peripheralsReconfigure (void* arg)
 {
+	(void) arg;
+
 	// Pedals initialization
 	pedalsInit (&pedals, &eepromMap->pedalConfig);
 
 	// SAS initialization
-	sasInit (&sas, &eepromMap->sasConfig);
+	// TODO(Barach): Should this still be here?
+	am4096Init (&sas, &SAS_CONFIG);
 
 	// Torque thread configuration
 	torqueThreadSetDrivingTorqueLimit (eepromMap->drivingTorqueLimit);

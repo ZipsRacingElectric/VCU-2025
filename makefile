@@ -18,6 +18,7 @@ CSRC =	$(ALLCSRC)							\
 		src/main.c							\
 											\
 		src/peripherals.c					\
+		src/peripherals/am4096.c			\
 		src/peripherals/eeprom_map.c		\
 		src/peripherals/pedals.c			\
 		src/peripherals/steering_angle.c	\
@@ -37,13 +38,14 @@ include common/src/debug.mk
 include common/src/fault_handler.mk
 
 include common/src/peripherals/analog.mk
+include common/src/peripherals/eeprom.mk
 include common/src/peripherals/linear_sensor.mk
 include common/src/peripherals/mc24lc32.mk
 
 include common/src/can/amk_inverter.mk
 include common/src/can/can_node.mk
 include common/src/can/ecumaster_gps_v2.mk
-include common/src/can/mc24lc32_can.mk
+include common/src/can/eeprom_can.mk
 
 include common/src/controls/pid_controller.mk
 

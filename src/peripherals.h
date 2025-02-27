@@ -11,12 +11,12 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
+#include "peripherals/am4096.h"
 #include "peripherals/analog.h"
 #include "peripherals/eeprom_map.h"
 #include "peripherals/linear_sensor.h"
 #include "peripherals/mc24lc32.h"
 #include "peripherals/pedals.h"
-#include "peripherals/steering_angle.h"
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
@@ -36,7 +36,10 @@ extern linearSensor_t glvBattery;
 extern pedals_t pedals;
 
 /// @brief Analog sensor measuring the steering angle of the vehicle.
-extern sas_t sas;
+extern am4096_t sas;
+
+/// @brief The VCU's virtual memory map. TODO(Barach): Docs.
+extern virtualEeprom_t virtualMemory;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -48,7 +51,8 @@ bool peripheralsInit (void);
 
 /**
  * @brief Re-initializes the VCU's peripherals after a change has been made to the on-board EEPROM.
+ * @param arg Ignored.
  */
-void peripheralsReconfigure (void);
+void peripheralsReconfigure (void* arg);
 
 #endif // PERIPHERALS_H

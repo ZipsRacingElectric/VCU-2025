@@ -5,6 +5,8 @@
 //
 // Description: Entrypoint and interrupt handling for the vehicle control unit. See the respective threads for specific
 //   responsibilities of the the VCU.
+//
+// TODO(Barach): The doc/software folder is dated and misleading.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
