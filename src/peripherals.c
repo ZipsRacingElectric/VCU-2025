@@ -18,6 +18,7 @@ pedals_t		pedals;
 am4096_t		sasAdc;
 sas_t			sas;
 virtualEeprom_t virtualMemory;
+eeprom_t		readonlyMemory;
 
 // Configuration --------------------------------------------------------------------------------------------------------------
 
@@ -74,17 +75,20 @@ static const mc24lc32Config_t EEPROM_CONFIG =
 static eeprom_t* VIRTUAL_MEMORY_EEPROMS [] =
 {
 	(eeprom_t*) &eeprom,
+	&readonlyMemory,
 	(eeprom_t*) &sasAdc
 };
 
 static uint16_t VIRTUAL_MEMORY_ADDRS [] =
 {
 	0x0000,
+	0x1000,
 	0x2000
 };
 
 static uint16_t VIRTUAL_MEMORY_SIZES [] =
 {
+	0x1000,
 	0x1000,
 	0x0038
 };
@@ -125,6 +129,9 @@ bool peripheralsInit ()
 	eepromMap = (eepromMap_t*) eeprom.cache;
 
 	// Virtual memory initialization.
+	// TODO(Barach): Cleanup
+	readonlyMemory.readHandler = eepromReadonlyRead;
+	readonlyMemory.writeHandler = eepromWriteonlyWrite;
 	virtualEepromInit (&virtualMemory, &VIRTUAL_MEMORY_CONFIG);
 
 	// Re-configurable peripherals are not considered fatal.

@@ -23,41 +23,41 @@
 
 typedef struct
 {
-	uint8_t pad0 [16];				// 0x0000
+	uint8_t pad0 [16];				// 0x000
 
-	pedalsConfig_t pedalConfig;		// 0x0010
+	pedalsConfig_t pedalConfig;		// 0x010
 
-	float drivingTorqueLimit;		// 0x0030
-	float drivingTorqueBias;		// 0x0034
-	float regenTorqueLimit;			// 0x0038
-	float regenTorqueBias;			// 0x003C
-	uint16_t torqueAlgoritmIndex;	// 0x0040
+	float drivingTorqueLimit;		// 0x030
+	float drivingTorqueBias;		// 0x034
+	float regenTorqueLimit;			// 0x038
+	float regenTorqueBias;			// 0x03C
+	uint16_t torqueAlgoritmIndex;	// 0x040
 
-	float powerLimit;				// 0x0044
-	float powerLimitPidKp;			// 0x0048
-	float powerLimitPidKi;			// 0x004C
-	float powerLimitPidKd;			// 0x0050
-	float powerLimitPidA;			// 0x0054
+	float powerLimit;				// 0x044
+	float powerLimitPidKp;			// 0x048
+	float powerLimitPidKi;			// 0x04C
+	float powerLimitPidKd;			// 0x050
+	float powerLimitPidA;			// 0x054
 
-	uint16_t glvBattery11v5;		// 0x0058
-	uint16_t glvBattery14v4;		// 0x005A
+	uint16_t glvBattery11v5;		// 0x058
+	uint16_t glvBattery14v4;		// 0x05A
 
-	sasConfig_t sasConfig;			// 0x005C
+	sasConfig_t sasConfig;			// 0x05C
 
-	uint16_t debugAddress0;			// 0x0070
-	uint16_t debugAddress1;			// 0x0072
-	uint16_t debugAddress2;			// 0x0074
-	uint16_t debugAddress3;			// 0x0076
+	uint16_t debugAddress0;			// 0x070
+	uint16_t debugAddress1;			// 0x072
+	uint16_t debugAddress2;			// 0x074
+	uint16_t debugAddress3;			// 0x076
 
-	uint8_t pad1 [136];				// 0x0078
+	uint8_t pad1 [136];				// 0x078
 
-	float chatfieldLut;				// 0x0100
+	float chatfieldLut;				// 0x100
 } eepromMap_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-bool eepromMapReadonlyCallback (uint16_t addr, void** data, uint8_t* dataCount);
+bool eepromReadonlyRead (void* object, uint16_t addr, void* data, uint16_t dataCount);
 
-float eepromMapGetReadonly (uint16_t addr);
+bool eepromWriteonlyWrite (void* object, uint16_t addr, const void* data, uint16_t dataCount);
 
 #endif // EEPROM_MAP_H

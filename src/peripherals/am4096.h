@@ -34,7 +34,7 @@ typedef struct
 	/// @brief The 7-bit I2C address of the device.
 	i2caddr_t addr;
 
-	/// @brief The IC2 bus of the device.
+	/// @brief The I2C bus of the device.
 	I2CDriver* i2c;
 
 	/// @brief The sensor to call after sampling successfully.

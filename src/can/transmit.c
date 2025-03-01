@@ -172,22 +172,29 @@ msg_t transmitSensorInputPercent (CANDriver* driver, sysinterval_t timeout)
 
 msg_t transmitDebugMessage (CANDriver* driver, sysinterval_t timeout)
 {
-	CANTxFrame frame =
-	{
-		.DLC	= 8,
-		.IDE	= CAN_IDE_STD,
-		.SID	= DEBUG_MESSAGE_ID,
-		.data16	=
-		{
-			DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress0)),
-			DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress1)),
-			DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress2)),
-			DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress3))
-		}
-	};
+	(void) driver;
+	(void) timeout;
 
-	msg_t result = canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
-	if (result != MSG_OK)
-		canFaultCallback (result);
-	return result;
+	// TODO(Barach): Implementation.
+
+	// CANTxFrame frame =
+	// {
+	// 	.DLC	= 8,
+	// 	.IDE	= CAN_IDE_STD,
+	// 	.SID	= DEBUG_MESSAGE_ID,
+	// 	.data16	=
+	// 	{
+	// 		DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress0)),
+	// 		DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress1)),
+	// 		DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress2)),
+	// 		DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress3))
+	// 	}
+	// };
+
+	// msg_t result = canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
+	// if (result != MSG_OK)
+	// 	canFaultCallback (result);
+	// return result;
+
+	return MSG_OK;
 }

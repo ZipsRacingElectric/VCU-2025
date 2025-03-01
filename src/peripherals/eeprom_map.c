@@ -5,46 +5,27 @@
 #include "peripherals.h"
 #include "torque_thread.h"
 
+// C Standard Library
+#include <string.h>
+
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
-typedef enum
-{
-	EEPROM_TYPE_UINT8_T		= 0,
-	EEPROM_TYPE_UINT16_T	= 1,
-	EEPROM_TYPE_UINT32_T	= 2,
-	EEPROM_TYPE_FLOAT		= 3,
-} eepromTypes_t;
-
 #define READONLY_COUNT (sizeof (READONLY_ADDRS) / sizeof (READONLY_ADDRS [0]))
-static uint16_t READONLY_ADDRS [] =
+static const uint16_t READONLY_ADDRS [] =
 {
-	0x1000,
-	0x1002,
-	0x1004,
-	0x1006,
-	0x1008,
-	0x100A,
-	0x100C,
-	0x1010,
-	0x1014,
-	0x1018
+	0x000,
+	0x002,
+	0x004,
+	0x006,
+	0x008,
+	0x00A,
+	0x00C,
+	0x010,
+	0x014,
+	0x018
 };
 
-static eepromTypes_t READONLY_TYPES [] =
-{
-	EEPROM_TYPE_UINT16_T,
-	EEPROM_TYPE_UINT16_T,
-	EEPROM_TYPE_UINT16_T,
-	EEPROM_TYPE_UINT16_T,
-	EEPROM_TYPE_UINT16_T,
-	EEPROM_TYPE_UINT16_T,
-	EEPROM_TYPE_FLOAT,
-	EEPROM_TYPE_FLOAT,
-	EEPROM_TYPE_FLOAT,
-	EEPROM_TYPE_FLOAT
-};
-
-static void* READONLY_DATA [READONLY_COUNT] =
+static const void* READONLY_DATA [READONLY_COUNT] =
 {
 	&pedals.apps1.sample,
 	&pedals.apps2.sample,
@@ -58,7 +39,7 @@ static void* READONLY_DATA [READONLY_COUNT] =
 	&torqueRequest.torqueFr
 };
 
-static uint8_t READONLY_DATACOUNTS [READONLY_COUNT] =
+static const uint16_t READONLY_SIZES [READONLY_COUNT] =
 {
 	sizeof (pedals.apps1.sample),
 	sizeof (pedals.apps2.sample),
@@ -74,41 +55,32 @@ static uint8_t READONLY_DATACOUNTS [READONLY_COUNT] =
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-bool eepromMapReadonlyCallback (uint16_t addr, void** data, uint8_t* dataCount)
+bool eepromReadonlyRead (void* object, uint16_t addr, void* data, uint16_t dataCount)
 {
+	(void) object;
+
 	for (uint16_t index = 0; index < READONLY_COUNT; ++index)
 	{
 		if (addr != READONLY_ADDRS [index])
 			continue;
 
-		*data = READONLY_DATA [index];
-		*dataCount = READONLY_DATACOUNTS [index];
+		if (dataCount != READONLY_SIZES [index])
+			return false;
 
+		memcpy (data, READONLY_DATA [index], dataCount);
 		return true;
 	}
 
 	return false;
 }
 
-float eepromMapGetReadonly (uint16_t addr)
+bool eepromWriteonlyWrite (void* object, uint16_t addr, const void* data, uint16_t dataCount)
 {
-	for (uint16_t index = 0; index < READONLY_COUNT; ++index)
-	{
-		if (addr != READONLY_ADDRS [index])
-			continue;
+	// TODO(Barach): Implementation.
+	(void) object;
+	(void) addr;
+	(void) data;
+	(void) dataCount;
 
-		switch (READONLY_TYPES [index])
-		{
-		case EEPROM_TYPE_UINT8_T:
-			return (float) (*((uint8_t*) READONLY_DATA [index]));
-		case EEPROM_TYPE_UINT16_T:
-			return (float) (*((uint16_t*) READONLY_DATA [index]));
-		case EEPROM_TYPE_UINT32_T:
-			return (float) (*((uint32_t*) READONLY_DATA [index]));
-		case EEPROM_TYPE_FLOAT:
-			return *((float*) READONLY_DATA [index]);
-		}
-	}
-
-	return 0.0f;
+	return false;
 }

@@ -43,6 +43,7 @@ extern sas_t sas;
 
 /// @brief The VCU's virtual memory map. TODO(Barach): Docs.
 extern virtualEeprom_t virtualMemory;
+extern eeprom_t readonlyMemory;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
