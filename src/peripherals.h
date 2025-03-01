@@ -12,16 +12,16 @@
 
 // Includes
 #include "peripherals/am4096.h"
-#include "peripherals/analog.h"
+#include "peripherals/analog_linear.h"
 #include "peripherals/eeprom_map.h"
-#include "peripherals/linear_sensor.h"
 #include "peripherals/mc24lc32.h"
 #include "peripherals/pedals.h"
+#include "peripherals/stm_adc.h"
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
-/// @brief The VCU's ADC. This is responsible for sampling all analog inputs ( @c pedals , @c sas , & @c glvBattery ).
-extern analog_t adc;
+/// @brief ADC responsible for sampling all on-board analog inputs ( @c pedals & @c glvBattery ).
+extern stmAdc_t adc;
 
 /// @brief The VCU's EEPROM. This is responsible for storing all non-volatile variables.
 extern mc24lc32_t eeprom;
@@ -35,8 +35,11 @@ extern linearSensor_t glvBattery;
 /// @brief Analog sensors measuring the requests of the throttle and brake pedals.
 extern pedals_t pedals;
 
-/// @brief Analog sensor measuring the steering angle of the vehicle.
-extern am4096_t sas;
+/// @brief ADC measuring the steering-angle sensor.
+extern am4096_t sasAdc;
+
+/// @brief Sensor measuring the steering angle of the vehicle.
+extern sas_t sas;
 
 /// @brief The VCU's virtual memory map. TODO(Barach): Docs.
 extern virtualEeprom_t virtualMemory;

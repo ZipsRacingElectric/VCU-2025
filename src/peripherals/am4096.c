@@ -57,10 +57,19 @@ bool am4096Sample (am4096_t* am4096)
 
 	uint16_t relativePos;
 	bool result = readRegister (am4096, RELATIVE_POS_ADDR, &relativePos);
-	if (result)
-		am4096->sample = RELATIVE_POS_GET_RPOS (relativePos);
 
-	// TODO(Barach): Analog sensor callback
+	if (result)
+	{
+		// If successful, update the sensor.
+		am4096->sample = RELATIVE_POS_GET_RPOS (relativePos);
+		am4096->config->sensor->callback (am4096->config->sensor, am4096->sample);
+	}
+	else
+	{
+		// Otherwise, put the sensor in the fail state.
+		am4096->sample = 0;
+		am4096->config->sensor->state = ANALOG_SENSOR_FAILED;
+	}
 
 	#if I2C_USE_MUTUAL_EXCLUSION
 	i2cReleaseBus (am4096->config->i2c);

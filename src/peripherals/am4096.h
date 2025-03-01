@@ -11,6 +11,7 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
+#include "peripherals/analog_sensor.h"
 #include "peripherals/eeprom.h"
 
 // ChibiOS
@@ -35,6 +36,9 @@ typedef struct
 
 	/// @brief The IC2 bus of the device.
 	I2CDriver* i2c;
+
+	/// @brief The sensor to call after sampling successfully.
+	analogSensor_t* sensor;
 
 	/// @brief The timeout interval of a transaction, should be at least 21ms.
 	sysinterval_t timeout;

@@ -144,7 +144,7 @@ msg_t transmitSensorInputPercent (CANDriver* driver, sysinterval_t timeout)
 	uint16_t apps2Word	= PERCENT_TO_WORD (pedals.apps2.value * 100.0f);
 	uint16_t bseFWord	= PERCENT_TO_WORD (pedals.bseF.value * 100.0f);
 	uint16_t bseRWord	= PERCENT_TO_WORD (pedals.bseR.value * 100.0f);
-	int16_t sasWord		= 0; // TODO(Barach): ANGLE_TO_WORD (sas.value);
+	int16_t sasWord		= ANGLE_TO_WORD (sas.value);
 
 	CANTxFrame frame =
 	{

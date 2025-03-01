@@ -4,26 +4,41 @@
 // Includes
 #include "controls/lerp.h"
 
+// Constants ------------------------------------------------------------------------------------------------------------------
+
 #define ZERO_SAMPLE 2048
+
+// Function Prototypes --------------------------------------------------------------------------------------------------------
+
+/**
+ * @brief Updates the value of the sensor.
+ * @note This function uses a @c void* for the object reference as to make the signature usable by callbacks.
+ * @param object The sensor to update (must be a @c sas_t* ).
+ * @param sample The read sample.
+ */
+static void callback (void* object, uint16_t sample);
+
+// Functions ------------------------------------------------------------------------------------------------------------------
 
 bool sasInit (sas_t* sas, sasConfig_t* config)
 {
 	// Store the configuration
 	sas->config = config;
+	sas->callback = callback;
 
 	// Validate the configuration
 	if (config->sampleNegative >= ZERO_SAMPLE || ZERO_SAMPLE >= config->samplePositive)
-		sas->state = LINEAR_SENSOR_CONFIG_INVALID;
+		sas->state = ANALOG_SENSOR_CONFIG_INVALID;
 	else
-		sas->state = LINEAR_SENSOR_VALUE_INVALID;
+		sas->state = ANALOG_SENSOR_SAMPLE_INVALID;
 
 	// Set values to their defaults
 	sas->value = 0.0f;
 
-	return sas->state != LINEAR_SENSOR_CONFIG_INVALID;
+	return sas->state != ANALOG_SENSOR_CONFIG_INVALID;
 }
 
-void sasUpdate (void* object, adcsample_t sample)
+void callback (void* object, uint16_t sample)
 {
 	sas_t* sas = (sas_t*) object;
 
@@ -36,17 +51,17 @@ void sasUpdate (void* object, adcsample_t sample)
 	sas->sample = sample;
 
 	// If the config is invalid, don't check anything else.
-	if (sas->state == LINEAR_SENSOR_CONFIG_INVALID)
+	if (sas->state == ANALOG_SENSOR_CONFIG_INVALID)
 		return;
 
 	// Check the sample is in the valid range
 	if (sample < sas->config->sampleNegative || sample > sas->config->samplePositive)
 	{
-		sas->state = LINEAR_SENSOR_VALUE_INVALID;
+		sas->state = ANALOG_SENSOR_SAMPLE_INVALID;
 		sas->value = 0;
 	}
 
-	sas->state = LINEAR_SENSOR_VALID;
+	sas->state = ANALOG_SENSOR_VALID;
 
 	if (sample > ZERO_SAMPLE)
 	{

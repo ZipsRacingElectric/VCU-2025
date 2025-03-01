@@ -7,24 +7,22 @@
 // Date Created: 2024.10.24
 //
 // Description: Object and functions related to the steering angle sensor.
-//
-// TODO(Barach): Integrate this with the AM4096 driver somehow.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "peripherals/linear_sensor.h"
+#include "peripherals/analog_sensor.h"
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
 typedef struct
 {
 	/// @brief The zeroing offset to apply to the sample, should shift the zero position to 2048.
-	adcsample_t sampleOffset;
+	uint16_t sampleOffset;
 	/// @brief The sample correlating to the negative-most position.
-	adcsample_t sampleNegative;
+	uint16_t sampleNegative;
 	/// @brief The sample correlating to the positive-most position.
-	adcsample_t samplePositive;
+	uint16_t samplePositive;
 	/// @brief The angle of the negative-most position, in radians.
 	float angleNegative;
 	/// @brief The angle of the positive-most position, in radians.
@@ -35,10 +33,10 @@ typedef struct
 
 typedef struct
 {
-	sasConfig_t*		config;
-	linearSensorState_t	state;
-	float				value;
-	adcsample_t			sample;
+	ANALOG_SENSOR_FIELDS;
+	sasConfig_t*	config;
+	uint16_t		sample;
+	float			value;
 } sas_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
@@ -50,13 +48,5 @@ typedef struct
  * @return True if successful, false otherwise.
  */
 bool sasInit (sas_t* sas, sasConfig_t* config);
-
-/**
- * @brief Updates the value of the sensor.
- * @note This function uses a @c void* for the object reference as to make the signature usable by callbacks.
- * @param object The sensor to update (must be a @c linearSensor_t* ).
- * @param sample The read sample.
- */
-void sasUpdate (void* object, adcsample_t sample);
 
 #endif // STEERING_ANGLE_H

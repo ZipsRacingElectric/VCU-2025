@@ -10,12 +10,13 @@
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
-analog_t		adc;
+stmAdc_t		adc;
 mc24lc32_t		eeprom;
 eepromMap_t*	eepromMap;
 linearSensor_t	glvBattery;
 pedals_t		pedals;
-am4096_t		sas;
+am4096_t		sasAdc;
+sas_t			sas;
 virtualEeprom_t virtualMemory;
 
 // Configuration --------------------------------------------------------------------------------------------------------------
@@ -28,15 +29,16 @@ static const I2CConfig I2C1_CONFIG =
 	.duty_cycle		= FAST_DUTY_CYCLE_2
 };
 
-static const am4096Config_t SAS_CONFIG =
+static const am4096Config_t SAS_ADC_CONFIG =
 {
 	.addr		= 0x00, // TODO(Barach): Move this to EEPROM so it can be changed.
 	.i2c		= &I2CD1,
+	.sensor		= (analogSensor_t*) &sas,
 	.timeout	= TIME_MS2I (500)
 };
 
 /// @brief Configuration for the ADC1 peripheral.
-static const analogConfig_t ADC_CONFIG =
+static const stmAdcConfig_t ADC_CONFIG =
 {
 	.driver = &ADCD1,
 	.channels =
@@ -48,21 +50,13 @@ static const analogConfig_t ADC_CONFIG =
 		ADC_CHANNEL_IN0		// GLV Battery
 	},
 	.channelCount = 5,
-	.handlers =
+	.sensors =
 	{
-		pedalSensorUpdate,
-		pedalSensorUpdate,
-		pedalSensorUpdate,
-		pedalSensorUpdate,
-		linearSensorUpdate
-	},
-	.objects =
-	{
-		&pedals.apps1,
-		&pedals.apps2,
-		&pedals.bseF,
-		&pedals.bseR,
-		&glvBattery
+		(analogSensor_t*) &pedals.apps1,
+		(analogSensor_t*) &pedals.apps2,
+		(analogSensor_t*) &pedals.bseF,
+		(analogSensor_t*) &pedals.bseR,
+		(analogSensor_t*) &glvBattery
 	}
 };
 
@@ -80,7 +74,7 @@ static const mc24lc32Config_t EEPROM_CONFIG =
 static eeprom_t* VIRTUAL_MEMORY_EEPROMS [] =
 {
 	(eeprom_t*) &eeprom,
-	(eeprom_t*) &sas
+	(eeprom_t*) &sasAdc
 };
 
 static uint16_t VIRTUAL_MEMORY_ADDRS [] =
@@ -122,7 +116,7 @@ bool peripheralsInit ()
 		return false;
 
 	// ADC 1 driver initialization.
-	if (!analogInit (&adc, &ADC_CONFIG))
+	if (!stmAdcInit (&adc, &ADC_CONFIG))
 		return false;
 
 	// EEPROM initialization (only exit early if a failure occurred).
@@ -146,8 +140,8 @@ void peripheralsReconfigure (void* arg)
 	pedalsInit (&pedals, &eepromMap->pedalConfig);
 
 	// SAS initialization
-	// TODO(Barach): Should this still be here?
-	am4096Init (&sas, &SAS_CONFIG);
+	sasInit (&sas, &eepromMap->sasConfig);
+	am4096Init (&sasAdc, &SAS_ADC_CONFIG);
 
 	// Torque thread configuration
 	torqueThreadSetDrivingTorqueLimit (eepromMap->drivingTorqueLimit);

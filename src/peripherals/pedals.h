@@ -11,20 +11,23 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "peripherals/linear_sensor.h"
+#include "peripherals/analog_sensor.h"
+
+// ChibiOS
+#include "ch.h"
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
 typedef struct
 {
 	/// @brief The absolute minimum plausible sample, any lower indicates implausibility.
-	adcsample_t absoluteMin;
+	uint16_t absoluteMin;
 	/// @brief The starting sample at which the sensor request begins increasing.
-	adcsample_t requestMin;
+	uint16_t requestMin;
 	/// @brief The ending sample at which the sensor request stops increasing.
-	adcsample_t requestMax;
+	uint16_t requestMax;
 	/// @brief The absolute maximum plausible sample, any higher indicates implausibility.
-	adcsample_t absoluteMax;
+	uint16_t absoluteMax;
 } pedalSensorConfig_t;
 
 /**
@@ -32,9 +35,9 @@ typedef struct
  */
 typedef struct
 {
-	linearSensorState_t		state;
+	ANALOG_SENSOR_FIELDS;
 	pedalSensorConfig_t*	config;
-	adcsample_t				sample;
+	uint16_t				sample;
 	float					value;
 } pedalSensor_t;
 
@@ -92,13 +95,6 @@ typedef struct
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 bool pedalSensorInit (pedalSensor_t* sensor, pedalSensorConfig_t* config);
-
-/**
- * @brief Updates the value of a pedal sensor based on a read sample.
- * @param object The pedal sensor to update (must be @c pedalSensor_t ).
- * @param sample The read sample.
- */
-void pedalSensorUpdate (void* object, adcsample_t sample);
 
 bool pedalsInit (pedals_t* pedals, pedalsConfig_t* config);
 

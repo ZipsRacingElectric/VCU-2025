@@ -64,7 +64,7 @@ void tvChatfieldInit (void)
 tvOutput_t tvChatfield (const tvInput_t* input)
 {
 	float throttle = pedals.appsRequest;
-	float angle = 0; // TODO(Barach): sas.value;
+	float angle = sas.value;
 
 	float biasFront = eepromMap->drivingTorqueBias;
 	float biasRear = 1 - biasFront;
@@ -73,7 +73,7 @@ tvOutput_t tvChatfield (const tvInput_t* input)
 
 	tvOutput_t output =
 	{
-		.valid = true, // TODO(Barach): sas.state == LINEAR_SENSOR_VALID,
+		.valid = sas.state == ANALOG_SENSOR_VALID,
 		.torqueRl = biasRightHand * biasRear  * input->drivingTorqueLimit,
 		.torqueRr = biasLeftHand  * biasRear  * input->drivingTorqueLimit,
 		.torqueFl = biasRightHand * biasFront * input->drivingTorqueLimit,

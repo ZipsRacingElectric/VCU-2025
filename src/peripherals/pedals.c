@@ -12,12 +12,22 @@
 /// @brief The maximum acceptable delta of the BSE-F and BSE-R sensor values.
 #define BSE_DELTA_MAX 0.1f
 
+// Function Prototypes --------------------------------------------------------------------------------------------------------
+
+/**
+ * @brief Updates the value of a pedal sensor based on a read sample.
+ * @param object The pedal sensor to update (must be @c pedalSensor_t ).
+ * @param sample The read sample.
+ */
+static void callback (void* object, uint16_t sample);
+
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 bool pedalSensorInit (pedalSensor_t* sensor, pedalSensorConfig_t* config)
 {
 	// Store the configuration
 	sensor->config = config;
+	sensor->callback = callback;
 
 	// Validate the configuration
 	bool configValid =
@@ -25,16 +35,16 @@ bool pedalSensorInit (pedalSensor_t* sensor, pedalSensorConfig_t* config)
 		config->requestMin < config->requestMax &&
 		config->requestMax < config->absoluteMax;
 
-	sensor->state = configValid ? LINEAR_SENSOR_VALUE_INVALID : LINEAR_SENSOR_CONFIG_INVALID;
+	sensor->state = configValid ? ANALOG_SENSOR_SAMPLE_INVALID : ANALOG_SENSOR_CONFIG_INVALID;
 
 	// Set values to their defaults
 	sensor->value = 0.0f;
 	sensor->sample = 0;
 
-	return sensor->state != LINEAR_SENSOR_CONFIG_INVALID;
+	return sensor->state != ANALOG_SENSOR_CONFIG_INVALID;
 }
 
-void pedalSensorUpdate (void* object, adcsample_t sample)
+void callback (void* object, uint16_t sample)
 {
 	pedalSensor_t* sensor = (pedalSensor_t*) object;
 
@@ -42,18 +52,18 @@ void pedalSensorUpdate (void* object, adcsample_t sample)
 	sensor->sample = sample;
 
 	// If the config is invalid, don't check anything else.
-	if (sensor->state == LINEAR_SENSOR_CONFIG_INVALID)
+	if (sensor->state == ANALOG_SENSOR_CONFIG_INVALID)
 		return;
 
 	// Check the sample is in the valid range
 	if (sample < sensor->config->absoluteMin || sample > sensor->config->absoluteMax)
 	{
-		sensor->state = LINEAR_SENSOR_VALUE_INVALID;
+		sensor->state = ANALOG_SENSOR_SAMPLE_INVALID;
 		sensor->value = 0;
 		return;
 	}
 
-	sensor->state = LINEAR_SENSOR_VALID;
+	sensor->state = ANALOG_SENSOR_VALID;
 
 	// Inverse lerp in request range, saturate otherwise.
 	if (sample < sensor->config->requestMin)
@@ -103,10 +113,10 @@ void pedalsUpdate (pedals_t* pedals, systime_t timePrevious, systime_t timeCurre
 
 	// Instantaneous plausiblity check
 	pedals->plausibleInst =
-		pedals->apps1.state == LINEAR_SENSOR_VALID &&
-		pedals->apps2.state == LINEAR_SENSOR_VALID &&
-		pedals->bseF.state == LINEAR_SENSOR_VALID &&
-		pedals->bseR.state == LINEAR_SENSOR_VALID &&
+		pedals->apps1.state == ANALOG_SENSOR_VALID &&
+		pedals->apps2.state == ANALOG_SENSOR_VALID &&
+		pedals->bseF.state == ANALOG_SENSOR_VALID &&
+		pedals->bseR.state == ANALOG_SENSOR_VALID &&
 		pedals->apps10PercentPlausible &&
 		pedals->bse10PercentPlausible &&
 		pedals->apps25_5Plausible;

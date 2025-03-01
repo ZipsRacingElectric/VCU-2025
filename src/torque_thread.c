@@ -120,9 +120,9 @@ THD_FUNCTION (torqueThread, arg)
 		timeCurrent = chVTGetSystemTimeX ();
 
 		// Sample the sensor inputs.
-		analogSample (&adc);
+		stmAdcSample (&adc);
 		pedalsUpdate (&pedals, timePrevious, timeCurrent);
-		am4096Sample (&sas);
+		am4096Sample (&sasAdc);
 
 		// Calculate the torque request and apply power limiting.
 		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S);
