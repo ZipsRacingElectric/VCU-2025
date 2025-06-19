@@ -75,21 +75,21 @@ static eeprom_t* VIRTUAL_MEMORY_EEPROMS [] =
 {
 	(eeprom_t*) &eeprom,
 	&readonlyMemory,
-	(eeprom_t*) &sasAdc
+	// (eeprom_t*) &sasAdc
 };
 
 static uint16_t VIRTUAL_MEMORY_ADDRS [] =
 {
 	0x0000,
 	0x1000,
-	0x2000
+	// 0x2000
 };
 
 static uint16_t VIRTUAL_MEMORY_SIZES [] =
 {
 	0x1000,
 	0x1000,
-	0x0038
+	// 0x0038
 };
 
 static const virtualEepromConfig_t VIRTUAL_MEMORY_CONFIG =
