@@ -2,6 +2,7 @@
 #include "eeprom_map.h"
 
 // Includes
+#include "can_thread.h"
 #include "peripherals.h"
 #include "torque_thread.h"
 
@@ -76,11 +77,18 @@ bool eepromReadonlyRead (void* object, uint16_t addr, void* data, uint16_t dataC
 
 bool eepromWriteonlyWrite (void* object, uint16_t addr, const void* data, uint16_t dataCount)
 {
-	// TODO(Barach): Implementation.
 	(void) object;
-	(void) addr;
 	(void) data;
 	(void) dataCount;
+
+	switch (addr)
+	{
+	case 0x0000: // AMK_RESET_REQUEST
+		for (uint8_t index = 0; index < AMK_COUNT; ++index)
+			for (uint8_t i = 0; i < 10; ++i)
+				amkSendErrorResetRequest (amks + index, TIME_MS2I (100));
+		return true;
+	}
 
 	return false;
 }

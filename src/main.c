@@ -5,8 +5,6 @@
 //
 // Description: Entrypoint and interrupt handling for the vehicle control unit. See the respective threads for specific
 //   responsibilities of the the VCU.
-//
-// TODO(Barach): The doc/software folder is dated and misleading.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -63,6 +61,9 @@ int main (void)
 
 	// State thread initialization. Start this at a lower priority as it has the least strict timing.
 	stateThreadStart (NORMALPRIO - 1);
+
+	// Allow the shutdown loop to close.
+	palSetLine (LINE_SHUTDOWN_EN);
 
 	// Do nothing.
 	while (true)

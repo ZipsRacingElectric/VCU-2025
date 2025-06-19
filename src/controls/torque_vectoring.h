@@ -27,6 +27,8 @@ typedef struct
 
 	/// @brief The maximum amount of cumulative requested regenerative torque. This value is set by the driver's configuration.
 	float regenTorqueLimit;
+
+	float regenRequest;
 } tvInput_t;
 
 /// @brief Output to TV algoritms.

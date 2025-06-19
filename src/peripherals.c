@@ -6,7 +6,6 @@
 // Includes
 #include "torque_thread.h"
 #include "controls/lerp.h"
-#include "controls/tv_chatfield.h"
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
@@ -26,8 +25,8 @@ eeprom_t		readonlyMemory;
 static const I2CConfig I2C1_CONFIG =
 {
 	.op_mode		= OPMODE_I2C,
-	.clock_speed	= 400000,
-	.duty_cycle		= FAST_DUTY_CYCLE_2
+	.clock_speed	= 100000,
+	.duty_cycle		= STD_DUTY_CYCLE
 };
 
 static const am4096Config_t SAS_ADC_CONFIG =
@@ -46,7 +45,7 @@ static const stmAdcConfig_t ADC_CONFIG =
 	{
 		ADC_CHANNEL_IN10,	// APPS-1
 		ADC_CHANNEL_IN11,	// APPS-2
-		ADC_CHANNEL_IN12,	// BSE-F
+		ADC_CHANNEL_IN13,	// BSE-F // TODO(Barach): Fix
 		ADC_CHANNEL_IN13,	// BSE-R
 		ADC_CHANNEL_IN0		// GLV Battery
 	},
@@ -147,8 +146,8 @@ void peripheralsReconfigure (void* arg)
 	pedalsInit (&pedals, &eepromMap->pedalConfig);
 
 	// SAS initialization
-	sasInit (&sas, &eepromMap->sasConfig);
-	am4096Init (&sasAdc, &SAS_ADC_CONFIG);
+	// sasInit (&sas, &eepromMap->sasConfig);
+	// am4096Init (&sasAdc, &SAS_ADC_CONFIG);
 
 	// Torque thread configuration
 	torqueThreadSetDrivingTorqueLimit (eepromMap->drivingTorqueLimit);
@@ -169,7 +168,4 @@ void peripheralsReconfigure (void* arg)
 	glvBatteryConfig.valueMin = lerp2d (0, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
 	glvBatteryConfig.valueMax = lerp2d (4095, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
 	linearSensorInit (&glvBattery, &glvBatteryConfig);
-
-	// Chatfield LUT initialization
-	tvChatfieldInit ();
 }

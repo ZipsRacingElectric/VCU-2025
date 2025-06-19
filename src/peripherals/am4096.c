@@ -46,11 +46,17 @@ bool am4096Init (am4096_t* am4096, const am4096Config_t* config)
 	am4096->readHandler		= readBlock;
 	am4096->config			= config;
 
+	am4096->state = AM4096_STATE_READY;
+
 	return am4096Sample (am4096);
 }
 
 bool am4096Sample (am4096_t* am4096)
 {
+	// Ignore if the peripheral is failed.
+	if (am4096->state != AM4096_STATE_READY)
+		return false;
+
 	#if I2C_USE_MUTUAL_EXCLUSION
 	i2cAcquireBus (am4096->config->i2c);
 	#endif // I2C_USE_MUTUAL_EXCLUSION

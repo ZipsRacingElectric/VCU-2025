@@ -14,7 +14,7 @@
 #define STATE_CONTROL_PERIOD	TIME_MS2I (10)
 #define STATE_MESSAGE_PRESCALAR	10
 
-#define BUZZER_TIME_PERIOD		TIME_MS2I (3000)
+#define BUZZER_TIME_PERIOD		TIME_MS2I (2500)
 #define HV_INACTIVE_PERIOD		TIME_MS2I (100)
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
@@ -23,6 +23,7 @@ vehicleState_t vehicleState	= VEHICLE_STATE_LOW_VOLTAGE;
 bool torquePlausible		= true;
 bool torqueDerating			= false;
 bool canPlausible			= true;
+bool amksValid				= false;
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
@@ -46,9 +47,9 @@ THD_FUNCTION (stateThread, arg)
 		if (vehicleState == VEHICLE_STATE_FAILED)
 			vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
 
-		// TODO(Barach): Replace once all inverters are running.
-		amkInverterState_t amksState = amksGetState (amks, 1);
-		if (amksState == AMK_STATE_INVALID || amksState == AMK_STATE_ERROR)
+		amkInverterState_t amksState = amksGetState (amks, AMK_COUNT);
+		amksValid = amksState == AMK_STATE_INVALID || amksState == AMK_STATE_ERROR;
+		if (amksState == AMK_STATE_INVALID)
 			vehicleState = VEHICLE_STATE_FAILED;
 
 		bool tractiveSystemsActive = amksState == AMK_STATE_READY_HIGH_VOLTAGE || amksState == AMK_STATE_READY_ENERGIZED;

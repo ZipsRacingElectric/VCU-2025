@@ -161,7 +161,7 @@
       <pin1
         ID="PUMP1"
         Type="PushPull"
-        Level="Low"
+        Level="High"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"
@@ -169,7 +169,7 @@
       <pin2
         ID="PUMP2"
         Type="PushPull"
-        Level="Low"
+        Level="High"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"
@@ -177,7 +177,7 @@
       <pin3
         ID="FAN1"
         Type="PushPull"
-        Level="Low"
+        Level="High"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"
@@ -185,7 +185,7 @@
       <pin4
         ID="FAN2"
         Type="PushPull"
-        Level="Low"
+        Level="High"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"
@@ -353,7 +353,7 @@
         Mode="Input"
         Alternate="0" />
       <pin9
-        ID="DRS_BUTTON_IN"
+        ID="BUTTON_1_IN"
         Type="PushPull"
         Level="High"
         Speed="Minimum"
@@ -361,7 +361,7 @@
         Mode="Input"
         Alternate="0" />
       <pin10
-        ID="TORQUE_UP_BUTTON_IN"
+        ID="BUTTON_2_IN"
         Type="PushPull"
         Level="High"
         Speed="Minimum"
@@ -369,7 +369,7 @@
         Mode="Input"
         Alternate="0" />
       <pin11
-        ID="TORQUE_DOWN_BUTTON_IN"
+        ID="BUTTON_3_IN"
         Type="PushPull"
         Level="High"
         Speed="Minimum"
@@ -377,7 +377,7 @@
         Mode="Input"
         Alternate="0" />
       <pin12
-        ID="EXTRA1_BUTTON_IN"
+        ID="BUTTON_4_IN"
         Type="PushPull"
         Level="High"
         Speed="Minimum"
@@ -385,7 +385,7 @@
         Mode="Input"
         Alternate="0" />
       <pin13
-        ID="EXTRA2_BUTTON_IN"
+        ID="BUTTON_5_IN"
         Type="PushPull"
         Level="High"
         Speed="Minimum"

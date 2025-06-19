@@ -5,10 +5,10 @@
 #include "can_thread.h"
 #include "controls/pid_controller.h"
 #include "controls/torque_vectoring.h"
-#include "controls/tv_chatfield.h"
 #include "controls/tv_straight_diff.h"
 #include "peripherals.h"
 #include "state_thread.h"
+#include "controls/lerp.h"
 
 // C Standard Library
 #include <float.h>
@@ -39,7 +39,7 @@ static uint8_t algoritmIndex = 0;
 #define TV_ALGORITHM_COUNT (sizeof (tvAlgorithms) / sizeof (tvFunction_t*))
 static tvFunction_t* tvAlgorithms [] =
 {
-	&tvStraightDiff, &tvChatfield
+	&tvStraightDiff
 };
 
 /**
@@ -94,6 +94,10 @@ tvOutput_t requestCalculateOutput (tvInput_t* input);
  */
 bool requestApplyPowerLimit (tvOutput_t* request, float deltaTime);
 
+bool requestApplyRegenLimit (tvOutput_t* output);
+
+bool torqueApplyRegenLimit (float* torque, amkInverter_t* amk);
+
 /**
  * @brief Checks the validity of a torque request.
  * @param request The request to validate.
@@ -110,6 +114,8 @@ THD_FUNCTION (torqueThread, arg)
 	(void) arg;
 	chRegSetThreadName ("torque_control");
 
+	bool button3Held = false;
+	bool button5Held = false;
 	systime_t timeCurrent = chVTGetSystemTimeX ();
 	while (true)
 	{
@@ -126,16 +132,61 @@ THD_FUNCTION (torqueThread, arg)
 
 		// Calculate the torque request and apply power limiting.
 		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S);
+
+		// Button inputs
+		if (!palReadLine (LINE_BUTTON_1_IN))
+		{
+			// Torque Up / Down
+			if (palReadLine (LINE_BUTTON_3_IN))
+			{
+				button3Held = false;
+			}
+			else if (!button3Held)
+			{
+				torqueThreadSetDrivingTorqueLimit (drivingTorqueLimit - 8.4f);
+				button3Held = true;
+			}
+
+			if (palReadLine (LINE_BUTTON_5_IN))
+			{
+				button5Held = false;
+			}
+			else if (!button5Held)
+			{
+				torqueThreadSetDrivingTorqueLimit (drivingTorqueLimit + 8.4f);
+				button5Held = true;
+			}
+		}
+		else
+		{
+			// Regen input
+			if (!palReadLine (LINE_BUTTON_3_IN) || !palReadLine (LINE_BUTTON_5_IN))
+			{
+				if (!palReadLine (LINE_BUTTON_3_IN) && !palReadLine (LINE_BUTTON_5_IN))
+					input.regenRequest = eepromMap->regenHardRequest;
+				else
+					input.regenRequest = eepromMap->regenLightRequest;
+			}
+		}
+
 		torqueRequest = requestCalculateOutput (&input);
 		bool derating = requestApplyPowerLimit (&torqueRequest, TORQUE_THREAD_PERIOD_S);
+		// derating &= requestApplyRegenLimit (&torqueRequest);
 		bool plausible = requestValidate (&torqueRequest, &input);
 
 		// Nofify the state thread of the current plausibility.
 		stateThreadSetTorquePlausibility (plausible, derating);
 
-		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
+		if (!amksValid)
 		{
-			if (plausible)
+			amkSendErrorResetRequest (&amkRl, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+			amkSendErrorResetRequest (&amkRr, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+			amkSendErrorResetRequest (&amkFl, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+			amkSendErrorResetRequest (&amkFr, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+		}
+		else if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
+		{
+			if (true)
 			{
 				// Torque request message.
 				amkSendTorqueRequest (&amkRl, torqueRequest.torqueRl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
@@ -181,7 +232,17 @@ void torqueThreadSelectAlgorithm (uint8_t index)
 void torqueThreadSetDrivingTorqueLimit (float torque)
 {
 	if (torque > AMK_DRIVING_TORQUE_MAX * AMK_COUNT)
+	{
+		drivingTorqueLimit = AMK_DRIVING_TORQUE_MAX * AMK_COUNT;
 		return;
+	}
+
+	if (torque < 0)
+	{
+		drivingTorqueLimit = 0;
+		return;
+	}
+
 	drivingTorqueLimit = torque;
 }
 
@@ -211,7 +272,8 @@ tvInput_t requestCalculateInput (float deltaTime)
 	{
 		.deltaTime			= deltaTime,
 		.drivingTorqueLimit	= pedals.appsRequest * drivingTorqueLimit,
-		.regenTorqueLimit	= regenTorqueLimit
+		.regenTorqueLimit	= regenTorqueLimit,
+		.regenRequest		= 0.0f
 	};
 	return input;
 }
@@ -225,8 +287,7 @@ tvOutput_t requestCalculateOutput (tvInput_t* input)
 bool requestApplyPowerLimit (tvOutput_t* output, float deltaTime)
 {
 	// Calculate the cumulative power consumption of the inverters.
-	// TODO(Barach): Replace once all inverters are running.
-	float cumulativePower = amksGetCumulativePower (amks, 1);
+	float cumulativePower = amksGetCumulativePower (amks, AMK_COUNT);
 
 	// Calculate the torque reduction ratio.
 	pidCalculate (&powerLimitPid, cumulativePower, deltaTime);
@@ -240,6 +301,35 @@ bool requestApplyPowerLimit (tvOutput_t* output, float deltaTime)
 	output->torqueFr *= torqueReductionRatio;
 
 	return (torqueReductionRatio < 1.0f - FLT_EPSILON);
+}
+
+bool requestApplyRegenLimit (tvOutput_t* output)
+{
+	return
+		torqueApplyRegenLimit (&output->torqueRl, &amkRl) &&
+		torqueApplyRegenLimit (&output->torqueRr, &amkRr) &&
+		torqueApplyRegenLimit (&output->torqueFl, &amkFl) &&
+		torqueApplyRegenLimit (&output->torqueFr, &amkFr);
+}
+
+bool torqueApplyRegenLimit (float* torque, amkInverter_t* amk)
+{
+	if (*torque < 0)
+	{
+		if (amk->actualSpeed < eepromMap->regenDeratingSpeedEnd)
+		{
+			*torque = 0;
+			return true;
+		}
+		else if (amk->actualSpeed < eepromMap->regenDeratingSpeedStart)
+		{
+			*torque = lerp2d (amk->actualSpeed,
+				eepromMap->regenDeratingSpeedEnd, 0,
+				eepromMap->regenDeratingSpeedStart, 1);
+			return true;
+		}
+		return false;
+	}
 }
 
 bool requestValidate (tvOutput_t* output, tvInput_t* input)

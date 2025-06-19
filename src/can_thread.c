@@ -9,6 +9,9 @@
 // ChibiOS
 #include "hal.h"
 
+// C Standard Library
+#include <string.h>
+
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
 amkInverter_t	amks [AMK_COUNT];
@@ -45,25 +48,29 @@ static const amkInverterConfig_t AMK_CONFIGS [AMK_COUNT] =
 {
 	// RL
 	{
-		.driver			= &CAND1,
+		.mainDriver		= &CAND2,
+		.bridgeDriver	= &CAND1,
 		.baseId			= 0x200,
 		.timeoutPeriod	= TIME_MS2I (100),
 	},
 	// RR
 	{
-		.driver			= &CAND1,
+		.mainDriver		= &CAND2,
+		.bridgeDriver	= &CAND1,
 		.baseId			= 0x201,
 		.timeoutPeriod	= TIME_MS2I (100),
 	},
 	// FL
 	{
-		.driver			= &CAND1,
+		.mainDriver		= &CAND2,
+		.bridgeDriver	= &CAND1,
 		.baseId			= 0x202,
 		.timeoutPeriod	= TIME_MS2I (100),
 	},
 	// FR
 	{
-		.driver			= &CAND1,
+		.mainDriver		= &CAND2,
+		.bridgeDriver	= &CAND1,
 		.baseId			= 0x203,
 		.timeoutPeriod	= TIME_MS2I (100),
 	}
@@ -77,13 +84,38 @@ static const ecumasterGpsConfig_t GPS_CONFIG =
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
-static THD_WORKING_AREA (canRxThreadWa, 512);
-THD_FUNCTION (canRxThread, arg)
+static THD_WORKING_AREA (can1RxThreadWa, 512);
+THD_FUNCTION (can1RxThread, arg)
 {
 	(void) arg;
-	chRegSetThreadName ("can_rx");
+	chRegSetThreadName ("can1_rx");
 
-	CANRxFrame frame;
+	CANRxFrame rxFrame;
+
+	while (true)
+	{
+		// Block until the next message arrives
+		msg_t result = canReceiveTimeout (&CAND1, CAN_ANY_MAILBOX, &rxFrame, CAN_THREAD_TIMEOUT_POLL_PERIOD);
+
+		if (result == MSG_OK)
+		{
+			// Find the handler of the message
+			if (!canNodesReceive (nodes, NODE_COUNT, &rxFrame))
+			{
+				// If no node handled the message, check if it is directly for the VCU.
+				receiveMessage (&rxFrame);
+			}
+		}
+	}
+}
+
+static THD_WORKING_AREA (can2RxThreadWa, 512);
+THD_FUNCTION (can2RxThread, arg)
+{
+	(void) arg;
+	chRegSetThreadName ("can2_rx");
+
+	CANRxFrame rxFrame;
 
 	systime_t timeCurrent = chVTGetSystemTimeX ();
 	systime_t timePrevious;
@@ -91,19 +123,28 @@ THD_FUNCTION (canRxThread, arg)
 	while (true)
 	{
 		// Block until the next message arrives
-		msg_t result = canReceiveTimeout (&CAND1, CAN_ANY_MAILBOX, &frame, CAN_THREAD_TIMEOUT_POLL_PERIOD);
+		msg_t result = canReceiveTimeout (&CAND2, CAN_ANY_MAILBOX, &rxFrame, CAN_THREAD_TIMEOUT_POLL_PERIOD);
 		timePrevious = timeCurrent;
 		timeCurrent = chVTGetSystemTimeX ();
 
 		if (result == MSG_OK)
 		{
 			// Find the handler of the message
-			if (!canNodesReceive (nodes, NODE_COUNT, &frame))
+			if (!canNodesReceive (nodes, NODE_COUNT, &rxFrame))
 			{
 				// If no node handled the message, check if it is directly for the VCU.
-				receiveMessage (&frame);
+				receiveMessage (&rxFrame);
 			}
 		}
+
+		CANTxFrame txFrame;
+
+			txFrame.SID = rxFrame.SID;
+			txFrame.DLC = rxFrame.DLC;
+			txFrame.IDE = rxFrame.IDE;
+			memcpy (txFrame.data8, rxFrame.data8, rxFrame.DLC);
+
+			canTransmitTimeout (&CAND1, CAN_ANY_MAILBOX, &txFrame, TIME_MS2I (500));
 
 		canNodesCheckTimeout (nodes, NODE_COUNT, timePrevious, timeCurrent);
 	}
@@ -117,13 +158,23 @@ bool canThreadStart (tprio_t priority)
 
 	palClearLine (LINE_CAN1_STBY);
 
+	// CAN 2 driver initialization
+	if (canStart (&CAND2, &CAN1_CONFIG) != MSG_OK)
+		return false;
+
+	palClearLine (LINE_CAN2_STBY);
+
 	// Initialize the CAN nodes
 	for (uint8_t index = 0; index < AMK_COUNT; ++index)
 		amkInit (amks + index, AMK_CONFIGS + index);
 
 	ecumasterInit (&gps, &GPS_CONFIG);
 
-	// Create the CAN thread
-	chThdCreateStatic (&canRxThreadWa, sizeof (canRxThreadWa), priority, canRxThread, NULL);
+	// Create the CAN 1 thread
+	chThdCreateStatic (&can1RxThreadWa, sizeof (can1RxThreadWa), priority, can1RxThread, NULL);
+
+	// Create the CAN 2 thread
+	chThdCreateStatic (&can2RxThreadWa, sizeof (can2RxThreadWa), priority, can2RxThread, NULL);
+
 	return true;
 }

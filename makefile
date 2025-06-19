@@ -28,7 +28,6 @@ CSRC =	$(ALLCSRC)							\
 		src/can/transmit.c					\
 											\
 		src/torque_thread.c					\
-		src/controls/tv_chatfield.c			\
 		src/controls/tv_straight_diff.c		\
 											\
 		src/state_thread.c

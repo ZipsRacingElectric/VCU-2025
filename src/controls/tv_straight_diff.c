@@ -9,6 +9,15 @@ tvOutput_t tvStraightDiff (const tvInput_t* input)
 	float torqueRear	= input->drivingTorqueLimit / 2.0f * (1 - eepromMap->drivingTorqueBias);
 	float torqueFront	= input->drivingTorqueLimit / 2.0f * eepromMap->drivingTorqueBias;
 
+	float regenTorque = 0.0f;
+	if (pedals.appsRequest < eepromMap->regenCutoffThreshold)
+		regenTorque = input->regenRequest *
+			(1 - pedals.appsRequest / eepromMap->regenCutoffThreshold)
+			* eepromMap->regenTorqueLimit;
+
+	torqueRear	-= regenTorque * eepromMap->regenTorqueBias / 2.0f;
+	torqueFront	-= regenTorque * eepromMap->regenTorqueBias / 2.0f;
+
 	tvOutput_t output =
 	{
 		.valid = true,
@@ -17,5 +26,6 @@ tvOutput_t tvStraightDiff (const tvInput_t* input)
 		.torqueFl = torqueFront,
 		.torqueFr = torqueFront
 	};
+
 	return output;
 }

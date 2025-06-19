@@ -48,6 +48,8 @@ extern bool torqueDerating;
 /// @brief Indicates the state of the CAN thread.
 extern bool canPlausible;
 
+extern bool amksValid;
+
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 void stateThreadStart (tprio_t priority);
