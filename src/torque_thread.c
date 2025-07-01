@@ -300,7 +300,8 @@ bool requestApplyPowerLimit (tvOutput_t* output, float deltaTime)
 	output->torqueFl *= torqueReductionRatio;
 	output->torqueFr *= torqueReductionRatio;
 
-	return (torqueReductionRatio < 1.0f - FLT_EPSILON);
+	// If reduction ratio is not 1, derating is occurring.
+	return (1.0f - torqueReductionRatio < FLT_EPSILON);
 }
 
 bool requestApplyRegenLimit (tvOutput_t* output)
