@@ -48,8 +48,8 @@ THD_FUNCTION (stateThread, arg)
 			vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
 
 		amkInverterState_t amksState = amksGetState (amks, AMK_COUNT);
-		amksValid = amksState == AMK_STATE_INVALID || amksState == AMK_STATE_ERROR;
-		if (amksState == AMK_STATE_INVALID)
+		amksValid = amksState != AMK_STATE_INVALID && amksState != AMK_STATE_ERROR;
+		if (amksState == AMK_STATE_INVALID || eeprom.state != MC24LC32_STATE_READY)
 			vehicleState = VEHICLE_STATE_FAILED;
 
 		bool tractiveSystemsActive = amksState == AMK_STATE_READY_HIGH_VOLTAGE || amksState == AMK_STATE_READY_ENERGIZED;
@@ -109,7 +109,7 @@ THD_FUNCTION (stateThread, arg)
 			messageCounter = 0;
 		}
 
-		palWriteLine (LINE_VCU_FLT, !torquePlausible || vehicleState == VEHICLE_STATE_FAILED);
+		palWriteLine (LINE_VCU_FLT, !torquePlausible || vehicleState == VEHICLE_STATE_FAILED || amksState == AMK_STATE_ERROR);
 
 		// Brake light
 		palWriteLine (LINE_BRK_LIGHT, pedals.braking);

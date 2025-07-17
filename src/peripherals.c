@@ -34,7 +34,7 @@ static const am4096Config_t SAS_ADC_CONFIG =
 	.addr		= 0x00, // TODO(Barach): Move this to EEPROM so it can be changed.
 	.i2c		= &I2CD1,
 	.sensor		= (analogSensor_t*) &sas,
-	.timeout	= TIME_MS2I (500)
+	.timeout	= TIME_MS2I (10)
 };
 
 /// @brief Configuration for the ADC1 peripheral.
@@ -75,21 +75,21 @@ static eeprom_t* VIRTUAL_MEMORY_EEPROMS [] =
 {
 	(eeprom_t*) &eeprom,
 	&readonlyMemory,
-	// (eeprom_t*) &sasAdc
+	(eeprom_t*) &sasAdc
 };
 
 static uint16_t VIRTUAL_MEMORY_ADDRS [] =
 {
 	0x0000,
 	0x1000,
-	// 0x2000
+	0x2000
 };
 
 static uint16_t VIRTUAL_MEMORY_SIZES [] =
 {
 	0x1000,
 	0x1000,
-	// 0x0038
+	0x0038
 };
 
 static const virtualEepromConfig_t VIRTUAL_MEMORY_CONFIG =
@@ -146,8 +146,8 @@ void peripheralsReconfigure (void* arg)
 	pedalsInit (&pedals, &eepromMap->pedalConfig);
 
 	// SAS initialization
-	// sasInit (&sas, &eepromMap->sasConfig);
-	// am4096Init (&sasAdc, &SAS_ADC_CONFIG);
+	sasInit (&sas, &eepromMap->sasConfig);
+	am4096Init (&sasAdc, &SAS_ADC_CONFIG);
 
 	// Torque thread configuration
 	torqueThreadSetDrivingTorqueLimit (eepromMap->drivingTorqueLimit);
