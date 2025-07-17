@@ -5,6 +5,7 @@
 
 // Includes
 #include "can/receive.h"
+#include "can/transmit.h"
 
 // ChibiOS
 #include "hal.h"
@@ -28,6 +29,8 @@ canNode_t* nodes [] =
 // Configurations -------------------------------------------------------------------------------------------------------------
 
 #define CAN_THREAD_TIMEOUT_POLL_PERIOD TIME_MS2I (10)
+
+#define CAN_TX_THREAD_PERIOD TIME_MS2I (1000)
 
 /**
  * @brief Configuration of the CAN 1 & CAN 2 peripherals.
@@ -150,6 +153,26 @@ THD_FUNCTION (can2RxThread, arg)
 	}
 }
 
+static THD_WORKING_AREA (can1TxThreadWa, 512);
+THD_FUNCTION (can1TxThread, arg)
+{
+	(void) arg;
+	chRegSetThreadName ("can1_tx");
+
+	systime_t timeCurrent = chVTGetSystemTimeX ();
+	while (true)
+	{
+		// Sleep until next loop.
+		systime_t timeNext = chTimeAddX (timeCurrent, CAN_TX_THREAD_PERIOD);
+		chThdSleepUntilWindowed (timeCurrent, timeNext);
+		timeCurrent = chVTGetSystemTimeX ();
+
+		transmitConfig0Message (&CAND1, CAN_TX_THREAD_PERIOD);
+		transmitConfig2Message (&CAND1, CAN_TX_THREAD_PERIOD);
+		transmitConfig3Message (&CAND1, CAN_TX_THREAD_PERIOD);
+	}
+}
+
 bool canThreadStart (tprio_t priority)
 {
 	// CAN 1 driver initialization
@@ -170,11 +193,14 @@ bool canThreadStart (tprio_t priority)
 
 	ecumasterInit (&gps, &GPS_CONFIG);
 
-	// Create the CAN 1 thread
+	// Create the CAN 1 RX thread
 	chThdCreateStatic (&can1RxThreadWa, sizeof (can1RxThreadWa), priority, can1RxThread, NULL);
 
-	// Create the CAN 2 thread
+	// Create the CAN 2 RX thread
 	chThdCreateStatic (&can2RxThreadWa, sizeof (can2RxThreadWa), priority, can2RxThread, NULL);
+
+	// // Create the CAN 1 TX thread
+	// chThdCreateStatic (&can1TxThreadWa, sizeof (can1TxThreadWa), LOWPRIO, can1TxThread, NULL);
 
 	return true;
 }

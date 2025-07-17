@@ -5,6 +5,7 @@
 #include "can_thread.h"
 #include "peripherals.h"
 #include "state_thread.h"
+#include "torque_thread.h"
 
 // C Standard Library
 #include <string.h>
@@ -27,11 +28,34 @@
 #define DEBUG_INVERSE_FACTOR		(10.0f)
 #define DEBUG_TO_WORD(debug)		(int16_t) ((debug) * DEBUG_INVERSE_FACTOR)
 
+// Torque Values
+#define TORQUE_INVERSE_FACTOR		(255.0f / 100.0f)
+#define TORQUE_TO_WORD(torque)		(uint8_t) ((torque) * TORQUE_INVERSE_FACTOR)
+
+// Ratio Values
+#define RATIO_INVERSE_FACTOR		(255.0f)
+#define RATIO_TO_WORD(ratio)		(uint8_t) ((ratio) * RATIO_INVERSE_FACTOR)
+
+// Config Angle Values
+#define CFG_ANGLE_INVERSE_FACTOR	(255.0f / 100.0f)
+#define CFG_ANGLE_TO_WORD(angle)	(uint8_t) ((angle) * CFG_ANGLE_INVERSE_FACTOR)
+
+// Config Spring Rate Values
+#define CFG_SPRING_INVERSE_FACTOR	(255.0f / 1200.0f)
+#define CFG_SPRING_TO_WORD(angle)	(uint8_t) ((angle) * CFG_SPRING_INVERSE_FACTOR)
+
+// Config Height Values
+#define CFG_HEIGHT_INVERSE_FACTOR	(255.0f / 500.0f)
+#define CFG_HEIGHT_TO_WORD(angle)	(uint8_t) ((angle) * CFG_SPRING_INVERSE_FACTOR)
+
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
 #define STATUS_MESSAGE_ID				0x100
 #define SENSOR_INPUT_PERCENT_MESSAGE_ID	0x600
 #define DEBUG_MESSAGE_ID				0x651
+#define CONFIG_0_MESSAGE_ID				0x7A0
+#define CONFIG_2_MESSAGE_ID				0x7A2
+#define CONFIG_3_MESSAGE_ID				0x7A3
 
 // Message Packing ------------------------------------------------------------------------------------------------------------
 
@@ -197,4 +221,67 @@ msg_t transmitDebugMessage (CANDriver* driver, sysinterval_t timeout)
 	// return result;
 
 	return MSG_OK;
+}
+
+msg_t transmitConfig0Message (CANDriver* driver, sysinterval_t timeout)
+{
+	CANTxFrame frame =
+	{
+		.DLC	= 4,
+		.IDE	= CAN_IDE_STD,
+		.SID	= CONFIG_0_MESSAGE_ID,
+		.data8	=
+		{
+			TORQUE_TO_WORD (drivingTorqueLimit),
+			RATIO_TO_WORD (eepromMap->drivingTorqueBias),
+			RATIO_TO_WORD (eepromMap->linearSasBiasMax),
+			eepromMap->torqueAlgoritmIndex
+		}
+	};
+
+	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
+}
+
+msg_t transmitConfig2Message (CANDriver* driver, sysinterval_t timeout)
+{
+	CANTxFrame frame =
+	{
+		.DLC	= 8,
+		.IDE	= CAN_IDE_STD,
+		.SID	= CONFIG_2_MESSAGE_ID,
+		.data8	=
+		{
+			CFG_ANGLE_TO_WORD (eepromMap->camberFront),
+			CFG_ANGLE_TO_WORD (eepromMap->camberRear),
+			CFG_ANGLE_TO_WORD (eepromMap->castorFront),
+			CFG_ANGLE_TO_WORD (eepromMap->castorRear),
+			(eepromMap->reboundFront & 0xF) | ((eepromMap->reboundRear << 4) & 0xF0),
+			(eepromMap->lowSpeedDampingFront & 0xF) | ((eepromMap->lowSpeedDampingRear << 4) & 0xF0),
+			(eepromMap->highSpeedDampingFront & 0xF) | ((eepromMap->highSpeedDampingRear << 4) & 0xF0),
+			eepromMap->arbStage
+		}
+	};
+
+	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
+}
+
+msg_t transmitConfig3Message (CANDriver* driver, sysinterval_t timeout)
+{
+	CANTxFrame frame =
+	{
+		.DLC	= 8,
+		.IDE	= CAN_IDE_STD,
+		.SID	= CONFIG_3_MESSAGE_ID,
+		.data8	=
+		{
+			CFG_SPRING_TO_WORD (eepromMap->springRateFront),
+			CFG_SPRING_TO_WORD (eepromMap->springRateRear),
+			CFG_HEIGHT_TO_WORD (eepromMap->rideHeightFront),
+			CFG_HEIGHT_TO_WORD (eepromMap->rideHeightRear),
+			CFG_ANGLE_TO_WORD (eepromMap->toeFront),
+			CFG_ANGLE_TO_WORD (eepromMap->toeRear)
+		}
+	};
+
+	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
 }

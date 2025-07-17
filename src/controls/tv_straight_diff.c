@@ -6,8 +6,8 @@
 
 tvOutput_t tvStraightDiff (const tvInput_t* input)
 {
-	float torqueRear	= input->drivingTorqueLimit / 2.0f * (1 - eepromMap->drivingTorqueBias);
-	float torqueFront	= input->drivingTorqueLimit / 2.0f * eepromMap->drivingTorqueBias;
+	float torqueRear	= input->drivingTorqueLimit / 2.0f * eepromMap->drivingTorqueBias;
+	float torqueFront	= input->drivingTorqueLimit / 2.0f * (1 - eepromMap->drivingTorqueBias);
 
 	float regenTorque = 0.0f;
 	if (pedals.appsRequest < eepromMap->regenCutoffThreshold)

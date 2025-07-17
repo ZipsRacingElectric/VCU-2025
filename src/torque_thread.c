@@ -6,6 +6,7 @@
 #include "controls/pid_controller.h"
 #include "controls/torque_vectoring.h"
 #include "controls/tv_straight_diff.h"
+#include "controls/tv_sas_linear.h"
 #include "peripherals.h"
 #include "state_thread.h"
 #include "controls/lerp.h"
@@ -27,7 +28,7 @@
 tvOutput_t torqueRequest;
 
 /// @brief The cumulative driving (positive) torque limit.
-static float drivingTorqueLimit = 0.0f;
+float drivingTorqueLimit = 0.0f;
 
 /// @brief The cumulative regenerative (negative) torque limit.
 static float regenTorqueLimit = 0.0f;
@@ -39,7 +40,8 @@ static uint8_t algoritmIndex = 0;
 #define TV_ALGORITHM_COUNT (sizeof (tvAlgorithms) / sizeof (tvFunction_t*))
 static tvFunction_t* tvAlgorithms [] =
 {
-	&tvStraightDiff
+	&tvStraightDiff,
+	&tvSasLinear
 };
 
 /**
@@ -134,6 +136,9 @@ THD_FUNCTION (torqueThread, arg)
 		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S);
 
 		// Button inputs
+		volatile bool resetRequest = !palReadLine (LINE_BUTTON_2_IN);
+		resetRequest = resetRequest;
+
 		if (!palReadLine (LINE_BUTTON_1_IN))
 		{
 			// Torque Up / Down
@@ -171,45 +176,38 @@ THD_FUNCTION (torqueThread, arg)
 
 		torqueRequest = requestCalculateOutput (&input);
 		bool derating = requestApplyPowerLimit (&torqueRequest, TORQUE_THREAD_PERIOD_S);
-		// derating &= requestApplyRegenLimit (&torqueRequest);
+		derating &= requestApplyRegenLimit (&torqueRequest);
 		bool plausible = requestValidate (&torqueRequest, &input);
 
 		// Nofify the state thread of the current plausibility.
 		stateThreadSetTorquePlausibility (plausible, derating);
 
-		if (!amksValid)
+		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
 		{
-			amkSendErrorResetRequest (&amkRl, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-			amkSendErrorResetRequest (&amkRr, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-			amkSendErrorResetRequest (&amkFl, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-			amkSendErrorResetRequest (&amkFr, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-		}
-		else if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
-		{
-			if (true)
+			if (plausible)
 			{
 				// Torque request message.
-				amkSendTorqueRequest (&amkRl, torqueRequest.torqueRl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-				amkSendTorqueRequest (&amkRr, torqueRequest.torqueRr, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-				amkSendTorqueRequest (&amkFl, torqueRequest.torqueFl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-				amkSendTorqueRequest (&amkFr, torqueRequest.torqueFr, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkRl, torqueRequest.torqueRl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkRr, torqueRequest.torqueRr, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkFl, torqueRequest.torqueFl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkFr, torqueRequest.torqueFr, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 			}
 			else
 			{
 				// Send 0 torque request message (keep torque limits, as lowering them in motion will trigger a fault).
-				amkSendTorqueRequest (&amkRl, 0, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-				amkSendTorqueRequest (&amkRr, 0, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-				amkSendTorqueRequest (&amkFl, 0, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-				amkSendTorqueRequest (&amkFr, 0, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkRl, 0, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkRr, 0, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkFl, 0, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+				amkSendTorqueRequest (&amkFr, 0, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 			}
 		}
 		else
 		{
 			// De-energization message.
-			amkSendEnergizationRequest (&amkRl, false, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-			amkSendEnergizationRequest (&amkRr, false, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-			amkSendEnergizationRequest (&amkFl, false, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
-			amkSendEnergizationRequest (&amkFr, false, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+			amkSendEnergizationRequest (&amkRl, false, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+			amkSendEnergizationRequest (&amkRr, false, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+			amkSendEnergizationRequest (&amkFl, false, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+			amkSendEnergizationRequest (&amkFr, false, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 		}
 	}
 }
@@ -331,6 +329,8 @@ bool torqueApplyRegenLimit (float* torque, amkInverter_t* amk)
 		}
 		return false;
 	}
+
+	return false;
 }
 
 bool requestValidate (tvOutput_t* output, tvInput_t* input)
