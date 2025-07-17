@@ -136,9 +136,7 @@ THD_FUNCTION (torqueThread, arg)
 		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S);
 
 		// Button inputs
-		volatile bool resetRequest = !palReadLine (LINE_BUTTON_2_IN);
-		resetRequest = resetRequest;
-
+		bool resetRequest = !palReadLine (LINE_BUTTON_2_IN);
 		if (!palReadLine (LINE_BUTTON_1_IN))
 		{
 			// Torque Up / Down
