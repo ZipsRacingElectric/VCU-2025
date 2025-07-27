@@ -40,6 +40,7 @@ typedef struct
 	/// @brief The sensor to call after sampling successfully.
 	analogSensor_t* sensor;
 
+	// TODO(Barach): Where does 21ms come from?
 	/// @brief The timeout interval of a transaction, should be at least 21ms.
 	sysinterval_t timeout;
 } am4096Config_t;

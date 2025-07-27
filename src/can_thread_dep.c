@@ -1,5 +1,5 @@
 // Header
-#include "can_thread.h"
+#include "can_thread_dep.h"
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ canNode_t* nodes [] =
 
 #define CAN_THREAD_TIMEOUT_POLL_PERIOD TIME_MS2I (10)
 
-#define CAN_TX_THREAD_PERIOD TIME_MS2I (1000)
+#define CAN_TX_THREAD_PERIOD TIME_S2I (1)
 
 /**
  * @brief Configuration of the CAN 1 & CAN 2 peripherals.
@@ -168,12 +168,12 @@ THD_FUNCTION (can1TxThread, arg)
 		timeCurrent = chVTGetSystemTimeX ();
 
 		transmitConfig0Message (&CAND1, CAN_TX_THREAD_PERIOD);
-		transmitConfig2Message (&CAND1, CAN_TX_THREAD_PERIOD);
-		transmitConfig3Message (&CAND1, CAN_TX_THREAD_PERIOD);
+		// transmitConfig2Message (&CAND1, CAN_TX_THREAD_PERIOD);
+		// transmitConfig3Message (&CAND1, CAN_TX_THREAD_PERIOD);
 	}
 }
 
-bool canThreadStart (tprio_t priority)
+bool canThreadStartDeprecated (tprio_t priority)
 {
 	// CAN 1 driver initialization
 	if (canStart (&CAND1, &CAN1_CONFIG) != MSG_OK)
@@ -199,8 +199,8 @@ bool canThreadStart (tprio_t priority)
 	// Create the CAN 2 RX thread
 	chThdCreateStatic (&can2RxThreadWa, sizeof (can2RxThreadWa), priority, can2RxThread, NULL);
 
-	// // Create the CAN 1 TX thread
-	// chThdCreateStatic (&can1TxThreadWa, sizeof (can1TxThreadWa), LOWPRIO, can1TxThread, NULL);
+	// Create the CAN 1 TX thread
+	chThdCreateStatic (&can1TxThreadWa, sizeof (can1TxThreadWa), LOWPRIO, can1TxThread, NULL);
 
 	return true;
 }

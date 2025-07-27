@@ -2,7 +2,7 @@
 #include "state_thread.h"
 
 // Includes
-#include "can_thread.h"
+#include "can_thread_dep.h"
 #include "can/transmit.h"
 #include "peripherals.h"
 
@@ -23,7 +23,6 @@ vehicleState_t vehicleState	= VEHICLE_STATE_LOW_VOLTAGE;
 bool torquePlausible		= true;
 bool torqueDerating			= false;
 bool canPlausible			= true;
-bool amksValid				= false;
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
@@ -48,7 +47,6 @@ THD_FUNCTION (stateThread, arg)
 			vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
 
 		amkInverterState_t amksState = amksGetState (amks, AMK_COUNT);
-		amksValid = amksState != AMK_STATE_INVALID && amksState != AMK_STATE_ERROR;
 		if (amksState == AMK_STATE_INVALID || eeprom.state != MC24LC32_STATE_READY)
 			vehicleState = VEHICLE_STATE_FAILED;
 
@@ -109,7 +107,12 @@ THD_FUNCTION (stateThread, arg)
 			messageCounter = 0;
 		}
 
-		palWriteLine (LINE_VCU_FLT, !torquePlausible || vehicleState == VEHICLE_STATE_FAILED || amksState == AMK_STATE_ERROR);
+		// VCU fault light
+		palWriteLine (LINE_VCU_FLT,
+			!torquePlausible ||
+			vehicleState == VEHICLE_STATE_FAILED ||
+			amksState == AMK_STATE_ERROR ||
+			ecumasterGpsStatus (&gps) != ECUMASTER_GPS_STATUS_VALID);
 
 		// Brake light
 		palWriteLine (LINE_BRK_LIGHT, pedals.braking);

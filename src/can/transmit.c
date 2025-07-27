@@ -2,7 +2,7 @@
 #include "transmit.h"
 
 // Includes
-#include "can_thread.h"
+#include "can_thread_dep.h"
 #include "peripherals.h"
 #include "state_thread.h"
 #include "torque_thread.h"
@@ -60,25 +60,26 @@
 // Message Packing ------------------------------------------------------------------------------------------------------------
 
 // VCU Status Word 0
-#define STATUS_WORD_0_VEHICLE_STATE(state)					(((uint16_t) (state))		<< 0)
-#define STATUS_WORD_0_TORQUE_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 2)
-#define STATUS_WORD_0_PEDALS_PLAUSIBLE(plausible)			(((uint16_t) (plausible))	<< 3)
-#define STATUS_WORD_0_TORQUE_DERATING(derating)				(((uint16_t) (derating))	<< 4)
-#define STATUS_WORD_0_EEPROM_STATE(state)					(((uint16_t) (state))		<< 5)
-#define STATUS_WORD_0_CAN_PLAUSIBLE(plausible)				(((uint16_t) (plausible))	<< 7)
+#define STATUS_WORD_0_VEHICLE_STATE(state)					(((uint8_t) (state))		<< 0)
+#define STATUS_WORD_0_TORQUE_PLAUSIBLE(plausible)			(((uint8_t) (plausible))	<< 2)
+#define STATUS_WORD_0_PEDALS_PLAUSIBLE(plausible)			(((uint8_t) (plausible))	<< 3)
+#define STATUS_WORD_0_TORQUE_DERATING(derating)				(((uint8_t) (derating))		<< 4)
+#define STATUS_WORD_0_EEPROM_STATE(state)					(((uint8_t) (state))		<< 5)
+#define STATUS_WORD_0_CAN_PLAUSIBLE(plausible)				(((uint8_t) (plausible))	<< 7)
 
 // VCU Status Word 1
-#define STATUS_WORD_1_APPS_1_STATE(state)					(((uint16_t) (state))		<< 0)
-#define STATUS_WORD_1_APPS_2_STATE(state)					(((uint16_t) (state))		<< 2)
-#define STATUS_WORD_1_BSE_F_STATE(state)					(((uint16_t) (state))		<< 4)
-#define STATUS_WORD_1_BSE_R_STATE(state)					(((uint16_t) (state))		<< 6)
+#define STATUS_WORD_1_APPS_1_STATE(state)					(((uint8_t) (state))		<< 0)
+#define STATUS_WORD_1_APPS_2_STATE(state)					(((uint8_t) (state))		<< 2)
+#define STATUS_WORD_1_BSE_F_STATE(state)					(((uint8_t) (state))		<< 4)
+#define STATUS_WORD_1_BSE_R_STATE(state)					(((uint8_t) (state))		<< 6)
 
 // VCU Status Word 2
-#define STATUS_WORD_2_AMK_RL_VALID(valid)					(((uint16_t) (valid))		<< 0)
-#define STATUS_WORD_2_AMK_RR_VALID(valid)					(((uint16_t) (valid))		<< 1)
-#define STATUS_WORD_2_AMK_FL_VALID(valid)					(((uint16_t) (valid))		<< 2)
-#define STATUS_WORD_2_AMK_FR_VALID(valid)					(((uint16_t) (valid))		<< 3)
-#define STATUS_WORD_2_GPS_VALID(valid)						(((uint16_t) (valid))		<< 4)
+#define STATUS_WORD_2_AMK_RL_VALID(valid)					(((uint8_t) (valid))		<< 0)
+#define STATUS_WORD_2_AMK_RR_VALID(valid)					(((uint8_t) (valid))		<< 1)
+#define STATUS_WORD_2_AMK_FL_VALID(valid)					(((uint8_t) (valid))		<< 2)
+#define STATUS_WORD_2_AMK_FR_VALID(valid)					(((uint8_t) (valid))		<< 3)
+#define STATUS_WORD_2_GPS_STATUS(status)					(((uint8_t) (status))		<< 4)
+#define STATUS_WORD_2_SAS_STATUS(status)					(((uint8_t) (status))		<< 6)
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -107,7 +108,8 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 	//   Bit 1: AMK RR valid
 	//   Bit 2: AMK FL valid
 	//   Bit 3: AMK FR valid
-	//   Bit 4: GPS valid
+	//   Bits 4 & 5: GPS status
+	//   Bits 6 & 7: SAS status
 	// Byte 3: GLV battery voltage
 
 	CANTxFrame frame =
@@ -120,8 +122,8 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_0_VEHICLE_STATE (vehicleState) |
 			STATUS_WORD_0_TORQUE_PLAUSIBLE (torquePlausible) |
 			STATUS_WORD_0_PEDALS_PLAUSIBLE (pedals.plausible) |
-			STATUS_WORD_0_EEPROM_STATE (eeprom.state) |
 			STATUS_WORD_0_TORQUE_DERATING (torqueDerating) |
+			STATUS_WORD_0_EEPROM_STATE (eeprom.state) |
 			STATUS_WORD_0_CAN_PLAUSIBLE (canPlausible),
 			STATUS_WORD_1_APPS_1_STATE (pedals.apps1.state) |
 			STATUS_WORD_1_APPS_2_STATE (pedals.apps2.state) |
@@ -131,8 +133,8 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_2_AMK_RR_VALID (amkGetValidityLock (&amkRr)) |
 			STATUS_WORD_2_AMK_FL_VALID (amkGetValidityLock (&amkFl)) |
 			STATUS_WORD_2_AMK_FR_VALID (amkGetValidityLock (&amkFr)) |
-			// TODO(Barach): Check GPS fix here.
-			STATUS_WORD_2_GPS_VALID (gps.state == CAN_NODE_VALID),
+			STATUS_WORD_2_GPS_STATUS (ecumasterGpsStatus (&gps)) |
+			STATUS_WORD_2_SAS_STATUS (sasAdc.state),
 			VOLTAGE_TO_WORD (glvBattery.value)
 		}
 	};

@@ -53,6 +53,7 @@ bool am4096Init (am4096_t* am4096, const am4096Config_t* config)
 
 bool am4096Sample (am4096_t* am4096)
 {
+	// TODO(Barach): Shouldn't be done like this, need to budget timeouts better.
 	// Ignore if the peripheral is failed.
 	if (am4096->state != AM4096_STATE_READY)
 		return false;
@@ -66,9 +67,10 @@ bool am4096Sample (am4096_t* am4096)
 
 	if (result)
 	{
+		// TODO(Barach): Should this be constant?
 		// If successful, update the sensor.
 		am4096->sample = RELATIVE_POS_GET_RPOS (relativePos);
-		am4096->config->sensor->callback (am4096->config->sensor, am4096->sample);
+		am4096->config->sensor->callback (am4096->config->sensor, am4096->sample, 4095);
 	}
 	else
 	{

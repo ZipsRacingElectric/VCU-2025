@@ -70,34 +70,27 @@ static const mc24lc32Config_t EEPROM_CONFIG =
 	.dirtyHook		= peripheralsReconfigure
 };
 
-// TODO(Barach): Figure out how to make these const. Also cleanup.
-static eeprom_t* VIRTUAL_MEMORY_EEPROMS [] =
-{
-	(eeprom_t*) &eeprom,
-	&readonlyMemory,
-	(eeprom_t*) &sasAdc
-};
-
-static uint16_t VIRTUAL_MEMORY_ADDRS [] =
-{
-	0x0000,
-	0x1000,
-	0x2000
-};
-
-static uint16_t VIRTUAL_MEMORY_SIZES [] =
-{
-	0x1000,
-	0x1000,
-	0x0038
-};
-
 static const virtualEepromConfig_t VIRTUAL_MEMORY_CONFIG =
 {
-	.eeproms	= VIRTUAL_MEMORY_EEPROMS,
-	.addrs		= VIRTUAL_MEMORY_ADDRS,
-	.sizes		= VIRTUAL_MEMORY_SIZES,
-	.count		= sizeof (VIRTUAL_MEMORY_EEPROMS) / sizeof (eeprom_t*)
+	.count		= 3,
+	.entries	=
+	{
+		{
+			.eeprom = (eeprom_t*) &eeprom,
+			.addr = 0x0000,
+			.size = 0x1000
+		},
+		{
+			.eeprom = &readonlyMemory,
+			.addr = 0x1000,
+			.size = 0x1000
+		},
+		{
+			.eeprom = (eeprom_t*) &sasAdc,
+			.addr = 0x2000,
+			.size = 0x0038
+		}
+	}
 };
 
 /// @brief Configuration for the GVL battery voltage measurment.

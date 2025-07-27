@@ -15,8 +15,9 @@
  * @note This function uses a @c void* for the object reference as to make the signature usable by callbacks.
  * @param object The sensor to update (must be a @c sas_t* ).
  * @param sample The read sample.
+ * @param sampleVdd TODO(Barach)
  */
-static void callback (void* object, uint16_t sample);
+static void callback (void* object, uint16_t sample, uint16_t sampleVdd);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -38,8 +39,11 @@ bool sasInit (sas_t* sas, sasConfig_t* config)
 	return sas->state != ANALOG_SENSOR_CONFIG_INVALID;
 }
 
-void callback (void* object, uint16_t sample)
+void callback (void* object, uint16_t sample, uint16_t sampleVdd)
 {
+	// TODO(Barach)
+	(void) sampleVdd;
+
 	sas_t* sas = (sas_t*) object;
 
 	// Apply the sample offset and 4096 modulus

@@ -2,7 +2,7 @@
 #include "torque_thread.h"
 
 // Includes
-#include "can_thread.h"
+#include "can_thread_dep.h"
 #include "controls/pid_controller.h"
 #include "controls/torque_vectoring.h"
 #include "controls/tv_straight_diff.h"

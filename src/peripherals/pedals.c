@@ -18,8 +18,9 @@
  * @brief Updates the value of a pedal sensor based on a read sample.
  * @param object The pedal sensor to update (must be @c pedalSensor_t ).
  * @param sample The read sample.
+ * @param sampleVdd TODO(Barach)
  */
-static void callback (void* object, uint16_t sample);
+static void callback (void* object, uint16_t sample, uint16_t sampleVdd);
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -44,8 +45,11 @@ bool pedalSensorInit (pedalSensor_t* sensor, pedalSensorConfig_t* config)
 	return sensor->state != ANALOG_SENSOR_CONFIG_INVALID;
 }
 
-void callback (void* object, uint16_t sample)
+void callback (void* object, uint16_t sample, uint16_t sampleVdd)
 {
+	// TODO(Barach): How to mange?
+	(void) sampleVdd;
+
 	pedalSensor_t* sensor = (pedalSensor_t*) object;
 
 	// Store the sample.

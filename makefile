@@ -23,7 +23,7 @@ CSRC =	$(ALLCSRC)							\
 		src/peripherals/pedals.c			\
 		src/peripherals/steering_angle.c	\
 											\
-		src/can_thread.c					\
+		src/can_thread_dep.c				\
 		src/can/receive.c					\
 		src/can/transmit.c					\
 											\

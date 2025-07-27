@@ -10,7 +10,7 @@
 
 // Includes
 #include "debug.h"
-#include "can_thread.h"
+#include "can_thread_dep.h"
 #include "peripherals.h"
 #include "state_thread.h"
 #include "torque_thread.h"
@@ -50,7 +50,7 @@ int main (void)
 
 	// CAN thread initialization. Start this first as to invalidate all can nodes before any other threads attempt reading
 	// any data.
-	if (!canThreadStart (NORMALPRIO))
+	if (!canThreadStartDeprecated (NORMALPRIO))
 	{
 		hardFaultCallback ();
 		while (true);

@@ -1,5 +1,5 @@
-#ifndef CAN_THREAD_H
-#define CAN_THREAD_H
+#ifndef CAN_THREAD_DEP_H
+#define CAN_THREAD_DEP_H
 
 // CAN Thread -----------------------------------------------------------------------------------------------------------------
 //
@@ -44,11 +44,12 @@ extern ecumasterGps_t gps;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
+// TODO(Barach)
 /**
  * @brief Creates and starts the CAN interface thread.
  * @param priority The priority of the thread.
  * @return False if a fatal error occurred, true otherwise.
  */
-bool canThreadStart (tprio_t priority);
+bool canThreadStartDeprecated (tprio_t priority);
 
-#endif // CAN_THREAD_H
+#endif // CAN_THREAD_DEP_H
