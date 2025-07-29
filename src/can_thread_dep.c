@@ -16,12 +16,13 @@
 // Global Nodes ---------------------------------------------------------------------------------------------------------------
 
 amkInverter_t	amks [AMK_COUNT];
+bms_t			bms;
 ecumasterGps_t	gps;
 
 canNode_t* nodes [] =
 {
 	(canNode_t*) &amkRl, (canNode_t*) &amkRr, (canNode_t*) &amkFl, (canNode_t*) &amkFr,
-	(canNode_t*) &gps
+	(canNode_t*) &bms, (canNode_t*) &gps
 };
 
 #define NODE_COUNT (sizeof (nodes) / sizeof (canNode_t*))
@@ -77,6 +78,12 @@ static const amkInverterConfig_t AMK_CONFIGS [AMK_COUNT] =
 		.baseId			= 0x203,
 		.timeoutPeriod	= TIME_MS2I (100),
 	}
+};
+
+static const bmsConfig_t BMS_CONFIG =
+{
+	.driver			= &CAND1,
+	.timeoutPeriod	= TIME_MS2I (1000)
 };
 
 static const ecumasterGpsConfig_t GPS_CONFIG =
@@ -190,6 +197,8 @@ bool canThreadStartDeprecated (tprio_t priority)
 	// Initialize the CAN nodes
 	for (uint8_t index = 0; index < AMK_COUNT; ++index)
 		amkInit (amks + index, AMK_CONFIGS + index);
+
+	bmsInit (&bms, &BMS_CONFIG);
 
 	ecumasterInit (&gps, &GPS_CONFIG);
 

@@ -50,7 +50,14 @@ THD_FUNCTION (stateThread, arg)
 		if (amksState == AMK_STATE_INVALID || eeprom.state != MC24LC32_STATE_READY)
 			vehicleState = VEHICLE_STATE_FAILED;
 
-		bool tractiveSystemsActive = amksState == AMK_STATE_READY_HIGH_VOLTAGE || amksState == AMK_STATE_READY_ENERGIZED;
+		canNodeLock ((canNode_t*) &bms);
+		bool bmsPrechargeComplete = bms.state == CAN_NODE_VALID && bms.prechargeComplete;
+		canNodeUnlock ((canNode_t*) &bms);
+
+		bool tractiveSystemsActive =
+			(amksState == AMK_STATE_READY_HIGH_VOLTAGE ||
+			amksState == AMK_STATE_READY_ENERGIZED) &&
+			bmsPrechargeComplete;
 
 		// Check vehicle state
 		if (vehicleState == VEHICLE_STATE_LOW_VOLTAGE)
@@ -95,6 +102,12 @@ THD_FUNCTION (stateThread, arg)
 				vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
 			}
 		}
+
+		bool coolingEnabled = vehicleState == VEHICLE_STATE_HIGH_VOLTAGE || vehicleState == VEHICLE_STATE_READY_TO_DRIVE;
+		palWriteLine (LINE_PUMP1, coolingEnabled);
+		palWriteLine (LINE_PUMP2, coolingEnabled);
+		palWriteLine (LINE_FAN1, coolingEnabled);
+		palWriteLine (LINE_FAN2, coolingEnabled);
 
 		// Stop the RTD buzzer if it is past the deadline.
 		if (!chTimeIsInRangeX (timeCurrent, timePrevious, timeoutBuzzer))

@@ -161,7 +161,7 @@
       <pin1
         ID="PUMP1"
         Type="PushPull"
-        Level="High"
+        Level="Low"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"
@@ -169,7 +169,7 @@
       <pin2
         ID="PUMP2"
         Type="PushPull"
-        Level="High"
+        Level="Low"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"
@@ -177,7 +177,7 @@
       <pin3
         ID="FAN1"
         Type="PushPull"
-        Level="High"
+        Level="Low"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"
@@ -185,7 +185,7 @@
       <pin4
         ID="FAN2"
         Type="PushPull"
-        Level="High"
+        Level="Low"
         Speed="Minimum"
         Resistor="Floating"
         Mode="Output"

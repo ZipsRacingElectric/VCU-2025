@@ -12,6 +12,7 @@
 
 // Includes
 #include "can/amk_inverter.h"
+#include "can/bms.h"
 #include "can/ecumaster_gps_v2.h"
 
 // ChibiOS
@@ -38,6 +39,9 @@
 
 /// @brief Array of all the AMK inverters.
 extern amkInverter_t amks [AMK_COUNT];
+
+/// @brief The accumulator's battery management system.
+extern bms_t bms;
 
 /// @brief The ECUMaster GPS/IMU.
 extern ecumasterGps_t gps;

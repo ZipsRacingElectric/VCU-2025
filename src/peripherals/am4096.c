@@ -53,11 +53,6 @@ bool am4096Init (am4096_t* am4096, const am4096Config_t* config)
 
 bool am4096Sample (am4096_t* am4096)
 {
-	// TODO(Barach): Shouldn't be done like this, need to budget timeouts better.
-	// Ignore if the peripheral is failed.
-	if (am4096->state != AM4096_STATE_READY)
-		return false;
-
 	#if I2C_USE_MUTUAL_EXCLUSION
 	i2cAcquireBus (am4096->config->i2c);
 	#endif // I2C_USE_MUTUAL_EXCLUSION
@@ -67,7 +62,6 @@ bool am4096Sample (am4096_t* am4096)
 
 	if (result)
 	{
-		// TODO(Barach): Should this be constant?
 		// If successful, update the sensor.
 		am4096->sample = RELATIVE_POS_GET_RPOS (relativePos);
 		am4096->config->sensor->callback (am4096->config->sensor, am4096->sample, 4095);
@@ -132,6 +126,7 @@ bool writeRegister (am4096_t* am4096, uint8_t addr, uint16_t data)
 		am4096->state = AM4096_STATE_FAILED;
 		return false;
 	}
+	am4096->state = AM4096_STATE_READY;
 
 	return true;
 }
@@ -140,6 +135,7 @@ bool readRegister (am4096_t* am4096, uint8_t addr, uint16_t* data)
 {
 	// Reads a word from the device's memory. See AM4096 datasheet, figure 7 for more details.
 
+	// TODO(Barach): Could lead with the transaction then poll on failure.
 	// Check the device is ready for data transfer.
 	if (!pollAck (am4096))
 		return false;
@@ -152,6 +148,7 @@ bool readRegister (am4096_t* am4096, uint8_t addr, uint16_t* data)
 		am4096->state = AM4096_STATE_FAILED;
 		return false;
 	}
+	am4096->state = AM4096_STATE_READY;
 
 	// Convert the data from big-endian to little-endian.
 	*data = __REV16 (rx);

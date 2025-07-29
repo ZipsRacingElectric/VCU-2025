@@ -34,7 +34,7 @@ static const am4096Config_t SAS_ADC_CONFIG =
 	.addr		= 0x00, // TODO(Barach): Move this to EEPROM so it can be changed.
 	.i2c		= &I2CD1,
 	.sensor		= (analogSensor_t*) &sas,
-	.timeout	= TIME_MS2I (10)
+	.timeout	= TIME_MS2I (5)
 };
 
 /// @brief Configuration for the ADC1 peripheral.
