@@ -162,14 +162,21 @@ THD_FUNCTION (torqueThread, arg)
 		}
 		else
 		{
-			// Regen input
-			if (!palReadLine (LINE_BUTTON_3_IN) || !palReadLine (LINE_BUTTON_5_IN))
-			{
-				if (!palReadLine (LINE_BUTTON_3_IN) && !palReadLine (LINE_BUTTON_5_IN))
-					input.regenRequest = eepromMap->regenHardRequest;
-				else
-					input.regenRequest = eepromMap->regenLightRequest;
-			}
+			// TODO(Barach): Temporary
+			// if (palReadLine (LINE_BUTTON_3_IN) && palReadLine (LINE_BUTTON_5_IN))
+			// 	linearSasBiasMax = eepromMap->linearSasBiasMax;
+			// else
+			// 	linearSasBiasMax = eepromMap->linearSasBiasMaxSlalom;
+
+			// TODO(Barach): Re-enable
+			// // Regen input
+			// if (!palReadLine (LINE_BUTTON_3_IN) || !palReadLine (LINE_BUTTON_5_IN))
+			// {
+			// 	if (!palReadLine (LINE_BUTTON_3_IN) && !palReadLine (LINE_BUTTON_5_IN))
+			// 		input.regenRequest = eepromMap->regenHardRequest;
+			// 	else
+			// 		input.regenRequest = eepromMap->regenLightRequest;
+			// }
 		}
 
 		torqueRequest = requestCalculateOutput (&input);

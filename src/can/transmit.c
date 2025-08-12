@@ -225,7 +225,7 @@ msg_t transmitDebugMessage (CANDriver* driver, sysinterval_t timeout)
 	return MSG_OK;
 }
 
-msg_t transmitConfig0Message (CANDriver* driver, sysinterval_t timeout)
+msg_t transmitConfigMessage (CANDriver* driver, sysinterval_t timeout)
 {
 	CANTxFrame frame =
 	{
@@ -238,50 +238,6 @@ msg_t transmitConfig0Message (CANDriver* driver, sysinterval_t timeout)
 			RATIO_TO_WORD (eepromMap->drivingTorqueBias),
 			RATIO_TO_WORD (eepromMap->linearSasBiasMax),
 			eepromMap->torqueAlgoritmIndex
-		}
-	};
-
-	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
-}
-
-msg_t transmitConfig2Message (CANDriver* driver, sysinterval_t timeout)
-{
-	CANTxFrame frame =
-	{
-		.DLC	= 8,
-		.IDE	= CAN_IDE_STD,
-		.SID	= CONFIG_2_MESSAGE_ID,
-		.data8	=
-		{
-			CFG_ANGLE_TO_WORD (eepromMap->camberFront),
-			CFG_ANGLE_TO_WORD (eepromMap->camberRear),
-			CFG_ANGLE_TO_WORD (eepromMap->castorFront),
-			CFG_ANGLE_TO_WORD (eepromMap->castorRear),
-			(eepromMap->reboundFront & 0xF) | ((eepromMap->reboundRear << 4) & 0xF0),
-			(eepromMap->lowSpeedDampingFront & 0xF) | ((eepromMap->lowSpeedDampingRear << 4) & 0xF0),
-			(eepromMap->highSpeedDampingFront & 0xF) | ((eepromMap->highSpeedDampingRear << 4) & 0xF0),
-			eepromMap->arbStage
-		}
-	};
-
-	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
-}
-
-msg_t transmitConfig3Message (CANDriver* driver, sysinterval_t timeout)
-{
-	CANTxFrame frame =
-	{
-		.DLC	= 8,
-		.IDE	= CAN_IDE_STD,
-		.SID	= CONFIG_3_MESSAGE_ID,
-		.data8	=
-		{
-			CFG_SPRING_TO_WORD (eepromMap->springRateFront),
-			CFG_SPRING_TO_WORD (eepromMap->springRateRear),
-			CFG_HEIGHT_TO_WORD (eepromMap->rideHeightFront),
-			CFG_HEIGHT_TO_WORD (eepromMap->rideHeightRear),
-			CFG_ANGLE_TO_WORD (eepromMap->toeFront),
-			CFG_ANGLE_TO_WORD (eepromMap->toeRear)
 		}
 	};
 

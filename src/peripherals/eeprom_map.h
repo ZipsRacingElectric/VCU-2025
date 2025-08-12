@@ -17,7 +17,7 @@
 // Constants ------------------------------------------------------------------------------------------------------------------
 
 /// @brief The magic string of the EEPROM. Update this value every time the memory map changes to force manual re-programming.
-#define EEPROM_MAP_STRING "VCU_2025_07_12"
+#define EEPROM_MAP_STRING "VCU_2025_07_30"
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
@@ -56,24 +56,6 @@ typedef struct
 	float regenDeratingSpeedStart;		// 0x0088
 
 	float linearSasBiasMax;				// 0x008C
-
-	float camberFront;					// 0x0500
-	float camberRear;					// 0x0504
-	float castorFront;					// 0x0508
-	float castorRear;					// 0x050C
-	float toeFront;						// 0x0510
-	float toeRear;						// 0x0514
-	uint8_t reboundFront;				// 0x0518
-	uint8_t reboundRear;				// 0x0519
-	uint8_t lowSpeedDampingFront;		// 0x051A
-	uint8_t lowSpeedDampingRear;		// 0x051B
-	uint8_t highSpeedDampingFront;		// 0x051C
-	uint8_t highSpeedDampingRear;		// 0x051D
-	uint8_t arbStage;					// 0x051E
-	float springRateFront;				// 0x0520
-	float springRateRear;				// 0x0524
-	float rideHeightFront;				// 0x0528
-	float rideHeightRear;				// 0x052C
 } eepromMap_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

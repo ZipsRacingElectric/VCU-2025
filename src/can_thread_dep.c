@@ -31,7 +31,7 @@ canNode_t* nodes [] =
 
 #define CAN_THREAD_TIMEOUT_POLL_PERIOD TIME_MS2I (10)
 
-#define CAN_TX_THREAD_PERIOD TIME_S2I (1)
+#define CAN_TX_THREAD_PERIOD TIME_MS2I (250)
 
 /**
  * @brief Configuration of the CAN 1 & CAN 2 peripherals.
@@ -174,9 +174,7 @@ THD_FUNCTION (can1TxThread, arg)
 		chThdSleepUntilWindowed (timeCurrent, timeNext);
 		timeCurrent = chVTGetSystemTimeX ();
 
-		transmitConfig0Message (&CAND1, CAN_TX_THREAD_PERIOD);
-		// transmitConfig2Message (&CAND1, CAN_TX_THREAD_PERIOD);
-		// transmitConfig3Message (&CAND1, CAN_TX_THREAD_PERIOD);
+		transmitConfigMessage (&CAND1, CAN_TX_THREAD_PERIOD);
 	}
 }
 

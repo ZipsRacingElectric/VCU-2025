@@ -54,16 +54,11 @@ THD_FUNCTION (stateThread, arg)
 		bool bmsPrechargeComplete = bms.state == CAN_NODE_VALID && bms.prechargeComplete;
 		canNodeUnlock ((canNode_t*) &bms);
 
-		bool tractiveSystemsActive =
-			(amksState == AMK_STATE_READY_HIGH_VOLTAGE ||
-			amksState == AMK_STATE_READY_ENERGIZED) &&
-			bmsPrechargeComplete;
-
 		// Check vehicle state
 		if (vehicleState == VEHICLE_STATE_LOW_VOLTAGE)
 		{
 			// Transition LV to HV
-			if (tractiveSystemsActive)
+			if (bmsPrechargeComplete)
 				vehicleState = VEHICLE_STATE_HIGH_VOLTAGE;
 		}
 		else if (vehicleState == VEHICLE_STATE_HIGH_VOLTAGE)
@@ -77,7 +72,7 @@ THD_FUNCTION (stateThread, arg)
 			}
 
 			// Check TS are still active
-			if (tractiveSystemsActive)
+			if (bmsPrechargeComplete)
 			{
 				// Postpone the deadline if TS are active.
 				timeoutHv = chTimeAddX (timeCurrent, HV_INACTIVE_PERIOD);
@@ -91,7 +86,7 @@ THD_FUNCTION (stateThread, arg)
 		else if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
 		{
 			// Check TS are still active
-			if (tractiveSystemsActive)
+			if (bmsPrechargeComplete)
 			{
 				// Postpone the deadline if TS are active.
 				timeoutHv = chTimeAddX (timeCurrent, HV_INACTIVE_PERIOD);
@@ -135,8 +130,9 @@ THD_FUNCTION (stateThread, arg)
 		transmitDebugMessage (&CAND1, STATE_CONTROL_PERIOD);
 
 		// Sleep until the next loop
-		systime_t timeNext = chTimeAddX (timePrevious, STATE_CONTROL_PERIOD);
-		timePrevious = chThdSleepUntilWindowed (timePrevious, timeNext);
+		timePrevious = timeCurrent;
+		systime_t timeNext = chTimeAddX (timeCurrent, STATE_CONTROL_PERIOD);
+		chThdSleepUntilWindowed (timeCurrent, timeNext);
 	}
 }
 

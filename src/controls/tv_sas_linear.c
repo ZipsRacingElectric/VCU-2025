@@ -9,9 +9,10 @@ tvOutput_t tvSasLinear (const tvInput_t* input)
 {
 	float biasRear = eepromMap->drivingTorqueBias;
 	float biasFront = 1 - biasRear;
+
 	float biasRight	= lerp2d (sas.value,
-		sas.config->angleNegative, 0.5f + (eepromMap->linearSasBiasMax / 2.0f),
-		sas.config->anglePositive, 0.5f - (eepromMap->linearSasBiasMax / 2.0f));
+		sas.config->angleNegative, eepromMap->linearSasBiasMax,
+		sas.config->anglePositive, 1 - eepromMap->linearSasBiasMax);
 	float biasLeft = 1 - biasRight;
 
 	tvOutput_t output =

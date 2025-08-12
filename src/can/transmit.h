@@ -40,27 +40,11 @@ msg_t transmitSensorInputPercent (CANDriver* driver, sysinterval_t timeout);
 msg_t transmitDebugMessage (CANDriver* driver, sysinterval_t timeout);
 
 /**
- * @brief Transmits the 1st vehicle configuration message.
+ * @brief Transmits the vehicle configuration message.
  * @param driver The CAN driver to use.
  * @param timeout The interval to timeout after.
  * @return The result of the CAN operation.
  */
-msg_t transmitConfig0Message (CANDriver* driver, sysinterval_t timeout);
-
-/**
- * @brief Transmits the 3rd vehicle configuration message.
- * @param driver The CAN driver to use.
- * @param timeout The interval to timeout after.
- * @return The result of the CAN operation.
- */
-msg_t transmitConfig2Message (CANDriver* driver, sysinterval_t timeout);
-
-/**
- * @brief Transmits the 4th vehicle configuration message.
- * @param driver The CAN driver to use.
- * @param timeout The interval to timeout after.
- * @return The result of the CAN operation.
- */
-msg_t transmitConfig3Message (CANDriver* driver, sysinterval_t timeout);
+msg_t transmitConfigMessage (CANDriver* driver, sysinterval_t timeout);
 
 #endif // TRANSMIT_H
