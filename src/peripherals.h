@@ -27,7 +27,7 @@ extern stmAdc_t adc;
 extern mc24lc32_t eeprom;
 
 /// @brief Structure mapping the EEPROM's contents to C datatypes.
-extern eepromMap_t* eepromMap;
+static eepromMap_t* const eepromMap = (eepromMap_t*) eeprom.cache;
 
 /// @brief Analog sensor measuring the voltage of the GLV battery.
 extern linearSensor_t glvBattery;

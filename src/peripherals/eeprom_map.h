@@ -13,11 +13,13 @@
 // Includes
 #include "peripherals/pedals.h"
 #include "peripherals/steering_angle.h"
+#include "controls/tv_const_bias.h"
+#include "controls/tv_linear_bias.h"
 
 // Constants ------------------------------------------------------------------------------------------------------------------
 
 /// @brief The magic string of the EEPROM. Update this value every time the memory map changes to force manual re-programming.
-#define EEPROM_MAP_STRING "VCU_2025_07_30"
+#define EEPROM_MAP_STRING "VCU_2025_08_13"
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
@@ -27,35 +29,36 @@ typedef struct
 
 	pedalsConfig_t pedalConfig;			// 0x0010
 
+	// TODO(Barach): Driving torque limit is dated.
 	float drivingTorqueLimit;			// 0x0030
-	float drivingTorqueBias;			// 0x0034
-	float regenTorqueLimit;				// 0x0038
-	float regenTorqueBias;				// 0x003C
-	uint16_t torqueAlgoritmIndex;		// 0x0040
+	uint16_t torqueAlgoritmIndex;		// 0x0034
 
-	float powerLimit;					// 0x0044
-	float powerLimitPidKp;				// 0x0048
-	float powerLimitPidKi;				// 0x004C
-	float powerLimitPidKd;				// 0x0050
-	float powerLimitPidA;				// 0x0054
+	float powerLimit;					// 0x0038
+	float powerLimitPidKp;				// 0x003C
+	float powerLimitPidKi;				// 0x0040
+	float powerLimitPidKd;				// 0x0044
+	float powerLimitPidA;				// 0x0048
 
-	uint16_t glvBattery11v5;			// 0x0058
-	uint16_t glvBattery14v4;			// 0x005A
+	uint16_t glvBattery11v5;			// 0x004C
+	uint16_t glvBattery14v4;			// 0x004E
 
-	sasConfig_t sasConfig;				// 0x005C
+	sasConfig_t sasConfig;				// 0x0050
 
-	uint16_t debugAddress0;				// 0x0070
-	uint16_t debugAddress1;				// 0x0072
-	uint16_t debugAddress2;				// 0x0074
-	uint16_t debugAddress3;				// 0x0076
+	// Straight-diff TV config
+	tvConstBiasConfig_t sdConfig;		// 0x0064
 
-	float regenLightRequest;			// 0x0078
-	float regenHardRequest;				// 0x007C
-	float regenCutoffThreshold;			// 0x0080
-	float regenDeratingSpeedEnd;		// 0x0084
-	float regenDeratingSpeedStart;		// 0x0088
+	// Linear-steering TV config
+	tvLinearBiasConfig_t lsConfig;		// 0x006C
 
-	float linearSasBiasMax;				// 0x008C
+	// Linear-steering (slalom) TV config
+	tvLinearBiasConfig_t lssConfig;		// 0x0088
+
+	float regenLightRequest;			// 0x00A4
+	float regenHardRequest;				// 0x00A8
+	float regenCutoffThreshold;			// 0x00AC
+	float regenDeratingSpeedEnd;		// 0x00B0
+	float regenDeratingSpeedStart;		// 0x00B4
+
 } eepromMap_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

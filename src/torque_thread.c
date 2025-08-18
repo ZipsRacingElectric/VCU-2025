@@ -5,8 +5,8 @@
 #include "can_thread_dep.h"
 #include "controls/pid_controller.h"
 #include "controls/torque_vectoring.h"
-#include "controls/tv_straight_diff.h"
-#include "controls/tv_sas_linear.h"
+#include "controls/tv_const_bias.h"
+#include "controls/tv_linear_bias.h"
 #include "peripherals.h"
 #include "state_thread.h"
 #include "controls/lerp.h"
@@ -36,12 +36,47 @@ static float regenTorqueLimit = 0.0f;
 /// @brief The index of the selected torque-vectoring algorithm.
 static uint8_t algoritmIndex = 0;
 
-/// @brief The array of selectable torque-vectoring algorithms.
-#define TV_ALGORITHM_COUNT (sizeof (tvAlgorithms) / sizeof (tvFunction_t*))
-static tvFunction_t* tvAlgorithms [] =
+static const tvConstBiasConfig_t STF_L_CONFIG =
 {
-	&tvStraightDiff,
-	&tvSasLinear
+	.frontRearBias = 1,
+	.leftRightBias = 1
+};
+
+static const tvConstBiasConfig_t STF_R_CONFIG =
+{
+	.frontRearBias = 1,
+	.leftRightBias = 0
+};
+
+/// @brief The array of selectable torque-vectoring algorithms.
+#define TV_ALGORITHM_COUNT (sizeof (tvAlgorithms) / sizeof (tvAlgorithm_t))
+static tvAlgorithm_t tvAlgorithms [] =
+{
+	{
+		// Straight-diff
+		.entrypoint	= &tvConstBias,
+		.config		= &eepromMap->sdConfig
+	},
+	{
+		// Linear-steering
+		.entrypoint	= &tvLinearBias,
+		.config		= &eepromMap->lsConfig
+	},
+	{
+		// Linear-steering (slalom)
+		.entrypoint	= &tvLinearBias,
+		.config		= &eepromMap->lssConfig
+	},
+	{
+		// Single-tire-fire (left)
+		.entrypoint	= &tvConstBias,
+		.config		= &STF_L_CONFIG
+	},
+	{
+		// Single-tire-fire (right)
+		.entrypoint	= &tvConstBias,
+		.config		= &STF_R_CONFIG
+	}
 };
 
 /**
@@ -284,7 +319,7 @@ tvInput_t requestCalculateInput (float deltaTime)
 tvOutput_t requestCalculateOutput (tvInput_t* input)
 {
 	// Use the user-specified torque-vectoring algorithm to calculate the torque request.
-	return tvAlgorithms [algoritmIndex] (input);
+	return tvAlgorithms [algoritmIndex].entrypoint (input, tvAlgorithms [algoritmIndex].config);
 }
 
 bool requestApplyPowerLimit (tvOutput_t* output, float deltaTime)

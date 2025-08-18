@@ -28,8 +28,8 @@ CSRC =	$(ALLCSRC)							\
 		src/can/transmit.c					\
 											\
 		src/torque_thread.c					\
-		src/controls/tv_straight_diff.c		\
-		src/controls/tv_sas_linear.c		\
+		src/controls/tv_const_bias.c		\
+		src/controls/tv_linear_bias.c		\
 											\
 		src/state_thread.c
 

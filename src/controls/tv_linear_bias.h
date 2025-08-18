@@ -12,15 +12,31 @@
 //
 // Sensor Requirements:
 //   - Steering-angle-sensor
+//   - Wheel speed
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
 #include "torque_vectoring.h"
 
+// Datatypes ------------------------------------------------------------------------------------------------------------------
+
+typedef struct
+{
+	// TODO(Barach): Docs
+	float wheelSpeedBiasBegin;
+	float wheelSpeedBiasEnd;
+	float frontRearBiasBegin;
+	float frontRearBiasEnd;
+
+	float steeringAngleBiasBegin;
+	float steeringAngleBiasEnd;
+	float leftRightBiasEnd;
+} tvLinearBiasConfig_t;
+
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-/// @brief Entrypoint to the SAS-linear torque vectoring algorithm.
-tvOutput_t tvSasLinear (const tvInput_t* input);
+/// @brief Entrypoint to the torque vectoring algorithm.
+tvOutput_t tvLinearBias (const tvInput_t* input, const void* configPointer);
 
 #endif // TV_SAS_LINEAR_H

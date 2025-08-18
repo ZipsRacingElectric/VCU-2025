@@ -235,9 +235,10 @@ msg_t transmitConfigMessage (CANDriver* driver, sysinterval_t timeout)
 		.data8	=
 		{
 			TORQUE_TO_WORD (drivingTorqueLimit),
-			RATIO_TO_WORD (eepromMap->drivingTorqueBias),
-			RATIO_TO_WORD (eepromMap->linearSasBiasMax),
-			eepromMap->torqueAlgoritmIndex
+			// TODO(Barach)
+			// RATIO_TO_WORD (eepromMap->drivingTorqueBias),
+			// RATIO_TO_WORD (eepromMap->linearSasBiasMax),
+			// eepromMap->torqueAlgoritmIndex
 		}
 	};
 

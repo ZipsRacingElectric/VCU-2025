@@ -11,7 +11,6 @@
 
 stmAdc_t		adc;
 mc24lc32_t		eeprom;
-eepromMap_t*	eepromMap;
 linearSensor_t	glvBattery;
 pedals_t		pedals;
 am4096_t		sasAdc;
@@ -118,7 +117,6 @@ bool peripheralsInit ()
 	// EEPROM initialization (only exit early if a failure occurred).
 	if (!mc24lc32Init (&eeprom, &EEPROM_CONFIG) && eeprom.state == MC24LC32_STATE_FAILED)
 		return false;
-	eepromMap = (eepromMap_t*) eeprom.cache;
 
 	// Virtual memory initialization.
 	// TODO(Barach): Cleanup
@@ -144,7 +142,6 @@ void peripheralsReconfigure (void* arg)
 
 	// Torque thread configuration
 	torqueThreadSetDrivingTorqueLimit (eepromMap->drivingTorqueLimit);
-	torqueThreadSetRegenTorqueLimit (eepromMap->regenTorqueLimit);
 	torqueThreadSelectAlgorithm (eepromMap->torqueAlgoritmIndex);
 	torqueThreadSetPowerLimit (eepromMap->powerLimit);
 	torqueThreadSetPowerLimitPid

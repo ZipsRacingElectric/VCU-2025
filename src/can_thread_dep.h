@@ -7,6 +7,8 @@
 // Date Created: 2024.09.29
 //
 // Description: Thread for managing the VCU's CAN interface. All received messages are parsed by this thread.
+//
+// TODO(Barach): This is all deprecated code. Please reference the BMS for CAN implementations.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 

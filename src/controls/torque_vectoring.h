@@ -50,6 +50,12 @@ typedef struct
 	float torqueFr;
 } tvOutput_t;
 
-typedef tvOutput_t (tvFunction_t) (const tvInput_t* input);
+typedef tvOutput_t (tvFunction_t) (const tvInput_t* input, const void* configPointer);
+
+typedef struct
+{
+	tvFunction_t* entrypoint;
+	const void* config;
+} tvAlgorithm_t;
 
 #endif // TORQUE_VECTORING_H
