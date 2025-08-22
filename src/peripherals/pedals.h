@@ -11,7 +11,7 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "peripherals/analog_sensor.h"
+#include "peripherals/interface/analog_sensor.h"
 
 // ChibiOS
 #include "ch.h"

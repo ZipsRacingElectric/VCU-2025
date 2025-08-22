@@ -11,12 +11,14 @@
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
-#include "peripherals/am4096.h"
-#include "peripherals/analog_linear.h"
+#include "peripherals/adc/analog_linear.h"
+#include "peripherals/adc/stm_adc.h"
+
+#include "peripherals/i2c/am4096.h"
+#include "peripherals/i2c/mc24lc32.h"
+
 #include "peripherals/eeprom_map.h"
-#include "peripherals/mc24lc32.h"
 #include "peripherals/pedals.h"
-#include "peripherals/stm_adc.h"
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 

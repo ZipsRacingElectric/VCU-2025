@@ -18,7 +18,6 @@ CSRC =	$(ALLCSRC)							\
 		src/main.c							\
 											\
 		src/peripherals.c					\
-		src/peripherals/am4096.c			\
 		src/peripherals/eeprom_map.c		\
 		src/peripherals/pedals.c			\
 		src/peripherals/steering_angle.c	\
@@ -37,10 +36,10 @@ CSRC =	$(ALLCSRC)							\
 include common/src/debug.mk
 include common/src/fault_handler.mk
 
-include common/src/peripherals/analog_linear.mk
-include common/src/peripherals/eeprom.mk
-include common/src/peripherals/mc24lc32.mk
-include common/src/peripherals/stm_adc.mk
+include common/src/peripherals/adc/analog_linear.mk
+include common/src/peripherals/adc/stm_adc.mk
+include common/src/peripherals/i2c/am4096.mk
+include common/src/peripherals/i2c/mc24lc32.mk
 
 include common/src/can/amk_inverter.mk
 include common/src/can/bms.mk
