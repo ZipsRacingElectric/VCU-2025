@@ -18,9 +18,10 @@
 
 /**
  * @brief Handles the received CAN message, if it is intended for the VCU.
+ * @param configPtr The config of the calling CAN thread.
  * @param frame The received CAN message.
- * @return True if the message was handled, false otherwise.
+ * @return 0 if handled, -1 otherwise.
  */
-bool receiveMessage (CANRxFrame* frame);
+int8_t receiveMessage (void* configPtr, CANRxFrame* frame);
 
 #endif // RECEIVE_H

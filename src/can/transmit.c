@@ -2,7 +2,7 @@
 #include "transmit.h"
 
 // Includes
-#include "can_thread_dep.h"
+#include "can.h"
 #include "peripherals.h"
 #include "state_thread.h"
 #include "torque_thread.h"
@@ -65,7 +65,6 @@
 #define STATUS_WORD_0_PEDALS_PLAUSIBLE(plausible)			(((uint8_t) (plausible))	<< 3)
 #define STATUS_WORD_0_TORQUE_DERATING(derating)				(((uint8_t) (derating))		<< 4)
 #define STATUS_WORD_0_EEPROM_STATE(state)					(((uint8_t) (state))		<< 5)
-#define STATUS_WORD_0_CAN_PLAUSIBLE(plausible)				(((uint8_t) (plausible))	<< 7)
 
 // VCU Status Word 1
 #define STATUS_WORD_1_APPS_1_STATE(state)					(((uint8_t) (state))		<< 0)
@@ -85,8 +84,6 @@
 
 msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 {
-	// TODO(Barach): Overhaul this to incorporate all internal object states.
-
 	// Byte 0:
 	//   Bits 0 & 1: Vehicle state
 	//   Bit 2: Torque plausible
@@ -123,8 +120,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_0_TORQUE_PLAUSIBLE (torquePlausible) |
 			STATUS_WORD_0_PEDALS_PLAUSIBLE (pedals.plausible) |
 			STATUS_WORD_0_TORQUE_DERATING (torqueDerating) |
-			STATUS_WORD_0_EEPROM_STATE (eeprom.state) |
-			STATUS_WORD_0_CAN_PLAUSIBLE (canPlausible),
+			STATUS_WORD_0_EEPROM_STATE (eeprom.state),
 			STATUS_WORD_1_APPS_1_STATE (pedals.apps1.state) |
 			STATUS_WORD_1_APPS_2_STATE (pedals.apps2.state) |
 			STATUS_WORD_1_BSE_F_STATE (pedals.bseF.state) |
@@ -139,10 +135,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 		}
 	};
 
-	msg_t result = canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
-	if (result != MSG_OK)
-		canFaultCallback (result);
-	return result;
+	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
 }
 
 msg_t transmitSensorInputPercent (CANDriver* driver, sysinterval_t timeout)
@@ -190,10 +183,7 @@ msg_t transmitSensorInputPercent (CANDriver* driver, sysinterval_t timeout)
 		}
 	};
 
-	msg_t result = canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
-	if (result != MSG_OK)
-		canFaultCallback (result);
-	return result;
+	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
 }
 
 msg_t transmitDebugMessage (CANDriver* driver, sysinterval_t timeout)
@@ -217,11 +207,7 @@ msg_t transmitDebugMessage (CANDriver* driver, sysinterval_t timeout)
 	// 	}
 	// };
 
-	// msg_t result = canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
-	// if (result != MSG_OK)
-	// 	canFaultCallback (result);
-	// return result;
-
+	// return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
 	return MSG_OK;
 }
 
@@ -235,7 +221,7 @@ msg_t transmitConfigMessage (CANDriver* driver, sysinterval_t timeout)
 		.data8	=
 		{
 			TORQUE_TO_WORD (drivingTorqueLimit),
-			// TODO(Barach)
+			// TODO(Barach): Figure this out.
 			// RATIO_TO_WORD (eepromMap->drivingTorqueBias),
 			// RATIO_TO_WORD (eepromMap->linearSasBiasMax),
 			// eepromMap->torqueAlgoritmIndex

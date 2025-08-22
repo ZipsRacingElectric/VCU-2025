@@ -1,9 +1,10 @@
 // Header
-#include "can_thread_dep.h"
+#include "can.h"
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
 // Includes
+#include "can/can_thread.h"
 #include "can/receive.h"
 #include "can/transmit.h"
 
@@ -19,17 +20,41 @@ amkInverter_t	amks [AMK_COUNT];
 bms_t			bms;
 ecumasterGps_t	gps;
 
-canNode_t* nodes [] =
+#define CAN1_NODE_COUNT (sizeof (can1Nodes) / sizeof (canNode_t*))
+canNode_t* can1Nodes [] =
 {
-	(canNode_t*) &amkRl, (canNode_t*) &amkRr, (canNode_t*) &amkFl, (canNode_t*) &amkFr,
 	(canNode_t*) &bms, (canNode_t*) &gps
 };
 
-#define NODE_COUNT (sizeof (nodes) / sizeof (canNode_t*))
+#define CAN2_NODE_COUNT (sizeof (can2Nodes) / sizeof (canNode_t*))
+canNode_t* can2Nodes [] =
+{
+	(canNode_t*) &amkRl, (canNode_t*) &amkRr, (canNode_t*) &amkFl, (canNode_t*) &amkFr
+};
 
 // Configurations -------------------------------------------------------------------------------------------------------------
 
-#define CAN_THREAD_TIMEOUT_POLL_PERIOD TIME_MS2I (10)
+static const canThreadConfig_t CAN1_CONFIG =
+{
+	.name			= "can1_rx",
+	.driver			= &CAND1,
+	.period			= TIME_MS2I (10),
+	.nodes			= can1Nodes,
+	.nodeCount		= CAN1_NODE_COUNT,
+	.rxHandler		= receiveMessage,
+	.bridgeDriver	= NULL
+};
+
+static const canThreadConfig_t CAN2_CONFIG =
+{
+	.name			= "can2_rx",
+	.driver			= &CAND2,
+	.period			= TIME_MS2I (10),
+	.nodes			= can2Nodes,
+	.nodeCount		= CAN2_NODE_COUNT,
+	.rxHandler		= NULL,
+	.bridgeDriver	= &CAND1
+};
 
 #define CAN_TX_THREAD_PERIOD TIME_MS2I (250)
 
@@ -37,7 +62,7 @@ canNode_t* nodes [] =
  * @brief Configuration of the CAN 1 & CAN 2 peripherals.
  * @note See section 32.9 of the STM32F405 Reference Manual for more details.
  */
-static const CANConfig CAN1_CONFIG =
+static const CANConfig CAN_DRIVER_CONFIG =
 {
 	.mcr = 	CAN_MCR_ABOM |		// Automatic bus-off management.
 			CAN_MCR_AWUM |		// Automatic wakeup mode.
@@ -89,76 +114,14 @@ static const bmsConfig_t BMS_CONFIG =
 static const ecumasterGpsConfig_t GPS_CONFIG =
 {
 	.driver			= &CAND1,
-	.timeoutPeriod	= TIME_MS2I (100),
+	.timeoutPeriod	= TIME_MS2I (300),
 };
 
-// Thread Entrypoint ----------------------------------------------------------------------------------------------------------
+// Threads --------------------------------------------------------------------------------------------------------------------
 
-static THD_WORKING_AREA (can1RxThreadWa, 512);
-THD_FUNCTION (can1RxThread, arg)
-{
-	(void) arg;
-	chRegSetThreadName ("can1_rx");
+static CAN_THREAD_WORKING_AREA (can1RxThreadWa);
 
-	CANRxFrame rxFrame;
-
-	while (true)
-	{
-		// Block until the next message arrives
-		msg_t result = canReceiveTimeout (&CAND1, CAN_ANY_MAILBOX, &rxFrame, CAN_THREAD_TIMEOUT_POLL_PERIOD);
-
-		if (result == MSG_OK)
-		{
-			// Find the handler of the message
-			if (!canNodesReceive (nodes, NODE_COUNT, &rxFrame))
-			{
-				// If no node handled the message, check if it is directly for the VCU.
-				receiveMessage (&rxFrame);
-			}
-		}
-	}
-}
-
-static THD_WORKING_AREA (can2RxThreadWa, 512);
-THD_FUNCTION (can2RxThread, arg)
-{
-	(void) arg;
-	chRegSetThreadName ("can2_rx");
-
-	CANRxFrame rxFrame;
-
-	systime_t timeCurrent = chVTGetSystemTimeX ();
-	systime_t timePrevious;
-
-	while (true)
-	{
-		// Block until the next message arrives
-		msg_t result = canReceiveTimeout (&CAND2, CAN_ANY_MAILBOX, &rxFrame, CAN_THREAD_TIMEOUT_POLL_PERIOD);
-		timePrevious = timeCurrent;
-		timeCurrent = chVTGetSystemTimeX ();
-
-		if (result == MSG_OK)
-		{
-			// Find the handler of the message
-			if (!canNodesReceive (nodes, NODE_COUNT, &rxFrame))
-			{
-				// If no node handled the message, check if it is directly for the VCU.
-				receiveMessage (&rxFrame);
-			}
-		}
-
-		CANTxFrame txFrame;
-
-			txFrame.SID = rxFrame.SID;
-			txFrame.DLC = rxFrame.DLC;
-			txFrame.IDE = rxFrame.IDE;
-			memcpy (txFrame.data8, rxFrame.data8, rxFrame.DLC);
-
-			canTransmitTimeout (&CAND1, CAN_ANY_MAILBOX, &txFrame, TIME_MS2I (500));
-
-		canNodesCheckTimeout (nodes, NODE_COUNT, timePrevious, timeCurrent);
-	}
-}
+static CAN_THREAD_WORKING_AREA (can2RxThreadWa);
 
 static THD_WORKING_AREA (can1TxThreadWa, 512);
 THD_FUNCTION (can1TxThread, arg)
@@ -178,33 +141,31 @@ THD_FUNCTION (can1TxThread, arg)
 	}
 }
 
-bool canThreadStartDeprecated (tprio_t priority)
+// Functions ------------------------------------------------------------------------------------------------------------------
+
+bool canInterfaceInit (tprio_t priority)
 {
 	// CAN 1 driver initialization
-	if (canStart (&CAND1, &CAN1_CONFIG) != MSG_OK)
+	if (canStart (&CAND1, &CAN_DRIVER_CONFIG) != MSG_OK)
 		return false;
-
 	palClearLine (LINE_CAN1_STBY);
 
 	// CAN 2 driver initialization
-	if (canStart (&CAND2, &CAN1_CONFIG) != MSG_OK)
+	if (canStart (&CAND2, &CAN_DRIVER_CONFIG) != MSG_OK)
 		return false;
-
 	palClearLine (LINE_CAN2_STBY);
 
 	// Initialize the CAN nodes
 	for (uint8_t index = 0; index < AMK_COUNT; ++index)
 		amkInit (amks + index, AMK_CONFIGS + index);
-
 	bmsInit (&bms, &BMS_CONFIG);
-
 	ecumasterInit (&gps, &GPS_CONFIG);
 
 	// Create the CAN 1 RX thread
-	chThdCreateStatic (&can1RxThreadWa, sizeof (can1RxThreadWa), priority, can1RxThread, NULL);
+	canThreadStart (can1RxThreadWa, sizeof (can1RxThreadWa), priority, &CAN1_CONFIG);
 
 	// Create the CAN 2 RX thread
-	chThdCreateStatic (&can2RxThreadWa, sizeof (can2RxThreadWa), priority, can2RxThread, NULL);
+	canThreadStart (&can2RxThreadWa, sizeof (can2RxThreadWa), priority, &CAN2_CONFIG);
 
 	// Create the CAN 1 TX thread
 	chThdCreateStatic (&can1TxThreadWa, sizeof (can1TxThreadWa), LOWPRIO, can1TxThread, NULL);

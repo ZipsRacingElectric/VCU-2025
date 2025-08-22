@@ -23,7 +23,7 @@ CSRC =	$(ALLCSRC)							\
 		src/peripherals/pedals.c			\
 		src/peripherals/steering_angle.c	\
 											\
-		src/can_thread_dep.c				\
+		src/can.c							\
 		src/can/receive.c					\
 		src/can/transmit.c					\
 											\
@@ -45,6 +45,7 @@ include common/src/peripherals/stm_adc.mk
 include common/src/can/amk_inverter.mk
 include common/src/can/bms.mk
 include common/src/can/can_node.mk
+include common/src/can/can_thread.mk
 include common/src/can/ecumaster_gps_v2.mk
 include common/src/can/eeprom_can.mk
 

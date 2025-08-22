@@ -3,6 +3,7 @@
 
 // Includes
 #include "peripherals.h"
+#include "can/can_thread.h"
 #include "can/eeprom_can.h"
 
 // Message IDs ----------------------------------------------------------------------------------------------------------------
@@ -11,13 +12,15 @@
 
 // Receive Functions ----------------------------------------------------------------------------------------------------------
 
-bool receiveMessage (CANRxFrame* frame)
+int8_t receiveMessage (void* configPtr, CANRxFrame* frame)
 {
+	canThreadConfig_t* config = configPtr;
+
 	if (frame->SID == EEPROM_COMMAND_MESSAGE_ID)
 	{
-		eepromHandleCanCommand (frame, &CAND1, (eeprom_t*) &virtualMemory);
-		return true;
+		eepromHandleCanCommand (frame, config->driver, (eeprom_t*) &virtualMemory);
+		return 0;
 	}
 
-	return false;
+	return -1;
 }

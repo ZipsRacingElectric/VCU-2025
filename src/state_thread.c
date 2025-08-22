@@ -2,7 +2,7 @@
 #include "state_thread.h"
 
 // Includes
-#include "can_thread_dep.h"
+#include "can.h"
 #include "can/transmit.h"
 #include "peripherals.h"
 
@@ -22,7 +22,6 @@
 vehicleState_t vehicleState	= VEHICLE_STATE_LOW_VOLTAGE;
 bool torquePlausible		= true;
 bool torqueDerating			= false;
-bool canPlausible			= true;
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
@@ -152,10 +151,4 @@ void stateThreadSetTorquePlausibility (bool plausible, bool derating)
 
 	torquePlausible = plausible;
 	torqueDerating = derating;
-}
-
-void canFaultCallback (msg_t result)
-{
-	(void) result;
-	canPlausible = false;
 }

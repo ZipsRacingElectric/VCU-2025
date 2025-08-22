@@ -2,7 +2,7 @@
 #include "eeprom_map.h"
 
 // Includes
-#include "can_thread_dep.h"
+#include "can.h"
 #include "peripherals.h"
 #include "torque_thread.h"
 

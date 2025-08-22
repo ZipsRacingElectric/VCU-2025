@@ -4,7 +4,7 @@
 // Includes
 #include "peripherals.h"
 #include "controls/lerp.h"
-#include "can_thread_dep.h"
+#include "can.h"
 
 tvOutput_t tvLinearBias (const tvInput_t* input, const void* configPointer)
 {

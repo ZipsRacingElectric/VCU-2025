@@ -45,9 +45,6 @@ extern bool torquePlausible;
 /// @brief Indicates whether the output torque is being derated for any reason.
 extern bool torqueDerating;
 
-/// @brief Indicates the state of the CAN thread.
-extern bool canPlausible;
-
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 void stateThreadStart (tprio_t priority);

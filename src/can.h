@@ -1,14 +1,16 @@
-#ifndef CAN_THREAD_DEP_H
-#define CAN_THREAD_DEP_H
+#ifndef CAN_H
+#define CAN_H
 
 // CAN Thread -----------------------------------------------------------------------------------------------------------------
 //
 // Author: Cole Barach
 // Date Created: 2024.09.29
 //
-// Description: Thread for managing the VCU's CAN interface. All received messages are parsed by this thread.
-//
-// TODO(Barach): This is all deprecated code. Please reference the BMS for CAN implementations.
+// Description: Objects related the the VCU's CAN interface. The VCU uses 2 CAN busses. The first CAN bus is the vehicle's
+//   main bus. All sensors not directly handled by the VCU are accessed via this bus. The second CAN bus is the inverter bus,
+//   containing only the VCU and the 4 inverters. The VCU acts as a bridge between these busses, where all CAN messages
+//   received on the inverter bus are re-transmitted on the main bus. The bridging is done for debugging and data-logging
+//   purposes. The separation of the two busses is to avoid CAN errors from the inverters.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -50,12 +52,11 @@ extern ecumasterGps_t gps;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
-// TODO(Barach)
 /**
- * @brief Creates and starts the CAN interface thread.
- * @param priority The priority of the thread.
+ * @brief Initializes both of the VCU's CAN interfaces.
+ * @param priority The priority to start the CAN threads at.
  * @return False if a fatal error occurred, true otherwise.
  */
-bool canThreadStartDeprecated (tprio_t priority);
+bool canInterfaceInit (tprio_t priority);
 
-#endif // CAN_THREAD_DEP_H
+#endif // CAN_H
