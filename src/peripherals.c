@@ -9,14 +9,17 @@
 
 // Global Peripherals ---------------------------------------------------------------------------------------------------------
 
+// Public
 stmAdc_t		adc;
-mc24lc32_t		eeprom;
+mc24lc32_t		physicalEeprom;
+virtualEeprom_t virtualEeprom;
 linearSensor_t	glvBattery;
 pedals_t		pedals;
-am4096_t		sasAdc;
+am4096_t		sasDriver;
 sas_t			sas;
-virtualEeprom_t virtualMemory;
-eeprom_t		readonlyMemory;
+
+// Private
+eeprom_t		readonlyWriteonlyEeprom;
 
 // Configuration --------------------------------------------------------------------------------------------------------------
 
@@ -28,9 +31,10 @@ static const I2CConfig I2C1_CONFIG =
 	.duty_cycle		= STD_DUTY_CYCLE
 };
 
-static const am4096Config_t SAS_ADC_CONFIG =
+/// @brief Configuration for the steering-angle-sensor's ADC driver.
+static am4096Config_t sasDriverConfig =
 {
-	.addr		= 0x00, // TODO(Barach): Move this to EEPROM so it can be changed.
+	.addr		= 0x00,
 	.i2c		= &I2CD1,
 	.sensor		= (analogSensor_t*) &sas,
 	.timeout	= TIME_MS2I (5)
@@ -60,7 +64,7 @@ static const stmAdcConfig_t ADC_CONFIG =
 };
 
 /// @brief Configuration for the on-board EEPROM.
-static const mc24lc32Config_t EEPROM_CONFIG =
+static const mc24lc32Config_t PHYSICAL_EEPROM_CONFIG =
 {
 	.addr			= 0x50,
 	.i2c			= &I2CD1,
@@ -69,25 +73,26 @@ static const mc24lc32Config_t EEPROM_CONFIG =
 	.dirtyHook		= peripheralsReconfigure
 };
 
-static const virtualEepromConfig_t VIRTUAL_MEMORY_CONFIG =
+/// @brief Configuration for the BMS's virtual EEPROM.
+static const virtualEepromConfig_t VIRTUAL_EEPROM_CONFIG =
 {
 	.count		= 3,
 	.entries	=
 	{
 		{
-			.eeprom = (eeprom_t*) &eeprom,
-			.addr = 0x0000,
-			.size = 0x1000
+			.eeprom	= (eeprom_t*) &physicalEeprom,
+			.addr	= 0x0000,
+			.size	= 0x1000
 		},
 		{
-			.eeprom = &readonlyMemory,
-			.addr = 0x1000,
-			.size = 0x1000
+			.eeprom	= &readonlyWriteonlyEeprom,
+			.addr	= 0x1000,
+			.size	= 0x1000
 		},
 		{
-			.eeprom = (eeprom_t*) &sasAdc,
-			.addr = 0x2000,
-			.size = 0x0038
+			.eeprom	= (eeprom_t*) &sasDriver,
+			.addr	= 0x2000,
+			.size	= 0x0038
 		}
 	}
 };
@@ -114,48 +119,68 @@ bool peripheralsInit ()
 	if (!stmAdcInit (&adc, &ADC_CONFIG))
 		return false;
 
-	// EEPROM initialization (only exit early if a failure occurred).
-	if (!mc24lc32Init (&eeprom, &EEPROM_CONFIG) && eeprom.state == MC24LC32_STATE_FAILED)
+	// Physical EEPROM initialization (only exit early if a failure occurred).
+	if (!mc24lc32Init (&physicalEeprom, &PHYSICAL_EEPROM_CONFIG) && physicalEeprom.state == MC24LC32_STATE_FAILED)
 		return false;
 
+	// Read-only / Write-only EEPROM initialization.
+	eepromInit (&readonlyWriteonlyEeprom, eepromWriteonlyWrite, eepromReadonlyRead);
+
 	// Virtual memory initialization.
-	// TODO(Barach): Cleanup
-	readonlyMemory.readHandler = eepromReadonlyRead;
-	readonlyMemory.writeHandler = eepromWriteonlyWrite;
-	virtualEepromInit (&virtualMemory, &VIRTUAL_MEMORY_CONFIG);
+	virtualEepromInit (&virtualEeprom, &VIRTUAL_EEPROM_CONFIG);
 
 	// Re-configurable peripherals are not considered fatal.
 	peripheralsReconfigure (NULL);
 	return true;
 }
 
-void peripheralsReconfigure (void* arg)
+void peripheralsReconfigure (void* caller)
 {
-	(void) arg;
+	(void) caller;
 
 	// Pedals initialization
-	pedalsInit (&pedals, &eepromMap->pedalConfig);
+	pedalsInit (&pedals, &physicalEepromMap->pedalConfig);
 
 	// SAS initialization
-	sasInit (&sas, &eepromMap->sasConfig);
-	am4096Init (&sasAdc, &SAS_ADC_CONFIG);
+	sasDriverConfig.addr = physicalEepromMap->sasAddr;
+	sasInit (&sas, &physicalEepromMap->sasConfig);
+	am4096Init (&sasDriver, &sasDriverConfig);
 
 	// Torque thread configuration
-	torqueThreadSetDrivingTorqueLimit (eepromMap->drivingTorqueLimit);
-	torqueThreadSelectAlgorithm (eepromMap->torqueAlgoritmIndex);
-	torqueThreadSetPowerLimit (eepromMap->powerLimit);
+	torqueThreadSetDrivingTorqueLimit (physicalEepromMap->drivingTorqueLimit);
+	torqueThreadSelectAlgorithm (physicalEepromMap->torqueAlgoritmIndex);
+	torqueThreadSetPowerLimit (physicalEepromMap->powerLimit);
 	torqueThreadSetPowerLimitPid
 	(
-		eepromMap->powerLimitPidKp,
-		eepromMap->powerLimitPidKi,
-		eepromMap->powerLimitPidKd,
-		eepromMap->powerLimitPidA
+		physicalEepromMap->powerLimitPidKp,
+		physicalEepromMap->powerLimitPidKi,
+		physicalEepromMap->powerLimitPidKd,
+		physicalEepromMap->powerLimitPidA
 	);
 
 	// GLV battery initialization
-	uint16_t glvSample11v5 = eepromMap->glvBattery11v5;
-	uint16_t glvSample14v4 = eepromMap->glvBattery14v4;
+	uint16_t glvSample11v5 = physicalEepromMap->glvBattery11v5;
+	uint16_t glvSample14v4 = physicalEepromMap->glvBattery14v4;
 	glvBatteryConfig.valueMin = lerp2d (0, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
 	glvBatteryConfig.valueMax = lerp2d (4095, glvSample11v5, 11.5f, glvSample14v4, 14.4f);
 	linearSensorInit (&glvBattery, &glvBatteryConfig);
+}
+
+void peripheralsSample (systime_t timePrevious, systime_t timeCurrent)
+{
+	// Sample the pedal inputs and GLV battery.
+	stmAdcSample (&adc);
+	pedalsUpdate (&pedals, timePrevious, timeCurrent);
+
+	if (physicalEepromMap->sasEnabled)
+	{
+		// If the SAS is enabled, sample the sensor.
+		am4096Sample (&sasDriver);
+	}
+	else
+	{
+		// Otherwise, invalidate the sensor.
+		sas.value = 0;
+		sas.state = ANALOG_SENSOR_SAMPLE_INVALID;
+	}
 }

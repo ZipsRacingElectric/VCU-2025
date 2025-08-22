@@ -90,14 +90,11 @@ bool pedalsInit (pedals_t* pedals, pedalsConfig_t* config)
 
 void pedalsUpdate (pedals_t* pedals, systime_t timePrevious, systime_t timeCurrent)
 {
-	// TODO(Barach): Pass on FSG rules compliance.
-
 	// Calculate the APPS & BSE requests (average of both sensors)
 	pedals->appsRequest = (pedals->apps1.value + pedals->apps2.value) / 2.0f;
 	pedals->bseRequest = (pedals->bseF.value + pedals->bseR.value) / 2.0f;
 
 	// Get the pedals states
-	// TODO(Barach): Higher tolerance for braking?
 	pedals->accelerating = pedals->appsRequest > 0.0f;
 	pedals->braking = pedals->bseRequest > 0.0f;
 

@@ -23,11 +23,14 @@
 /// @brief ADC responsible for sampling all on-board analog inputs ( @c pedals & @c glvBattery ).
 extern stmAdc_t adc;
 
-/// @brief The VCU's EEPROM. This is responsible for storing all non-volatile variables.
-extern mc24lc32_t eeprom;
+/// @brief The VCU's physical (on-board) EEPROM. This is responsible for storing all non-volatile variables.
+extern mc24lc32_t physicalEeprom;
 
 /// @brief Structure mapping the EEPROM's contents to C datatypes.
-static eepromMap_t* const eepromMap = (eepromMap_t*) eeprom.cache;
+static eepromMap_t* const physicalEepromMap = (eepromMap_t*) physicalEeprom.cache;
+
+/// @brief The VCU's virtual memory map. This aggregates all externally accessible memory into a single map for CAN-bus access.
+extern virtualEeprom_t virtualEeprom;
 
 /// @brief Analog sensor measuring the voltage of the GLV battery.
 extern linearSensor_t glvBattery;
@@ -36,14 +39,10 @@ extern linearSensor_t glvBattery;
 extern pedals_t pedals;
 
 /// @brief ADC measuring the steering-angle sensor.
-extern am4096_t sasAdc;
+extern am4096_t sasDriver;
 
 /// @brief Sensor measuring the steering angle of the vehicle.
 extern sas_t sas;
-
-/// @brief The VCU's virtual memory map. TODO(Barach): Docs.
-extern virtualEeprom_t virtualMemory;
-extern eeprom_t readonlyMemory;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -55,8 +54,16 @@ bool peripheralsInit (void);
 
 /**
  * @brief Re-initializes the VCU's peripherals after a change has been made to the on-board EEPROM.
- * @param arg Ignored.
+ * @param caller Ignored. Used to make function signature compatible with EEPROM dirty hook.
  */
-void peripheralsReconfigure (void* arg);
+void peripheralsReconfigure (void* caller);
+
+/**
+ * @brief Samples all of the peripheral sensors. Must be done to update the values of the @c glvBattery , @c pedals , & @c sas
+ * sensors.
+ * @param timePrevious The time at which this function was last called (last value provided to @c timeCurrent ).
+ * @param timeCurrent The current system time.
+ */
+void peripheralsSample (systime_t timePrevious, systime_t timeCurrent);
 
 #endif // PERIPHERALS_H

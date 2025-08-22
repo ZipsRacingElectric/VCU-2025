@@ -19,7 +19,7 @@
 // Constants ------------------------------------------------------------------------------------------------------------------
 
 /// @brief The magic string of the EEPROM. Update this value every time the memory map changes to force manual re-programming.
-#define EEPROM_MAP_STRING "VCU_2025_08_13"
+#define EEPROM_MAP_STRING "VCU_2025_08_22"
 
 // Datatypes ------------------------------------------------------------------------------------------------------------------
 
@@ -59,6 +59,8 @@ typedef struct
 	float regenDeratingSpeedEnd;		// 0x00B0
 	float regenDeratingSpeedStart;		// 0x00B4
 
+	bool sasEnabled;					// 0x00B8
+	uint8_t sasAddr;					// 0x00B9
 } eepromMap_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

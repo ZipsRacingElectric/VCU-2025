@@ -120,7 +120,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_0_TORQUE_PLAUSIBLE (torquePlausible) |
 			STATUS_WORD_0_PEDALS_PLAUSIBLE (pedals.plausible) |
 			STATUS_WORD_0_TORQUE_DERATING (torqueDerating) |
-			STATUS_WORD_0_EEPROM_STATE (eeprom.state),
+			STATUS_WORD_0_EEPROM_STATE (physicalEeprom.state),
 			STATUS_WORD_1_APPS_1_STATE (pedals.apps1.state) |
 			STATUS_WORD_1_APPS_2_STATE (pedals.apps2.state) |
 			STATUS_WORD_1_BSE_F_STATE (pedals.bseF.state) |
@@ -130,7 +130,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_2_AMK_FL_VALID (amkGetValidityLock (&amkFl)) |
 			STATUS_WORD_2_AMK_FR_VALID (amkGetValidityLock (&amkFr)) |
 			STATUS_WORD_2_GPS_STATUS (ecumasterGpsStatus (&gps)) |
-			STATUS_WORD_2_SAS_STATUS (sasAdc.state),
+			STATUS_WORD_2_SAS_STATUS (sasDriver.state),
 			VOLTAGE_TO_WORD (glvBattery.value)
 		}
 	};
@@ -222,9 +222,9 @@ msg_t transmitConfigMessage (CANDriver* driver, sysinterval_t timeout)
 		{
 			TORQUE_TO_WORD (drivingTorqueLimit),
 			// TODO(Barach): Figure this out.
-			// RATIO_TO_WORD (eepromMap->drivingTorqueBias),
-			// RATIO_TO_WORD (eepromMap->linearSasBiasMax),
-			// eepromMap->torqueAlgoritmIndex
+			// RATIO_TO_WORD (physicalEepromMap->drivingTorqueBias),
+			// RATIO_TO_WORD (physicalEepromMap->linearSasBiasMax),
+			// physicalEepromMap->torqueAlgoritmIndex
 		}
 	};
 

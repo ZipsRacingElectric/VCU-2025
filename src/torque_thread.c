@@ -55,17 +55,17 @@ static tvAlgorithm_t tvAlgorithms [] =
 	{
 		// Straight-diff
 		.entrypoint	= &tvConstBias,
-		.config		= &eepromMap->sdConfig
+		.config		= &physicalEepromMap->sdConfig
 	},
 	{
 		// Linear-steering
 		.entrypoint	= &tvLinearBias,
-		.config		= &eepromMap->lsConfig
+		.config		= &physicalEepromMap->lsConfig
 	},
 	{
 		// Linear-steering (slalom)
 		.entrypoint	= &tvLinearBias,
-		.config		= &eepromMap->lssConfig
+		.config		= &physicalEepromMap->lssConfig
 	},
 	{
 		// Single-tire-fire (left)
@@ -163,9 +163,7 @@ THD_FUNCTION (torqueThread, arg)
 		timeCurrent = chVTGetSystemTimeX ();
 
 		// Sample the sensor inputs.
-		stmAdcSample (&adc);
-		pedalsUpdate (&pedals, timePrevious, timeCurrent);
-		am4096Sample (&sasAdc);
+		peripheralsSample (timePrevious, timeCurrent);
 
 		// Calculate the torque request and apply power limiting.
 		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S);
@@ -199,18 +197,18 @@ THD_FUNCTION (torqueThread, arg)
 		{
 			// TODO(Barach): Temporary
 			// if (palReadLine (LINE_BUTTON_3_IN) && palReadLine (LINE_BUTTON_5_IN))
-			// 	linearSasBiasMax = eepromMap->linearSasBiasMax;
+			// 	linearSasBiasMax = physicalEepromMap->linearSasBiasMax;
 			// else
-			// 	linearSasBiasMax = eepromMap->linearSasBiasMaxSlalom;
+			// 	linearSasBiasMax = physicalEepromMap->linearSasBiasMaxSlalom;
 
 			// TODO(Barach): Re-enable
 			// // Regen input
 			// if (!palReadLine (LINE_BUTTON_3_IN) || !palReadLine (LINE_BUTTON_5_IN))
 			// {
 			// 	if (!palReadLine (LINE_BUTTON_3_IN) && !palReadLine (LINE_BUTTON_5_IN))
-			// 		input.regenRequest = eepromMap->regenHardRequest;
+			// 		input.regenRequest = physicalEepromMap->regenHardRequest;
 			// 	else
-			// 		input.regenRequest = eepromMap->regenLightRequest;
+			// 		input.regenRequest = physicalEepromMap->regenLightRequest;
 			// }
 		}
 
@@ -355,16 +353,17 @@ bool torqueApplyRegenLimit (float* torque, amkInverter_t* amk)
 {
 	if (*torque < 0)
 	{
-		if (amk->actualSpeed < eepromMap->regenDeratingSpeedEnd)
+		if (amk->actualSpeed < physicalEepromMap->regenDeratingSpeedEnd)
 		{
 			*torque = 0;
 			return true;
 		}
-		else if (amk->actualSpeed < eepromMap->regenDeratingSpeedStart)
+		else if (amk->actualSpeed < physicalEepromMap->regenDeratingSpeedStart)
 		{
+			// TODO(Barach): This is wrong.
 			*torque = lerp2d (amk->actualSpeed,
-				eepromMap->regenDeratingSpeedEnd, 0,
-				eepromMap->regenDeratingSpeedStart, 1);
+				physicalEepromMap->regenDeratingSpeedEnd, 0,
+				physicalEepromMap->regenDeratingSpeedStart, 1);
 			return true;
 		}
 		return false;

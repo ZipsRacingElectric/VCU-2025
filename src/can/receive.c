@@ -18,7 +18,7 @@ int8_t receiveMessage (void* configPtr, CANRxFrame* frame)
 
 	if (frame->SID == EEPROM_COMMAND_MESSAGE_ID)
 	{
-		eepromHandleCanCommand (frame, config->driver, (eeprom_t*) &virtualMemory);
+		eepromHandleCanCommand (frame, config->driver, (eeprom_t*) &virtualEeprom);
 		return 0;
 	}
 

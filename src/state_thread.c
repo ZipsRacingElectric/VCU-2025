@@ -46,7 +46,7 @@ THD_FUNCTION (stateThread, arg)
 			vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
 
 		amkInverterState_t amksState = amksGetState (amks, AMK_COUNT);
-		if (amksState == AMK_STATE_INVALID || eeprom.state != MC24LC32_STATE_READY)
+		if (amksState == AMK_STATE_INVALID || physicalEeprom.state != MC24LC32_STATE_READY)
 			vehicleState = VEHICLE_STATE_FAILED;
 
 		canNodeLock ((canNode_t*) &bms);
