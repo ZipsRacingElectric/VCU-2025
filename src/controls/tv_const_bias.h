@@ -12,7 +12,7 @@
 // Sensor Requirements: None
 //
 // Algorithm Description:
-// - TODO(Barach)
+// - Applies a constant front-to-rear & left-to-right bias to the requested amount of torque.
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 

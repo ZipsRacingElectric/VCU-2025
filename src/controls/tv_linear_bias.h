@@ -23,14 +23,20 @@
 
 typedef struct
 {
-	// TODO(Barach): Docs
+	/// @brief The wheel speed at which the front-to-rear bias starts shifting from the beginning value.
 	float wheelSpeedBiasBegin;
+	/// @brief The wheel speed at which the front-to-rear bias stops shifting to the end value.
 	float wheelSpeedBiasEnd;
+	/// @brief The front-to-rear bias at the beginning wheel speed.
 	float frontRearBiasBegin;
+	/// @brief The front-to-rear bias at the ending wheel speed.
 	float frontRearBiasEnd;
 
+	/// @brief The steering angle at which the left-to-right bias starts shifting from 50/50.
 	float steeringAngleBiasBegin;
+	/// @brief The steering angle at which the left-to-right bias stops shifting to the end value.
 	float steeringAngleBiasEnd;
+	/// @brief The left-to-right bias at the ending steering angle.
 	float leftRightBiasEnd;
 } tvLinearBiasConfig_t;
 
