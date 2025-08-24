@@ -165,7 +165,7 @@ bool canInterfaceInit (tprio_t priority)
 	canThreadStart (can1RxThreadWa, sizeof (can1RxThreadWa), priority, &CAN1_CONFIG);
 
 	// Create the CAN 2 RX thread
-	canThreadStart (&can2RxThreadWa, sizeof (can2RxThreadWa), priority, &CAN2_CONFIG);
+	canThreadStart (can2RxThreadWa, sizeof (can2RxThreadWa), priority, &CAN2_CONFIG);
 
 	// Create the CAN 1 TX thread
 	chThdCreateStatic (&can1TxThreadWa, sizeof (can1TxThreadWa), LOWPRIO, can1TxThread, NULL);
