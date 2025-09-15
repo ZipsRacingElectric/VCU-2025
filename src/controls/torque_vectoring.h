@@ -25,10 +25,9 @@ typedef struct
 	/// and the current throttle position.
 	float drivingTorqueLimit;
 
-	/// @brief The maximum amount of cumulative requested regenerative torque. This value is set by the driver's configuration.
+	/// @brief The maximum amount of cumulative requested regenerative torque. This value is set by the driver's configuration
+	/// and the regen request.
 	float regenTorqueLimit;
-
-	float regenRequest;
 } tvInput_t;
 
 /// @brief Output to TV algoritms.

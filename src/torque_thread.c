@@ -38,14 +38,18 @@ static uint8_t algoritmIndex = 0;
 
 static const tvConstBiasConfig_t STF_L_CONFIG =
 {
-	.frontRearBias = 1,
-	.leftRightBias = 1
+	.drivingFrontRearBias	= 1,
+	.drivingLeftRightBias	= 1,
+	.regenFrontRearBias		= 1,
+	.regenLeftRightBias		= 1
 };
 
 static const tvConstBiasConfig_t STF_R_CONFIG =
 {
-	.frontRearBias = 1,
-	.leftRightBias = 0
+	.drivingFrontRearBias	= 1,
+	.drivingLeftRightBias	= 0,
+	.regenFrontRearBias		= 1,
+	.regenLeftRightBias		= 0
 };
 
 /// @brief The array of selectable torque-vectoring algorithms.
@@ -112,11 +116,11 @@ static float powerLimitPidA = 0;
  * @param deltaTime The amount of time that has passed since the last call to this function.
  * @return The calculated input structure.
  */
-tvInput_t requestCalculateInput (float deltaTime);
+tvInput_t requestCalculateInput (float deltaTime, bool* button3Held, bool* button5Held, bool* resetRequest);
 
 /**
  * @brief Executes the selected torque-vectoring algorithm, calculating an amount of torque to request of each inverter.
- * @note This functino only calculates the torque request, power limiting and validation should be performed using
+ * @note This function only calculates the torque request, power limiting and validation should be performed using
  * @c requestApplyPowerLimit and @c requestValidate , respectively.
  * @param input The input structure, as returned by @c requestCalculateInput .
  * @return The output structure containing the torque to request.
@@ -131,8 +135,13 @@ tvOutput_t requestCalculateOutput (tvInput_t* input);
  */
 bool requestApplyPowerLimit (tvOutput_t* request, float deltaTime);
 
-bool requestApplyRegenLimit (tvOutput_t* output);
-
+/**
+ * @brief Applies regen limiting to a torque amount. De-rating is applied when the motor speed is below a certain value,
+ * as negative torque can cause the motors to spin in reverse.
+ * @param torque The torque to limit.
+ * @param amk The inverter the torque is to be requested of.
+ * @return True if the torque was de-rated, false otherwise.
+ */
 bool torqueApplyRegenLimit (float* torque, amkInverter_t* amk);
 
 /**
@@ -166,68 +175,28 @@ THD_FUNCTION (torqueThread, arg)
 		peripheralsSample (timePrevious, timeCurrent);
 
 		// Calculate the torque request and apply power limiting.
-		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S);
-
-		// Button inputs
-		bool resetRequest = !palReadLine (LINE_BUTTON_2_IN);
-		if (!palReadLine (LINE_BUTTON_1_IN))
-		{
-			// Torque Up / Down
-			if (palReadLine (LINE_BUTTON_3_IN))
-			{
-				button3Held = false;
-			}
-			else if (!button3Held)
-			{
-				torqueThreadSetDrivingTorqueLimit (drivingTorqueLimit - 8.4f);
-				button3Held = true;
-			}
-
-			if (palReadLine (LINE_BUTTON_5_IN))
-			{
-				button5Held = false;
-			}
-			else if (!button5Held)
-			{
-				torqueThreadSetDrivingTorqueLimit (drivingTorqueLimit + 8.4f);
-				button5Held = true;
-			}
-		}
-		else
-		{
-			// TODO(Barach): Temporary
-			// if (palReadLine (LINE_BUTTON_3_IN) && palReadLine (LINE_BUTTON_5_IN))
-			// 	linearSasBiasMax = physicalEepromMap->linearSasBiasMax;
-			// else
-			// 	linearSasBiasMax = physicalEepromMap->linearSasBiasMaxSlalom;
-
-			// TODO(Barach): Re-enable
-			// // Regen input
-			// if (!palReadLine (LINE_BUTTON_3_IN) || !palReadLine (LINE_BUTTON_5_IN))
-			// {
-			// 	if (!palReadLine (LINE_BUTTON_3_IN) && !palReadLine (LINE_BUTTON_5_IN))
-			// 		input.regenRequest = physicalEepromMap->regenHardRequest;
-			// 	else
-			// 		input.regenRequest = physicalEepromMap->regenLightRequest;
-			// }
-		}
+		bool resetRequest = false;
+		tvInput_t input = requestCalculateInput (TORQUE_THREAD_PERIOD_S, &button3Held, &button5Held, &resetRequest);
 
 		torqueRequest = requestCalculateOutput (&input);
 		bool derating = requestApplyPowerLimit (&torqueRequest, TORQUE_THREAD_PERIOD_S);
-		derating &= requestApplyRegenLimit (&torqueRequest);
 		bool plausible = requestValidate (&torqueRequest, &input);
-
-		// Nofify the state thread of the current plausibility.
-		stateThreadSetTorquePlausibility (plausible, derating);
 
 		if (vehicleState == VEHICLE_STATE_READY_TO_DRIVE)
 		{
 			if (plausible)
 			{
 				// Torque request message.
+				derating &= torqueApplyRegenLimit (&torqueRequest.torqueRl, &amkRl);
 				amkSendTorqueRequest (&amkRl, torqueRequest.torqueRl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+
+				derating &= torqueApplyRegenLimit (&torqueRequest.torqueRr, &amkRr);
 				amkSendTorqueRequest (&amkRr, torqueRequest.torqueRr, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+
+				derating &= torqueApplyRegenLimit (&torqueRequest.torqueFl, &amkFl);
 				amkSendTorqueRequest (&amkFl, torqueRequest.torqueFl, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
+
+				derating &= torqueApplyRegenLimit (&torqueRequest.torqueFr, &amkFr);
 				amkSendTorqueRequest (&amkFr, torqueRequest.torqueFr, AMK_DRIVING_TORQUE_MAX, -AMK_REGENERATIVE_TORQUE_MAX, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 			}
 			else
@@ -247,6 +216,9 @@ THD_FUNCTION (torqueThread, arg)
 			amkSendEnergizationRequest (&amkFl, false, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 			amkSendEnergizationRequest (&amkFr, false, resetRequest, TORQUE_THREAD_CAN_MESSAGE_TIMEOUT);
 		}
+
+		// Nofify the state thread of the current plausibility.
+		stateThreadSetTorquePlausibility (plausible, derating);
 	}
 }
 
@@ -302,14 +274,58 @@ void torqueThreadSetPowerLimitPid (float kp, float ki, float kd, float a)
 	powerLimitPidA		= a;
 }
 
-tvInput_t requestCalculateInput (float deltaTime)
+tvInput_t requestCalculateInput (float deltaTime, bool* button3Held, bool* button5Held, bool* resetRequest)
 {
+	float regenRequest = 0.0f;
+
+	// Paddle inputs
+	*resetRequest = !palReadLine (LINE_BUTTON_2_IN);
+	if (!palReadLine (LINE_BUTTON_1_IN))
+	{
+		// Torque Down
+		if (palReadLine (LINE_BUTTON_3_IN))
+		{
+			*button3Held = false;
+		}
+		else if (!*button3Held)
+		{
+			torqueThreadSetDrivingTorqueLimit (drivingTorqueLimit - AMK_DRIVING_TORQUE_MAX * AMK_COUNT / 10.0f);
+			*button3Held = true;
+		}
+
+		// Torque Up
+		if (palReadLine (LINE_BUTTON_5_IN))
+		{
+			*button5Held = false;
+		}
+		else if (!*button5Held)
+		{
+			torqueThreadSetDrivingTorqueLimit (drivingTorqueLimit + AMK_DRIVING_TORQUE_MAX * AMK_COUNT / 10.0f);
+			*button5Held = true;
+		}
+	}
+	else
+	{
+		// Regen input
+		if (!palReadLine (LINE_BUTTON_3_IN) || !palReadLine (LINE_BUTTON_5_IN))
+		{
+			if (!palReadLine (LINE_BUTTON_3_IN) && !palReadLine (LINE_BUTTON_5_IN))
+				regenRequest = physicalEepromMap->regenTorqueLimit * physicalEepromMap->regenHardRequest;
+			else
+				regenRequest = physicalEepromMap->regenTorqueLimit * physicalEepromMap->regenLightRequest;
+
+			// Derate based on throttle position (no regen when pedal is depressed)
+			regenRequest = lerp2dSaturated (pedals.appsRequest,
+				physicalEepromMap->regenDeratingThrottleStart, regenRequest,
+				physicalEepromMap->regenDeratingThrottleEnd, 0);
+		}
+	}
+
 	tvInput_t input =
 	{
 		.deltaTime			= deltaTime,
 		.drivingTorqueLimit	= pedals.appsRequest * drivingTorqueLimit,
-		.regenTorqueLimit	= regenTorqueLimit,
-		.regenRequest		= 0.0f
+		.regenTorqueLimit	= regenRequest,
 	};
 	return input;
 }
@@ -340,33 +356,25 @@ bool requestApplyPowerLimit (tvOutput_t* output, float deltaTime)
 	return (1.0f - torqueReductionRatio < FLT_EPSILON);
 }
 
-bool requestApplyRegenLimit (tvOutput_t* output)
-{
-	return
-		torqueApplyRegenLimit (&output->torqueRl, &amkRl) &&
-		torqueApplyRegenLimit (&output->torqueRr, &amkRr) &&
-		torqueApplyRegenLimit (&output->torqueFl, &amkFl) &&
-		torqueApplyRegenLimit (&output->torqueFr, &amkFr);
-}
-
 bool torqueApplyRegenLimit (float* torque, amkInverter_t* amk)
 {
+	// Negative torque means regen
 	if (*torque < 0)
 	{
+		// If the speed is below the end derating speed, clamp to 0.
 		if (amk->actualSpeed < physicalEepromMap->regenDeratingSpeedEnd)
 		{
 			*torque = 0;
 			return true;
 		}
+		// If the speed is between the start and end derating speeds, lerp between them.
 		else if (amk->actualSpeed < physicalEepromMap->regenDeratingSpeedStart)
 		{
-			// TODO(Barach): This is wrong.
 			*torque = lerp2d (amk->actualSpeed,
 				physicalEepromMap->regenDeratingSpeedEnd, 0,
-				physicalEepromMap->regenDeratingSpeedStart, 1);
+				physicalEepromMap->regenDeratingSpeedStart, *torque);
 			return true;
 		}
-		return false;
 	}
 
 	return false;
@@ -388,22 +396,22 @@ bool requestValidate (tvOutput_t* output, tvInput_t* input)
 	if (output->torqueRl >= 0.0f)
 		drivingTorque += output->torqueRl;
 	else
-	 	regenTorque += output->torqueRl;
+	 	regenTorque -= output->torqueRl;
 
 	if (output->torqueRr >= 0.0f)
 		drivingTorque += output->torqueRr;
 	else
-	 	regenTorque += output->torqueRr;;
+	 	regenTorque -= output->torqueRr;;
 
 	if (output->torqueFl >= 0.0f)
 		drivingTorque += output->torqueFl;
 	else
-		regenTorque += output->torqueFl;
+		regenTorque -= output->torqueFl;
 
 	if (output->torqueFr >= 0.0f)
 		drivingTorque += output->torqueFr;
 	else
-	 	regenTorque += output->torqueFr;
+	 	regenTorque -= output->torqueFr;
 
 	// Validate the cumulative torque limits are not exceeded.
 	valid &= drivingTorque <= input->drivingTorqueLimit * (1 + CUMULATIVE_TORQUE_TOLERANCE);

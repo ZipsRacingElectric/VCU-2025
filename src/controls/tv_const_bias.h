@@ -23,10 +23,14 @@
 
 typedef struct
 {
-	/// @brief The front-to-rear bias (1 => 100% rear, 0 => 100% front).
-	float frontRearBias;
-	/// @brief The left-to-right bias (1 => 100% left, 0 -> 100% right).
-	float leftRightBias;
+	/// @brief The front-to-rear bias of the driving torque (1 => 100% rear, 0 => 100% front).
+	float drivingFrontRearBias;
+	/// @brief The left-to-right bias of the driving torque (1 => 100% left, 0 -> 100% right).
+	float drivingLeftRightBias;
+	/// @brief The front-to-rear bias of the regen torque (1 => 100% rear, 0 => 100% front).
+	float regenFrontRearBias;
+	/// @brief The left-to-right bias of the regen torque (1 => 100% left, 0 -> 100% right).
+	float regenLeftRightBias;
 } tvConstBiasConfig_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

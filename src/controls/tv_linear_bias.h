@@ -12,7 +12,7 @@
 //
 // Sensor Requirements:
 //   - Steering-angle-sensor
-//   - Wheel speed
+//   - Motor speed
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
@@ -23,13 +23,13 @@
 
 typedef struct
 {
-	/// @brief The wheel speed at which the front-to-rear bias starts shifting from the beginning value.
-	float wheelSpeedBiasBegin;
-	/// @brief The wheel speed at which the front-to-rear bias stops shifting to the end value.
-	float wheelSpeedBiasEnd;
-	/// @brief The front-to-rear bias at the beginning wheel speed.
+	/// @brief The motor speed at which the front-to-rear bias starts shifting from the beginning value.
+	float motorSpeedBiasBegin;
+	/// @brief The motor speed at which the front-to-rear bias stops shifting to the end value.
+	float motorSpeedBiasEnd;
+	/// @brief The front-to-rear bias at the beginning motor speed.
 	float frontRearBiasBegin;
-	/// @brief The front-to-rear bias at the ending wheel speed.
+	/// @brief The front-to-rear bias at the ending motor speed.
 	float frontRearBiasEnd;
 
 	/// @brief The steering angle at which the left-to-right bias starts shifting from 50/50.

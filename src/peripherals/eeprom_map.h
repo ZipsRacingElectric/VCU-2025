@@ -29,38 +29,43 @@ typedef struct
 
 	pedalsConfig_t pedalConfig;			// 0x0010
 
-	// TODO(Barach): Driving torque limit is dated.
 	float drivingTorqueLimit;			// 0x0030
-	uint16_t torqueAlgoritmIndex;		// 0x0034
+	float regenTorqueLimit;				// 0x0034
+	uint16_t torqueAlgoritmIndex;		// 0x0038
 
-	float powerLimit;					// 0x0038
-	float powerLimitPidKp;				// 0x003C
-	float powerLimitPidKi;				// 0x0040
-	float powerLimitPidKd;				// 0x0044
-	float powerLimitPidA;				// 0x0048
+	float powerLimit;					// 0x003C
+	float powerLimitPidKp;				// 0x0040
+	float powerLimitPidKi;				// 0x0044
+	float powerLimitPidKd;				// 0x0048
+	float powerLimitPidA;				// 0x004C
 
-	uint16_t glvBattery11v5;			// 0x004C
-	uint16_t glvBattery14v4;			// 0x004E
+	uint16_t glvBattery11v5;			// 0x0050
+	uint16_t glvBattery14v4;			// 0x0052
 
-	sasConfig_t sasConfig;				// 0x0050
+	uint8_t pad1 [12];
+
+	sasConfig_t sasConfig;				// 0x0060
 
 	// Straight-diff TV config
-	tvConstBiasConfig_t sdConfig;		// 0x0064
+	tvConstBiasConfig_t sdConfig;		// 0x0074
 
 	// Linear-steering TV config
-	tvLinearBiasConfig_t lsConfig;		// 0x006C
+	tvLinearBiasConfig_t lsConfig;		// 0x0084
 
 	// Linear-steering (slalom) TV config
-	tvLinearBiasConfig_t lssConfig;		// 0x0088
+	tvLinearBiasConfig_t lssConfig;		// 0x00A0
 
-	float regenLightRequest;			// 0x00A4
-	float regenHardRequest;				// 0x00A8
-	float regenCutoffThreshold;			// 0x00AC
-	float regenDeratingSpeedEnd;		// 0x00B0
-	float regenDeratingSpeedStart;		// 0x00B4
+	uint8_t pad2 [36];					// 0x00BC
 
-	bool sasEnabled;					// 0x00B8
-	uint8_t sasAddr;					// 0x00B9
+	float regenLightRequest;			// 0x00E0
+	float regenHardRequest;				// 0x00E4
+	float regenDeratingThrottleStart;	// 0x00E8
+	float regenDeratingThrottleEnd;		// 0x00EC
+	float regenDeratingSpeedEnd;		// 0x00F0
+	float regenDeratingSpeedStart;		// 0x00F4
+
+	bool sasEnabled;					// 0x00F8
+	uint8_t sasAddr;					// 0x00F9
 } eepromMap_t;
 
 // Functions ------------------------------------------------------------------------------------------------------------------

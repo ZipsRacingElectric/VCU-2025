@@ -10,11 +10,11 @@ tvOutput_t tvLinearBias (const tvInput_t* input, const void* configPointer)
 {
 	const tvLinearBiasConfig_t* config = configPointer;
 
-	// Lerp from beginning wheel speed & bias to end wheel speed & bias.
-	float wheelSpeed = (amkRl.actualSpeed + amkRr.actualSpeed) / 2.0f;
-	float biasRear = lerp2dSaturated (wheelSpeed,
-		config->wheelSpeedBiasBegin, config->frontRearBiasBegin,
-		config->wheelSpeedBiasEnd, config->frontRearBiasEnd);
+	// Lerp from beginning motor speed & bias to end motor speed & bias.
+	float motorSpeed = (amkRl.actualSpeed + amkRr.actualSpeed) / 2.0f;
+	float biasRear = lerp2dSaturated (motorSpeed,
+		config->motorSpeedBiasBegin, config->frontRearBiasBegin,
+		config->motorSpeedBiasEnd, config->frontRearBiasEnd);
 	float biasFront = 1.0f - biasRear;
 
 	// Lerp from beginning angle & 50% bias to end angle & bias (for both positive and negative).
