@@ -142,7 +142,7 @@ void peripheralsReconfigure (void* caller)
 	pedalsInit (&pedals, &physicalEepromMap->pedalConfig);
 
 	// SAS initialization
-	sasDriverConfig.addr = physicalEepromMap->sasAddr;
+	sasDriverConfig.addr = physicalEepromMap->sasAddr & 0x7F;
 	sasInit (&sas, &physicalEepromMap->sasConfig);
 	am4096Init (&sasDriver, &sasDriverConfig);
 
