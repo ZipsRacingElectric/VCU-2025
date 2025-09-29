@@ -1,10 +1,15 @@
 # Vehicle Control Unit - Zips Racing 2025
+
+Embedded firmware for the vehicle control unit of ZR25. The VCU is the primary control unit of the vehicle, it is responsible for implementing the vehicle's state, torque distribution, and torque security.
+
 ## Usage
+
 For help on how to setup this project, see the below file:
 
-[Firmware Toolchain Setup Guide (common/doc/firmware_toolchain_guide.md)](common/doc/firmware_toolchain_guide.md)
+[Firmware Toolchain Setup Guide (common/doc/firmware_toolchain_guide.md)](https://github.com/ZipsRacingElectric/STM32F405-Common/blob/main/doc/firmware_toolchain_guide.md)
 
 ## Directory Structure
+
 ```
 .
 ├── build                               - Directory for compilation output.
