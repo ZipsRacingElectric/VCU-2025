@@ -22,11 +22,12 @@
 
 void hardFaultCallback (void)
 {
-	// Open the shutdown loop
-	palClearLine (LINE_SHUTDOWN_EN);
-
-	// Set the fault LED
-	palSetLine (LINE_VCU_FLT);
+	// Blink the fault LED
+	while (true)
+	{
+		palToggleLine (LINE_LED_FAULT);
+		for (uint16_t index = 0; index < 32768; ++index);
+	}
 }
 
 // Entrypoint -----------------------------------------------------------------------------------------------------------------
@@ -63,7 +64,7 @@ int main (void)
 	stateThreadStart (NORMALPRIO - 1);
 
 	// Allow the shutdown loop to close.
-	palSetLine (LINE_SHUTDOWN_EN);
+	palSetLine (LINE_SHUTDOWN_CONTROL);
 
 	// Do nothing.
 	while (true)

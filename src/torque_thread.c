@@ -278,48 +278,48 @@ tvInput_t requestCalculateInput (float deltaTime, bool* button3Held, bool* butto
 {
 	float regenRequest = 0.0f;
 
-	// Paddle inputs
-	*resetRequest = !palReadLine (LINE_BUTTON_2_IN);
-	if (!palReadLine (LINE_BUTTON_1_IN))
-	{
-		// Torque Down
-		if (palReadLine (LINE_BUTTON_3_IN))
-		{
-			*button3Held = false;
-		}
-		else if (!*button3Held)
-		{
-			torqueThreadSetDrivingTorqueLimit (drivingTorqueLimit - AMK_DRIVING_TORQUE_MAX * AMK_COUNT / 10.0f);
-			*button3Held = true;
-		}
+	// // Paddle inputs
+	// *resetRequest = !palReadLine (LINE_BUTTON_2_IN);
+	// if (!palReadLine (LINE_BUTTON_1_IN))
+	// {
+	// 	// Torque Down
+	// 	if (palReadLine (LINE_BUTTON_3_IN))
+	// 	{
+	// 		*button3Held = false;
+	// 	}
+	// 	else if (!*button3Held)
+	// 	{
+	// 		torqueThreadSetDrivingTorqueLimit (drivingTorqueLimit - AMK_DRIVING_TORQUE_MAX * AMK_COUNT / 10.0f);
+	// 		*button3Held = true;
+	// 	}
 
-		// Torque Up
-		if (palReadLine (LINE_BUTTON_5_IN))
-		{
-			*button5Held = false;
-		}
-		else if (!*button5Held)
-		{
-			torqueThreadSetDrivingTorqueLimit (drivingTorqueLimit + AMK_DRIVING_TORQUE_MAX * AMK_COUNT / 10.0f);
-			*button5Held = true;
-		}
-	}
-	else
-	{
-		// Regen input
-		if (!palReadLine (LINE_BUTTON_3_IN) || !palReadLine (LINE_BUTTON_5_IN))
-		{
-			if (!palReadLine (LINE_BUTTON_3_IN) && !palReadLine (LINE_BUTTON_5_IN))
-				regenRequest = physicalEepromMap->regenTorqueLimit * physicalEepromMap->regenHardRequest;
-			else
-				regenRequest = physicalEepromMap->regenTorqueLimit * physicalEepromMap->regenLightRequest;
+	// 	// Torque Up
+	// 	if (palReadLine (LINE_BUTTON_5_IN))
+	// 	{
+	// 		*button5Held = false;
+	// 	}
+	// 	else if (!*button5Held)
+	// 	{
+	// 		torqueThreadSetDrivingTorqueLimit (drivingTorqueLimit + AMK_DRIVING_TORQUE_MAX * AMK_COUNT / 10.0f);
+	// 		*button5Held = true;
+	// 	}
+	// }
+	// else
+	// {
+	// 	// Regen input
+	// 	if (!palReadLine (LINE_BUTTON_3_IN) || !palReadLine (LINE_BUTTON_5_IN))
+	// 	{
+	// 		if (!palReadLine (LINE_BUTTON_3_IN) && !palReadLine (LINE_BUTTON_5_IN))
+	// 			regenRequest = physicalEepromMap->regenTorqueLimit * physicalEepromMap->regenHardRequest;
+	// 		else
+	// 			regenRequest = physicalEepromMap->regenTorqueLimit * physicalEepromMap->regenLightRequest;
 
-			// Derate based on throttle position (no regen when pedal is depressed)
-			regenRequest = lerp2dSaturated (pedals.appsRequest,
-				physicalEepromMap->regenDeratingThrottleStart, regenRequest,
-				physicalEepromMap->regenDeratingThrottleEnd, 0);
-		}
-	}
+	// 		// Derate based on throttle position (no regen when pedal is depressed)
+	// 		regenRequest = lerp2dSaturated (pedals.appsRequest,
+	// 			physicalEepromMap->regenDeratingThrottleStart, regenRequest,
+	// 			physicalEepromMap->regenDeratingThrottleEnd, 0);
+	// 	}
+	// }
 
 	tvInput_t input =
 	{

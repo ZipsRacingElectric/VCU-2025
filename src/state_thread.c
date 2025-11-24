@@ -63,7 +63,7 @@ THD_FUNCTION (stateThread, arg)
 		else if (vehicleState == VEHICLE_STATE_HIGH_VOLTAGE)
 		{
 			// Transition HV to RTD
-			if (pedals.braking && !pedals.accelerating && !palReadLine (LINE_START_BUTTON_IN))
+			if (pedals.braking && !pedals.accelerating && !palReadLine (LINE_BUTTON_1_IN))
 			{
 				vehicleState = VEHICLE_STATE_READY_TO_DRIVE;
 				palSetLine (LINE_BUZZER);
@@ -98,10 +98,7 @@ THD_FUNCTION (stateThread, arg)
 		}
 
 		bool coolingEnabled = vehicleState == VEHICLE_STATE_HIGH_VOLTAGE || vehicleState == VEHICLE_STATE_READY_TO_DRIVE;
-		palWriteLine (LINE_PUMP1, coolingEnabled);
-		palWriteLine (LINE_PUMP2, coolingEnabled);
-		palWriteLine (LINE_FAN1, coolingEnabled);
-		palWriteLine (LINE_FAN2, coolingEnabled);
+		palWriteLine (LINE_OUTPUT_2, coolingEnabled);
 
 		// Stop the RTD buzzer if it is past the deadline.
 		if (!chTimeIsInRangeX (timeCurrent, timePrevious, timeoutBuzzer))
@@ -115,14 +112,14 @@ THD_FUNCTION (stateThread, arg)
 		}
 
 		// VCU fault light
-		palWriteLine (LINE_VCU_FLT,
+		palWriteLine (LINE_LED_FAULT,
 			!torquePlausible ||
 			vehicleState == VEHICLE_STATE_FAILED ||
 			amksState == AMK_STATE_ERROR ||
 			ecumasterGpsStatus (&gps) != ECUMASTER_GPS_STATUS_VALID);
 
 		// Brake light
-		palWriteLine (LINE_BRK_LIGHT, pedals.braking);
+		palWriteLine (LINE_OUTPUT_1, pedals.braking);
 
 		// Broadcast the sensor input message and debug message
 		transmitSensorInputPercent (&CAND1, STATE_CONTROL_PERIOD);
@@ -147,7 +144,7 @@ void stateThreadSetTorquePlausibility (bool plausible, bool derating)
 {
 	// If implausible, set the fault indicator now.
 	if (!plausible)
-		palWriteLine (LINE_VCU_FLT, true);
+		palSetLine (LINE_LED_FAULT);
 
 	torquePlausible = plausible;
 	torqueDerating = derating;
