@@ -15,6 +15,7 @@
 #include "peripherals/adc/stm_adc.h"
 
 #include "peripherals/i2c/am4096.h"
+#include "peripherals/i2c/as5600.h"
 #include "peripherals/i2c/mc24lc32.h"
 
 #include "peripherals/eeprom_map.h"
@@ -41,7 +42,10 @@ extern linearSensor_t glvBattery;
 extern pedals_t pedals;
 
 /// @brief ADC measuring the steering-angle sensor.
-extern am4096_t sasDriver;
+//extern am4096_t sasDriver;
+
+/// @brief ADC measuring the steering-angle sensor. (2026)
+extern as5600_t sasADC;
 
 /// @brief Sensor measuring the steering angle of the vehicle.
 extern sas_t sas;

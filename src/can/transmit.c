@@ -130,7 +130,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_2_AMK_FL_VALID (amkGetValidityLock (&amkFl)) |
 			STATUS_WORD_2_AMK_FR_VALID (amkGetValidityLock (&amkFr)) |
 			STATUS_WORD_2_GPS_STATUS (ecumasterGpsStatus (&gps)) |
-			STATUS_WORD_2_SAS_STATUS (sasDriver.state),
+			STATUS_WORD_2_SAS_STATUS (sas.state),
 			VOLTAGE_TO_WORD (glvBattery.value)
 		}
 	};
