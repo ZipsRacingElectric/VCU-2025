@@ -24,38 +24,21 @@
 #define VOLTAGE_INVERSE_FACTOR		(255.0f / 18.0f)
 #define VOLTAGE_TO_WORD(voltage)	(uint8_t) ((voltage) * VOLTAGE_INVERSE_FACTOR)
 
-// Debug Value
-#define DEBUG_INVERSE_FACTOR		(10.0f)
-#define DEBUG_TO_WORD(debug)		(int16_t) ((debug) * DEBUG_INVERSE_FACTOR)
-
 // Torque Values
 #define TORQUE_INVERSE_FACTOR		(255.0f / 100.0f)
 #define TORQUE_TO_WORD(torque)		(uint8_t) ((torque) * TORQUE_INVERSE_FACTOR)
 
-// Ratio Values
-#define RATIO_INVERSE_FACTOR		(255.0f)
-#define RATIO_TO_WORD(ratio)		(uint8_t) ((ratio) * RATIO_INVERSE_FACTOR)
-
-// Config Angle Values
-#define CFG_ANGLE_INVERSE_FACTOR	(255.0f / 100.0f)
-#define CFG_ANGLE_TO_WORD(angle)	(uint8_t) ((angle) * CFG_ANGLE_INVERSE_FACTOR)
-
-// Config Spring Rate Values
-#define CFG_SPRING_INVERSE_FACTOR	(255.0f / 1200.0f)
-#define CFG_SPRING_TO_WORD(angle)	(uint8_t) ((angle) * CFG_SPRING_INVERSE_FACTOR)
-
-// Config Height Values
-#define CFG_HEIGHT_INVERSE_FACTOR	(255.0f / 500.0f)
-#define CFG_HEIGHT_TO_WORD(angle)	(uint8_t) ((angle) * CFG_SPRING_INVERSE_FACTOR)
+// Temperature Values
+#define TEMPERATURE_INVERSE_FACTOR	10.0f
+#define TEMPERATURE_TO_WORD(temp)	(uint16_t) ((temp) * TEMPERATURE_INVERSE_FACTOR)
 
 // Message IDs ----------------------------------------------------------------------------------------------------------------
 
 #define STATUS_MESSAGE_ID				0x100
 #define SENSOR_INPUT_PERCENT_MESSAGE_ID	0x600
 #define DEBUG_MESSAGE_ID				0x651
-#define CONFIG_0_MESSAGE_ID				0x7A0
-#define CONFIG_2_MESSAGE_ID				0x7A2
-#define CONFIG_3_MESSAGE_ID				0x7A3
+#define TEMPERATURE_MESSAGE_ID			0x7A0
+#define CONFIG_MESSAGE_ID				0x7A2
 
 // Message Packing ------------------------------------------------------------------------------------------------------------
 
@@ -65,6 +48,7 @@
 #define STATUS_WORD_0_PEDALS_PLAUSIBLE(plausible)			(((uint8_t) (plausible))	<< 3)
 #define STATUS_WORD_0_TORQUE_DERATING(derating)				(((uint8_t) (derating))		<< 4)
 #define STATUS_WORD_0_EEPROM_STATE(state)					(((uint8_t) (state))		<< 5)
+#define STATUS_WORK_0_VCU_FAULT(state)						(((uint8_t) (state))		<< 7)
 
 // VCU Status Word 1
 #define STATUS_WORD_1_APPS_1_STATE(state)					(((uint8_t) (state))		<< 0)
@@ -77,7 +61,7 @@
 #define STATUS_WORD_2_AMK_RR_VALID(valid)					(((uint8_t) (valid))		<< 1)
 #define STATUS_WORD_2_AMK_FL_VALID(valid)					(((uint8_t) (valid))		<< 2)
 #define STATUS_WORD_2_AMK_FR_VALID(valid)					(((uint8_t) (valid))		<< 3)
-#define STATUS_WORD_2_GPS_STATUS(status)					(((uint8_t) (status))		<< 4)
+#define STATUS_WORD_2_AMK_FAULT(state)						(((uint8_t) (state == AMK_STATE_ERROR || state == AMK_STATE_INVALID)) << 4)
 #define STATUS_WORD_2_SAS_STATUS(status)					(((uint8_t) (status))		<< 6)
 
 // Functions ------------------------------------------------------------------------------------------------------------------
@@ -90,7 +74,7 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 	//   Bit 3: Pedals plausible
 	//   Bit 4: Torque derating
 	//   Bits 5 & 6: EEPROM state
-	//   Bit 7: CAN plausible
+	//   Bit 7: VCU fault
 	// Byte 1:
 	//   Bit 0: APPS-1 Plausible
 	//   Bit 1: APPS-1 Config Plausible
@@ -105,9 +89,14 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 	//   Bit 1: AMK RR valid
 	//   Bit 2: AMK FL valid
 	//   Bit 3: AMK FR valid
-	//   Bits 4 & 5: GPS status
+	//   Bits 4 AMK fault
 	//   Bits 6 & 7: SAS status
 	// Byte 3: GLV battery voltage
+
+	bool amkRlValid = amkGetValidityLock (&amkRl);
+	bool amkRrValid = amkGetValidityLock (&amkRr);
+	bool amkFlValid = amkGetValidityLock (&amkFl);
+	bool amkFrValid = amkGetValidityLock (&amkFr);
 
 	CANTxFrame frame =
 	{
@@ -120,16 +109,17 @@ msg_t transmitStatusMessage (CANDriver* driver, sysinterval_t timeout)
 			STATUS_WORD_0_TORQUE_PLAUSIBLE (torquePlausible) |
 			STATUS_WORD_0_PEDALS_PLAUSIBLE (pedals.plausible) |
 			STATUS_WORD_0_TORQUE_DERATING (torqueDerating) |
-			STATUS_WORD_0_EEPROM_STATE (physicalEeprom.state),
+			STATUS_WORD_0_EEPROM_STATE (physicalEeprom.state) |
+			STATUS_WORK_0_VCU_FAULT (vcuFault),
 			STATUS_WORD_1_APPS_1_STATE (pedals.apps1.state) |
 			STATUS_WORD_1_APPS_2_STATE (pedals.apps2.state) |
 			STATUS_WORD_1_BSE_F_STATE (pedals.bseF.state) |
 			STATUS_WORD_1_BSE_R_STATE (pedals.bseR.state),
-			STATUS_WORD_2_AMK_RL_VALID (amkGetValidityLock (&amkRl)) |
-			STATUS_WORD_2_AMK_RR_VALID (amkGetValidityLock (&amkRr)) |
-			STATUS_WORD_2_AMK_FL_VALID (amkGetValidityLock (&amkFl)) |
-			STATUS_WORD_2_AMK_FR_VALID (amkGetValidityLock (&amkFr)) |
-			STATUS_WORD_2_GPS_STATUS (ecumasterGpsStatus (&gps)) |
+			STATUS_WORD_2_AMK_RL_VALID (amkRlValid) |
+			STATUS_WORD_2_AMK_RR_VALID (amkRrValid) |
+			STATUS_WORD_2_AMK_FL_VALID (amkFlValid) |
+			STATUS_WORD_2_AMK_FR_VALID (amkFrValid) |
+			STATUS_WORD_2_AMK_FAULT (amksState) |
 			STATUS_WORD_2_SAS_STATUS (sas.state),
 			VOLTAGE_TO_WORD (glvBattery.value)
 		}
@@ -186,29 +176,21 @@ msg_t transmitSensorInputPercent (CANDriver* driver, sysinterval_t timeout)
 	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
 }
 
-msg_t transmitDebugMessage (CANDriver* driver, sysinterval_t timeout)
+msg_t transmitTemperaturesMessage (CANDriver* driver, sysinterval_t timeout)
 {
-	(void) driver;
-	(void) timeout;
+	CANTxFrame frame =
+	{
+		.DLC	= 4,
+		.IDE	= CAN_IDE_STD,
+		.SID	= TEMPERATURE_MESSAGE_ID,
+		.data16	=
+		{
+			TEMPERATURE_TO_WORD (temperatureInverterMax),
+			TEMPERATURE_TO_WORD (temperatureMotorMax)
+		}
+	};
 
-	// TODO(Barach): Implementation.
-
-	// CANTxFrame frame =
-	// {
-	// 	.DLC	= 8,
-	// 	.IDE	= CAN_IDE_STD,
-	// 	.SID	= DEBUG_MESSAGE_ID,
-	// 	.data16	=
-	// 	{
-	// 		DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress0)),
-	// 		DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress1)),
-	// 		DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress2)),
-	// 		DEBUG_TO_WORD (eepromMapGetReadonly (eepromMap->debugAddress3))
-	// 	}
-	// };
-
-	// return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
-	return MSG_OK;
+	return canTransmitTimeout (driver, CAN_ANY_MAILBOX, &frame, timeout);
 }
 
 msg_t transmitConfigMessage (CANDriver* driver, sysinterval_t timeout)
@@ -217,14 +199,12 @@ msg_t transmitConfigMessage (CANDriver* driver, sysinterval_t timeout)
 	{
 		.DLC	= 4,
 		.IDE	= CAN_IDE_STD,
-		.SID	= CONFIG_0_MESSAGE_ID,
+		.SID	= CONFIG_MESSAGE_ID,
 		.data8	=
 		{
 			TORQUE_TO_WORD (drivingTorqueLimit),
-			// TODO(Barach): Figure this out.
-			// RATIO_TO_WORD (physicalEepromMap->drivingTorqueBias),
-			// RATIO_TO_WORD (physicalEepromMap->linearSasBiasMax),
-			// physicalEepromMap->torqueAlgoritmIndex
+			0x00, // TORQUE_TO_WORD (regenTorqueLimit) TODO(Barach)
+			physicalEepromMap->torqueAlgoritmIndex
 		}
 	};
 

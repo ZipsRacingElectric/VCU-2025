@@ -14,6 +14,9 @@
 
 // Includes -------------------------------------------------------------------------------------------------------------------
 
+// Includes
+#include "can/amk_inverter.h"
+
 // ChibiOS
 #include "ch.h"
 
@@ -39,11 +42,23 @@ typedef enum
 /// @brief The global state of the vehicle.
 extern vehicleState_t vehicleState;
 
+/// @brief The state of all 4 AMK inverters.
+extern amkInverterState_t amksState;
+
 /// @brief Indicates the state of the torque thread.
 extern bool torquePlausible;
 
 /// @brief Indicates whether the output torque is being derated for any reason.
 extern bool torqueDerating;
+
+/// @brief Indicates whether any condition has made the VCU faulted.
+extern bool vcuFault;
+
+/// @brief The maximum temperature of the 4 inverters.
+extern float temperatureInverterMax;
+
+/// @brief The maximum temperature of the 4 motors.
+extern float temperatureMotorMax;
 
 // Functions ------------------------------------------------------------------------------------------------------------------
 

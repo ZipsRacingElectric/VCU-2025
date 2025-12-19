@@ -9,6 +9,9 @@
 // ChibiOS
 #include "hal.h"
 
+// C Standard Library
+#include "float.h"
+
 // Constants ------------------------------------------------------------------------------------------------------------------
 
 #define STATE_CONTROL_PERIOD	TIME_MS2I (10)
@@ -19,9 +22,14 @@
 
 // Global Data ----------------------------------------------------------------------------------------------------------------
 
-vehicleState_t vehicleState	= VEHICLE_STATE_LOW_VOLTAGE;
-bool torquePlausible		= true;
-bool torqueDerating			= false;
+vehicleState_t vehicleState		= VEHICLE_STATE_LOW_VOLTAGE;
+amkInverterState_t amksState	= AMK_STATE_ERROR;
+bool torquePlausible			= true;
+bool torqueDerating				= false;
+bool vcuFault					= false;
+
+float temperatureInverterMax;
+float temperatureMotorMax;
 
 // Thread Entrypoint ----------------------------------------------------------------------------------------------------------
 
@@ -45,7 +53,7 @@ THD_FUNCTION (stateThread, arg)
 		if (vehicleState == VEHICLE_STATE_FAILED)
 			vehicleState = VEHICLE_STATE_LOW_VOLTAGE;
 
-		amkInverterState_t amksState = amksGetState (amks, AMK_COUNT);
+		amksState = amksGetState (amks, AMK_COUNT);
 		if (amksState == AMK_STATE_INVALID || physicalEeprom.state != MC24LC32_STATE_READY)
 			vehicleState = VEHICLE_STATE_FAILED;
 
@@ -97,6 +105,22 @@ THD_FUNCTION (stateThread, arg)
 			}
 		}
 
+		// Get cooling temps
+		temperatureInverterMax	= -FLT_MAX;
+		temperatureMotorMax		= -FLT_MAX;
+		for (size_t index = 0; index < AMK_COUNT; ++index)
+		{
+			canNodeLock ((canNode_t*) &amks [index]);
+
+			if (amks [index].temperatureInverter > temperatureInverterMax)
+				temperatureInverterMax = amks [index].temperatureInverter;
+
+			if (amks [index].temperatureMotor > temperatureMotorMax)
+				temperatureMotorMax = amks [index].temperatureMotor;
+
+			canNodeUnlock ((canNode_t*) &amks [index]);
+		}
+
 		// TODO(Barach): Enable if temp > EEPROM config value
 		// Enable the cooling systems if high voltage is enabled.
 		bool coolingEnabled = vehicleState == VEHICLE_STATE_HIGH_VOLTAGE || vehicleState == VEHICLE_STATE_READY_TO_DRIVE;
@@ -115,19 +139,19 @@ THD_FUNCTION (stateThread, arg)
 		}
 
 		// VCU fault light
-		// TODO(Barach): Remove GPS
-		palWriteLine (LINE_LED_FAULT,
+		// TODO(Barach): Include AMKs here?
+		vcuFault =
 			!torquePlausible ||
-			vehicleState == VEHICLE_STATE_FAILED ||
-			amksState == AMK_STATE_ERROR ||
-			ecumasterGpsStatus (&gps) != ECUMASTER_GPS_STATUS_VALID);
+			vehicleState == VEHICLE_STATE_FAILED;// ||
+			// amksState == AMK_STATE_ERROR;
+
+		palWriteLine (LINE_LED_FAULT, vcuFault);
 
 		// Brake light
 		palWriteLine (LINE_OUTPUT_1, pedals.braking);
 
 		// Broadcast the sensor input message and debug message
 		transmitSensorInputPercent (&CAND1, STATE_CONTROL_PERIOD);
-		transmitDebugMessage (&CAND1, STATE_CONTROL_PERIOD);
 
 		// Sleep until the next loop
 		timePrevious = timeCurrent;

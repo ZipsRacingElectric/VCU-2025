@@ -137,6 +137,7 @@ THD_FUNCTION (can1TxThread, arg)
 		chThdSleepUntilWindowed (timeCurrent, timeNext);
 		timeCurrent = chVTGetSystemTimeX ();
 
+		transmitTemperaturesMessage (&CAND1, CAN_TX_THREAD_PERIOD);
 		transmitConfigMessage (&CAND1, CAN_TX_THREAD_PERIOD);
 	}
 }
