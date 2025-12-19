@@ -97,6 +97,8 @@ THD_FUNCTION (stateThread, arg)
 			}
 		}
 
+		// TODO(Barach): Enable if temp > EEPROM config value
+		// Enable the cooling systems if high voltage is enabled.
 		bool coolingEnabled = vehicleState == VEHICLE_STATE_HIGH_VOLTAGE || vehicleState == VEHICLE_STATE_READY_TO_DRIVE;
 		palWriteLine (LINE_OUTPUT_2, coolingEnabled);
 
@@ -104,6 +106,7 @@ THD_FUNCTION (stateThread, arg)
 		if (!chTimeIsInRangeX (timeCurrent, timePrevious, timeoutBuzzer))
 			palClearLine (LINE_BUZZER);
 
+		// Transmit the status message
 		++messageCounter;
 		if (messageCounter >= STATE_MESSAGE_PRESCALAR)
 		{
@@ -112,6 +115,7 @@ THD_FUNCTION (stateThread, arg)
 		}
 
 		// VCU fault light
+		// TODO(Barach): Remove GPS
 		palWriteLine (LINE_LED_FAULT,
 			!torquePlausible ||
 			vehicleState == VEHICLE_STATE_FAILED ||

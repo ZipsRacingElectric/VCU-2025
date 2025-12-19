@@ -68,7 +68,7 @@ static const stmAdcConfig_t ADC_CONFIG =
 	{
 		ADC_CHANNEL_IN10,	// APPS-1
 		ADC_CHANNEL_IN11,	// APPS-2
-		ADC_CHANNEL_IN13,	// BSE-F // TODO(Barach): Fix
+		ADC_CHANNEL_IN12,	// BSE-F
 		ADC_CHANNEL_IN13,	// BSE-R
 		ADC_CHANNEL_IN0		// GLV Battery
 	},

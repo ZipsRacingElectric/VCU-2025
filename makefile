@@ -72,7 +72,7 @@ ULIBS =
 
 # Common toolchain includes
 include common/common.mk
-include common/make/openocd_low_speed.mk
+include common/make/openocd.mk
 
 # ChibiOS compilation hooks
 PRE_MAKE_ALL_RULE_HOOK: $(BOARD_FILES) $(CLANGD_FILE)
