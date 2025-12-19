@@ -24,6 +24,8 @@ extern tvOutput_t torqueRequest;
 
 extern float drivingTorqueLimit;
 
+extern float regenTorqueLimit;
+
 // Functions ------------------------------------------------------------------------------------------------------------------
 
 /**

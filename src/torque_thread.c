@@ -31,7 +31,7 @@ tvOutput_t torqueRequest;
 float drivingTorqueLimit = 0.0f;
 
 /// @brief The cumulative regenerative (negative) torque limit.
-static float regenTorqueLimit = 0.0f;
+float regenTorqueLimit = 0.0f;
 
 /// @brief The index of the selected torque-vectoring algorithm.
 static uint8_t algoritmIndex = 0;
@@ -310,9 +310,9 @@ tvInput_t requestCalculateInput (float deltaTime, bool* button3Held, bool* butto
 	// 	if (!palReadLine (LINE_BUTTON_3_IN) || !palReadLine (LINE_BUTTON_5_IN))
 	// 	{
 	// 		if (!palReadLine (LINE_BUTTON_3_IN) && !palReadLine (LINE_BUTTON_5_IN))
-	// 			regenRequest = physicalEepromMap->regenTorqueLimit * physicalEepromMap->regenHardRequest;
+	// 			regenRequest = regenTorqueLimit * physicalEepromMap->regenHardRequest;
 	// 		else
-	// 			regenRequest = physicalEepromMap->regenTorqueLimit * physicalEepromMap->regenLightRequest;
+	// 			regenRequest = regenTorqueLimit * physicalEepromMap->regenLightRequest;
 
 	// 		// Derate based on throttle position (no regen when pedal is depressed)
 	// 		regenRequest = lerp2dSaturated (pedals.appsRequest,

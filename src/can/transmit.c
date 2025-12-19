@@ -203,7 +203,7 @@ msg_t transmitConfigMessage (CANDriver* driver, sysinterval_t timeout)
 		.data8	=
 		{
 			TORQUE_TO_WORD (drivingTorqueLimit),
-			0x00, // TORQUE_TO_WORD (regenTorqueLimit) TODO(Barach)
+			TORQUE_TO_WORD (regenTorqueLimit),
 			physicalEepromMap->torqueAlgoritmIndex
 		}
 	};
